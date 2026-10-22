@@ -1,0 +1,17 @@
+-- FSCC-12948 - Package F8_TRANSACC_DEPO_PKG (spec)
+-- Fuente: INTRANETDE (desarrollo), extraido de USER_SOURCE el 2026-10-14. Solo referencia (linea base); no ejecutar.
+-- ASCII: se quitaron las tildes de comentarios y mensajes.
+
+CREATE OR REPLACE PACKAGE F8_TRANSACC_DEPO_PKG AS
+
+  PROCEDURE FN_SIG_DIA_HABIL(P_FECHA IN VARCHAR2, SRV_MESSAGE OUT VARCHAR2);
+
+  PROCEDURE EXISTE_VTA_TEMPESC(VTA_ID	    IN NUMBER,
+			       VTA_LOCAL    IN NUMBER,
+			       VTA_TERMINAL IN NUMBER,
+			       VTA_FECHA    IN VARCHAR2,
+			       CODIGO_BARRA IN VARCHAR2,
+			       FLG_PAIS     IN VARCHAR2,
+			       SRV_MESSAGE  OUT VARCHAR2);
+END F8_TRANSACC_DEPO_PKG;
+/

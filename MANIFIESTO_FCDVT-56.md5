@@ -1,0 +1,41 @@
+# MANIFIESTO FCDVT-56 - estado congelado: CC (Form43) muestra y cierra en FACO los terminales sin movimiento + filtro de Terminal (sin compilar); PKG_F8_CIERRE_DIARIO con la etapa SIN VENTA que cierra la Z como CC (sin compilar ni ejecutar)
+# Fecha: 2026-10-22. Base: nada ejecutado (solo lecturas). Version anterior del cierre diario en docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/. Retomar por docs/README_FCDVT-56.md S7 y S10.
+# Verificar desde la raiz del repositorio (C:\Repositorio-f8\F8; en esta copia D:\Fala\F8), Git Bash:  grep -v '^#' docs/MANIFIESTO_FCDVT-56.md5 | md5sum -c
+05a55ea9e2913ac446cd4e05e1facacd *CLAUDE.md
+9e9589c700bf9a75185221bbf0543fc5 *docs/README_FCDVT-56.md
+20ad54ebdeea5186c9cb075e2552f9d2 *docs/sql/CLAUDE.md
+219f35b5e03aedca14fd1ad42e61b6a7 *docs/sql/FCDVT-56/FCDVT-56.doc
+2f634df1f52a301a54f44764979d3087 *FTEPROD/Form43.frm
+add8ab0140aa8606387519d64024515e *FTEPROD/Form43.frx
+ef03a18643b1b5b185af1bd173184a60 *FTEPROD/Form43.frm.bak_FCDVT-56
+73984ded470699ebd24f4f7c775a8d4a *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
+b9d7c4388223a2000219566828af80a2 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_prechecks.sql
+c7646e4a6a47a52678acd90d2135ae54 *docs/sql/FSCC-12901_CIERRE_DIARIO/01_log_cierre_diario.sql
+cb78cd924c8b301dfa7b7e89be6f1ea2 *docs/sql/FSCC-12901_CIERRE_DIARIO/02_parametros.sql
+f3aa2d97a4c7ce2d8cd5432beb376d3f *docs/sql/FSCC-12901_CIERRE_DIARIO/03_pkg_cierre_diario_spec.sql
+a31373c54f622085666155b8e5eca683 *docs/sql/FSCC-12901_CIERRE_DIARIO/04_pkg_cierre_diario_body.sql
+aa984d00d7a521bce2d874a556d0f6bd *docs/sql/FSCC-12901_CIERRE_DIARIO/05_grants_sinonimos.sql
+a702013512c7391d3a8e722f19d853b4 *docs/sql/FSCC-12901_CIERRE_DIARIO/06_pruebas.sql
+32ebcdcfc14dccabe6e9d509090062d8 *docs/sql/FSCC-12901_CIERRE_DIARIO/99_rollback.sql
+a6950013451a1a18871f83fd1ada1f02 *docs/sql/FSCC-12901_CIERRE_DIARIO/INSTALAR.sql
+d5e4fc6ea4927fa8516b14a4c5e2336c *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/00_LEEME.md
+f8ec8cfa79cc00339f3872b320a02eae *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/00_prechecks.sql
+2c774888acdc4fd99090de5e9d0e3e70 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/01_log_cierre_diario.sql
+b9b54563f542af70a3b471eff5ae4ecb *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/02_parametros.sql
+cd68e03589732ad64ed91198e36cc55c *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/03_pkg_cierre_diario_spec.sql
+44fe82b5e0466f0c7f6c7c6aaccd5a96 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/04_pkg_cierre_diario_body.sql
+aa984d00d7a521bce2d874a556d0f6bd *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/05_grants_sinonimos.sql
+95397ee592f766131f23cb184026f7e1 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/06_pruebas.sql
+c73ad990e2272f54d18df0a4a57bd0dc *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/99_rollback.sql
+a6950013451a1a18871f83fd1ada1f02 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/INSTALAR.sql
+59a67b5ea2d27fe5e9b199d5212ebe29 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/LEEME.md
+742687e1c05a699804ce2981abd020d4 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P0_simulacion.sql
+5b39959a617b68a4c92d0efc114f727a *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P1_ejecutar.sql
+c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P2_resultados.sql
+902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P9_reabrir.sql
+af31192dc8a38e178a2b2b6fea9bfd25 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
+742687e1c05a699804ce2981abd020d4 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P0_simulacion.sql
+265286265ee34036a6724125ae82ee79 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P1_ejecutar.sql
+c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P2_resultados.sql
+7b441bbca470b94cec4a5d85f482b123 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P3_sin_venta.sql
+902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P9_reabrir.sql

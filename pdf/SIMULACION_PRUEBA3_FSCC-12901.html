@@ -1,0 +1,172 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Simulacion prueba 3 FSCC-12901</title><link rel="stylesheet" href="estilo.css"></head><body>
+<h1>Prueba 3: simulación en papel del paquete PROC_Y después de la carga</h1>
+<p>Fecha: 15-10-2026. <b>Es solo una traza en papel</b>: no se ejecutó nada ni se creó ningún objeto.</p>
+<p>Objetivo: comprobar, antes de pasar los objetos de <code>docs/sql/FSCC-12901_PROC_Y</code> a test, qué haría el paquete si se lo llama al terminar la carga de <code>Form133</code>. La llamada sería <code>PKG_F8_CIERRE_AUTO.prc_cierre_automatico('FACO')</code>, que ejecuta primero T1 (<code>PKG_F8_COMPENSA_DI_AUTO</code>) y después T2.</p>
+<p>Referencias:</p>
+<ul>
+<li><code>07</code> = <code>07_pkg_cierre_auto_body.sql</code></li>
+<li><code>06</code> = <code>06_pkg_compensa_di_body.sql</code></li>
+<li><code>08</code> = <code>08_trigger_FACO.sql</code></li>
+<li><code>03</code> = parámetros</li>
+</ul>
+<h2>1. Datos: Excel <code>PRD-LIST-TEST-V3.xlsx</code></h2>
+<table><tr><th>Local</th><th>Terminal</th><th>Sobre</th><th>Monto</th><th>Dif.</th><th>Fecha venta</th><th>Y</th></tr>
+<tr><td>6</td><td>29</td><td>3007295625</td><td>4.000.000</td><td>0</td><td>20260828</td><td>1</td></tr>
+<tr><td>6</td><td>29</td><td>3110295626</td><td>4.000.000</td><td>0</td><td>20260828</td><td>1</td></tr>
+<tr><td>6</td><td>29</td><td>3111295627</td><td>344.000</td><td>0</td><td>20260828</td><td>1</td></tr>
+<tr><td></td><td></td><td></td><td><b>8.344.000</b></td><td></td><td></td><td></td></tr>
+</table>
+<p>Es una sola caja (6 / 29 / 28-08-2026 / Y 1). Se simulan dos variantes de la Y manual sobre esa caja:</p>
+<table><tr><th>Escenario</th><th>EFECTIVO de la Y</th><th>BOLETAS + FACTURA</th><th>DR esperada</th><th>Qué debería pasar</th></tr>
+<tr><td><b>A, feliz</b></td><td>8.344.000</td><td>8.344.000 (p. ej. 8.000.000 + 344.000)</td><td>0</td><td>T1 no hace nada, T2 cierra</td></tr>
+<tr><td><b>B, DI</b></td><td>8.343.500</td><td>8.343.500 (p. ej. 8.000.000 + 343.500)</td><td><b>+500</b> (sobrante)</td><td>T1 registra una DI de +500 y T2 cierra</td></tr>
+</table>
+<p>La DR se calcula como sobres EFE − efectivo de la Y = 8.344.000 − efectivo (<code>07:578</code>). En B, +500 cae dentro del rango [−1.000, 20.000] (<code>CA_DI_MIN</code> / <code>CA_DI_MAX</code> en <code>03</code>).</p>
+<p>Parámetros supuestos (los de <code>03</code>): <code>CA_ACTIVO = S</code>, <code>CA_DI_ACTIVO = S</code>, <code>CA_VAL_CHEQ = S</code>, <code>CA_VAL_ZZZ = N</code>, <code>CA_DECIMAL = 0</code>, <code>CA_SIN_SOBRE = S</code>.</p>
+<h2>2. Pantallas (igual que la prueba 2)</h2>
+<ol>
+<li>F8 con fecha 28-08-2026, local 6 y terminal 29 (que la Y 1 no exista).</li>
+<li><code>Form19Y</code>: N° de Y 0, que pasa a 1 al validar. EFECTIVO y BOLETAS + FACTURA según el escenario, el resto en 0. Graba:</li>
+</ol>
+<ul>
+<li><code>VTA_FACOLIBVTA</code> (tiporeg Y, secuencia 1, estado A);</li>
+<li><code>VTA_FACOZZZ</code> (<code>rec_mefectivo</code>);</li>
+<li><code>VTA_FACOTERMSTATY</code> (estado <b>−1</b>).</li>
+</ul>
+<ol>
+<li><code>Form133</code> con el Excel v3. Inserta 3 filas en <code>VTA_FACOPRD</code>: <code>prv_tiporec = 'F8'</code>, <code>prv_tiposobre = 'EFE'</code>, <code>prv_cierrey = 1</code>. Además reabre la Z.</li>
+</ol>
+<h2>3. Trigger (<code>08</code>)</h2>
+<p><code>TRG_VTA_FACOPRD_CIERRE_AI</code> se dispara por cada sobre insertado con <code>prv_tiporec</code> en ('F8', 'DOL') y copia el sobre a <code>VTA_FACOPRD_CIERRE</code> en estado <b>P</b> con <code>pcr_intentos = 0</code>.</p>
+<p><b>Cola después de la carga:</b> 3 filas en P (6 / 29 / 28-08 / Y 1).</p>
+<h2>4. <code>prc_cierre_automatico('FACO')</code> (<code>07:946</code>)</h2>
+<table><tr><th>#</th><th>Paso</th><th>Línea</th><th>Efecto</th></tr>
+<tr><td>1</td><td><code>pr_config('FACO')</code>, <code>g_proceso = 'T2'</code>, <code>g_usuario = 'PROC_CIERRE_AUTO'</code></td><td>960</td><td>—</td></tr>
+<tr><td>2</td><td><code>fn_nueva_ejecucion</code></td><td>964</td><td>Toma el número de ejecución <b>N</b> de <code>SEQ_VTA_FACOLOG_CIERRE_AUTO</code></td></tr>
+<tr><td>3</td><td>Interruptores: <code>CA_ACTIVO</code> y <code>CA_DI_ACTIVO</code> en S</td><td>968</td><td>Continúa</td></tr>
+<tr><td>4</td><td>Log</td><td>972</td><td>T2, <code>-</code>, <b>INICIO</b></td></tr>
+<tr><td>5</td><td>Sobres con Y = 0 pasan a O</td><td>976</td><td>0 filas</td></tr>
+<tr><td>6</td><td>Cola P → E con la ejecución N, commit</td><td>987</td><td><b>3 filas en E</b>, <code>v_carga = 3</code></td></tr>
+<tr><td>7</td><td>T1 <code>prc_compensa_di('FACO', N)</code></td><td>1000</td><td>Ver §5</td></tr>
+<tr><td>8</td><td><code>CA_ACTIVO = S</code></td><td>1011</td><td>Sigue con T2</td></tr>
+<tr><td>9</td><td><code>fn_universo('FACO', N)</code></td><td>1025</td><td>Ver §4.1. Universo: <b>1 Y</b> (6 / 29 / Y 1)</td></tr>
+<tr><td>10</td><td><code>pr_procesa_y</code> por cada Y</td><td>1031</td><td>Ver §6</td></tr>
+<tr><td>11</td><td>Lo que quede en E vuelve a P</td><td>1041</td><td>0 filas</td></tr>
+<tr><td>12</td><td>Log</td><td>1050</td><td>T2, <code>-</code>, <b>FIN</b>: "Sobres de la carga: 3 | Cierres Y evaluados: 1 | Y cerradas: 1 | Y no cerradas: 0"</td></tr>
+</table>
+<h3>4.1 Universo (<code>07:281</code>)</h3>
+<ul>
+<li><b>Rama COLA:</b> filas E de la ejecución N con <code>prv_cierrey &lt;&gt; 0</code>. Da 3 filas iguales (6 / 29 / 28-08 / 1), que el <code>UNION</code> reduce a <b>1</b>.</li>
+<li><b>Rama SIN_SOBRE</b> (<code>CA_SIN_SOBRE = S</code>): toma <b>todas</b> las Y de <code>TERMSTATY</code> con <code>ter_estado &lt;= 0</code> del mismo <b>local y fecha</b> de la carga (local 6, 28-08-2026) que tengan libro de ventas Y, <b>aunque no tengan sobres</b>.</li>
+<li>La Y 1 de la terminal 27 (prueba 2) está cerrada (estado 1), así que no entra.</li>
+<li><b>Si existe otra Y abierta del local 6 ese día, entra al universo</b> (ver hallazgo H1).</li>
+</ul>
+<h2>5. T1: <code>prc_compensa_di</code> (<code>06</code>)</h2>
+<ul>
+<li>Log T1 <b>INICIO</b>: "rango [-1000, 20000] | usuario PROC_DI_AUTO".</li>
+<li>Abre el mismo universo (<code>fn_universo</code> con N) y, por cada caja, ejecuta <code>pr_procesa_caja</code>:</li>
+</ul>
+<table><tr><th>Paso</th><th>Escenario A</th><th>Escenario B</th></tr>
+<tr><td><code>savepoint sp_di</code> y <code>TERMSTATY</code> <code>for update nowait</code></td><td>estado −1 (bloquea la fila)</td><td>ídem</td></tr>
+<tr><td><code>v_estado &gt; 0</code></td><td>no</td><td>no</td></tr>
+<tr><td><code>fn_evalua_caja</code> → <code>fn_dif_real</code> (<code>07:589</code> → <code>pr_cuadratura</code>)</td><td>Y: efectivo 8.344.000. Sobres EFE 8.344.000. Tesorería, tarjetas, USD y compensado 0 → <b>DR = 0</b></td><td>Y: efectivo 8.343.500 → <b>DR = +500</b></td></tr>
+<tr><td>Resultado</td><td><b>DR_CERO</b>: <code>rollback to sp_di</code>, log T1 "Diferencia real 0: sin DI, pasa al cierre (T2)"</td><td>Dentro de [−1.000, 20.000]. <code>fn_estado_di</code>: no hay DI previa → <b>COMPENSABLE</b></td></tr>
+<tr><td><code>pr_registra_di</code></td><td>—</td><td>INSERT en <code>VTA_FACOMOVDET</code>: <code>mov_tipomov 'DI'</code>, <code>mov_monto +500</code>, <code>mov_hechopor 'PROC_DI_AUTO'</code>, <code>mov_regul 'S'</code>, <code>mov_fecha = mov_fechareg = 28-08-2026</code>, <code>mov_cierrey 1</code>, techkey de <code>SEQ_VTA_FACOVEN</code>. UPDATE (o INSERT) de <code>VTA_FACOCOMPDES</code> DI con la glosa "COMPENSACION AUTOMATICA DI"</td></tr>
+<tr><td>Recálculo de la DR</td><td>—</td><td>El compensado toma la DI en la rama "conceptos regularizados" (<code>07:495</code>; DI existe en <code>VTA_FACOCONCEPDIF</code>). DR = round(500 − 500) = <b>0</b>, commit</td></tr>
+<tr><td>Log T1</td><td>DR_CERO (dif 0)</td><td><b>DI_REGISTRADA</b> (dif 500): "DI automatica por 500; diferencia real queda en 0"</td></tr>
+</table>
+<ul>
+<li>Log T1 <b>FIN</b>: "Cajas evaluadas: 1".</li>
+<li>T1 no toca la cola: siguen 3 filas en E.</li>
+</ul>
+<h2>6. T2: <code>pr_procesa_y</code> (<code>07:835</code>)</h2>
+<table><tr><th>Paso</th><th>Línea</th><th>A y B</th></tr>
+<tr><td><code>savepoint sp_y</code>, <code>TERMSTATY</code> <code>for update nowait</code></td><td>846</td><td>Estado −1</td></tr>
+<tr><td>RY-02: <code>v_estado &gt; 0</code></td><td>875</td><td>No</td></tr>
+<tr><td>DR (<code>fn_dif_real</code>)</td><td>885</td><td>A: 0. B: 500 − 500 (DI) = <b>0</b></td></tr>
+<tr><td>RY-01 cheque a fecha (<code>CA_VAL_CHEQ = S</code>)</td><td>760</td><td>Gestión de cheques 0 = tesorería 0 → pasa</td></tr>
+<tr><td>RY-03 conceptos SN…DP sin regularizar en la Y</td><td>766</td><td>B: la DI no está en la lista y además tiene <code>mov_regul 'S'</code> → pasa</td></tr>
+<tr><td>RY-06 ZZZ (<code>CA_VAL_ZZZ = N</code>)</td><td>776</td><td>No se evalúa</td></tr>
+<tr><td>UPDATE <code>TERMSTATY</code></td><td>915</td><td><code>ter_estado = 1</code>, <code>ter_cerradopor = 'PROC_CIERRE_AUTO'</code>, <code>ter_notas</code> = "CIERRE AUTOMATICO FSCC-12958 dd-mm-yyyy hh24:mi | INGRESO MANUAL POR CIERRE DE Y"</td></tr>
+<tr><td>Cola</td><td>924</td><td>3 filas pasan a <b>C</b>, <code>pcr_resultado = 'CERRADA_Y'</code>, <code>pcr_intentos = 1</code>, <code>pcr_ejecucion = N</code></td></tr>
+<tr><td>commit y log T2</td><td>925</td><td><b>CERRADA_Y</b> (dif 0)</td></tr>
+</table>
+<h2>7. Estado final esperado</h2>
+<table><tr><th>Objeto</th><th>Escenario A</th><th>Escenario B</th></tr>
+<tr><td><code>VTA_FACOTERMSTATY</code> 6 / 29 / Y 1</td><td>estado <b>1</b>, <code>PROC_CIERRE_AUTO</code>, nota CIERRE AUTOMATICO</td><td>ídem</td></tr>
+<tr><td><code>VTA_FACOMOVDET</code></td><td>sin cambios</td><td>+1 fila DI de <b>+500</b> (<code>PROC_DI_AUTO</code>, regul S)</td></tr>
+<tr><td><code>VTA_FACOCOMPDES</code></td><td>sin cambios</td><td>DI con la glosa "COMPENSACION AUTOMATICA DI"</td></tr>
+<tr><td><code>VTA_FACOPRD_CIERRE</code></td><td>3 filas C / CERRADA_Y</td><td>ídem</td></tr>
+<tr><td><code>VTA_FACOLOG_CIERRE_AUTO</code> (ejecución N), en orden</td><td>T2 INICIO, T1 INICIO, T1 DR_CERO, T1 FIN, T2 CERRADA_Y, T2 FIN</td><td>T2 INICIO, T1 INICIO, <b>T1 DI_REGISTRADA (500)</b>, T1 FIN, T2 CERRADA_Y, T2 FIN</td></tr>
+<tr><td>Z (<code>VTA_FACOTERMSTAT</code>)</td><td>no se toca (estado 0 por <code>Form133</code>)</td><td>ídem</td></tr>
+<tr><td><b>F8 Y en el exe</b></td><td>Dif. de Caja 0, Compensación 0, DR 0, <b>Cerrado</b></td><td>Dif. de Caja <b>500</b>, Compensación <b>500</b>, DR 0, <b>Cerrado</b></td></tr>
+</table>
+<p><b>Conclusión:</b> con estos datos los dos escenarios terminan bien. La lógica de T1 y T2 coincide con el cierre manual de la prueba 2: mismas fórmulas de <code>Form3Y</code> y la misma DR que mostró la pantalla. No se encontraron errores de lógica que impidan pasar los objetos. Sí hay que tener en cuenta los hallazgos de abajo.</p>
+<h2>8. Hallazgos de la simulación</h2>
+<table><tr><th>#</th><th>Hallazgo</th><th>Impacto</th><th>Recomendación</th></tr>
+<tr><td><b>H1</b></td><td>Con <code>CA_SIN_SOBRE = S</code> el universo incluye <b>todas las Y abiertas del mismo local y fecha</b> con libro de ventas, aunque no tengan sobres (<code>07:300</code>).</td><td>En test, T1 podría registrar una DI y T2 cerrar Y <b>reales</b> del local 6 del 28-08-2026, si las hay. Según los datos del 07-10 no había cajas ese día, pero las pruebas 2 y 3 ya agregaron Y.</td><td>Antes de ejecutar, revisar que el local 6 del 28-08-2026 no tenga otras Y abiertas, o poner <code>CA_SIN_SOBRE = N</code> durante la prueba.</td></tr>
+<tr><td><b>H2</b></td><td>Nada llama al paquete al terminar <code>Form133</code>: la decisión vigente es un job externo, y la llamada desde <code>Form133</code> está pendiente (B3).</td><td>En test hay que ejecutarlo a mano: <code>begin PKG_F8_CIERRE_AUTO.prc_cierre_automatico('FACO'); end;</code> como dueño o con sinónimo.</td><td>Ejecutarlo a mano en la prueba, o activar el job comentado del traspaso.</td></tr>
+<tr><td><b>H3</b></td><td><b>Orden:</b> si los sobres se cargan <b>antes</b> de ingresar la Y, T2 registra SIN_TERMSTAT o SIN_LIBVTA y deja la cola en C. Ingresar la Y después <b>no</b> vuelve a poner la caja en la cola; solo lo hace un sobre nuevo.</td><td>La caja quedaría abierta hasta otra carga o hasta cerrarla desde CC o a mano.</td><td>En la prueba, primero la Y y después la carga, como está previsto. Para producción, decidirlo con negocio (relacionado con B2).</td></tr>
+<tr><td><b>H4</b></td><td>El trigger tiene <code>when others then null</code>.</td><td>Si la copia a la cola falla, el sobre se graba pero la caja no se evalúa, sin aviso.</td><td>Decisión ya documentada. Para revisarlo existe la consulta de conciliación de sobres sin fila en la cola.</td></tr>
+<tr><td><b>H5</b></td><td>El objeto existente <code>PKG_F8_FACO_CIERRE_TER_PM_AP</code> también cierra Y con <code>AUTOMATICO</code> (Autopago).</td><td>Si cierra la Y antes, T2 registra YA_CERRADA. No es un error.</td><td>Usar una terminal que no sea de Autopago (revisar que la 29 no lo sea).</td></tr>
+<tr><td>H6</td><td><code>pr_cuadratura</code> suma <code>tes_chefecha</code> y el exe toma la primera fila.</td><td>Ninguno: en test hay una fila de tesorería por Y.</td><td>Ya documentado (D6).</td></tr>
+</table>
+<h2>9. Si después se prueba en test</h2>
+<ol>
+<li>Ejecutar el traspaso de <code>PROC_Y</code> (lo ejecuta el usuario o el DBA), incluyendo el trigger.</li>
+<li>Revisar H1 y H5.</li>
+<li>Repetir los pasos de pantalla del §2: Y primero, después la carga.</li>
+<li>Ejecutar <code>prc_cierre_automatico('FACO')</code> a mano.</li>
+<li>Abrir la F8 Y de la terminal 29 y comparar con el §7.</li>
+<li>Para el escenario B se necesita <b>otra caja</b> (otra terminal, sobres nuevos y efectivo de la Y con 500 menos que los sobres), porque la terminal 29 ya quedaría cerrada con A.</li>
+</ol>
+<h2>10. Plan de la prueba 3 en test (flujo de cierre del paquete)</h2>
+<p>Requisito: los objetos de <code>PROC_Y</code> instalados en test (traspaso <code>traspaso_test/TRASPASO_TEST_FSCC-12901_v2.sql</code>, trigger incluido, 9 objetos VALID).</p>
+<p>Se prueban 3 cajas en <b>terminales distintas</b>. Todas son del local 6, fecha 28-08-2026, Y 1, y cada una tiene <b>sobres con números nuevos</b>, porque <code>Form133</code> compara número de sobre + fecha.</p>
+<table><tr><th>Caja</th><th>Terminal</th><th>Sobres</th><th>Efectivo de la Y (= BOLETAS + FACTURA)</th><th>DR</th><th>T1 esperado</th><th>T2 esperado</th><th>Estado final</th></tr>
+<tr><td><b>A, feliz</b></td><td>29 (Excel V3)</td><td>8.344.000</td><td>8.344.000</td><td>0</td><td>DR_CERO</td><td>CERRADA_Y</td><td><b>Cerrada</b></td></tr>
+<tr><td><b>2a, DI en rango</b></td><td>otra (p. ej. 30)</td><td>Excel nuevo, total T</td><td>T − 500</td><td>+500</td><td>DI_REGISTRADA (+500)</td><td>CERRADA_Y</td><td><b>Cerrada</b>; F8: Compensación 500</td></tr>
+<tr><td><b>2b, fuera de rango</b></td><td>otra (p. ej. 31)</td><td>Excel nuevo, total T</td><td>T + 1.500</td><td>−1.500</td><td>FUERA_RANGO</td><td>CON_DIFERENCIA (RY-05)</td><td><b>Abierta</b>; F8: DR −1.500</td></tr>
+</table>
+<p>Rango de la DI automática: de <b>−1.000</b> (faltante) a <b>+20.000</b> (sobrante), con los límites incluidos. DR = sobres − efectivo de la Y.</p>
+<p>Orden por caja, o para todas juntas:</p>
+<ol>
+<li><code>Form19Y</code> (la Y primero).</li>
+<li><code>Form133</code> con el Excel. Se pueden poner las 3 cajas en un mismo Excel.</li>
+<li>Ejecutar el paquete en SQL: <code>begin PKG_F8_CIERRE_AUTO.prc_cierre_automatico('FACO'); end;</code></li>
+<li>Revisar la F8 de cada Y.</li>
+<li>Revisar el log: <code>select * from VTA_FACOLOG_CIERRE_AUTO where log_ejecucion = (select max(log_ejecucion) from VTA_FACOLOG_CIERRE_AUTO) order by log_id;</code></li>
+</ol>
+<p>Antes de ejecutar el paquete:</p>
+<ul>
+<li><b>H1</b>: confirmar que el local 6 del 28-08-2026 no tenga <b>otras Y abiertas</b> con libro de ventas, o poner <code>CA_SIN_SOBRE = N</code> durante la prueba.</li>
+<li><b>H5</b>: confirmar que las terminales no son de Autopago (<code>PKG_F8_FACO_CIERRE_TER_PM_AP</code>).</li>
+</ul>
+<h2>11. Caso 2: qué pasa después de un descuadre</h2>
+<ul>
+<li><b>Fuera de rango</b>: el paquete deja la Y abierta y registra en el log <code>FUERA_RANGO</code> (T1) y <code>CON_DIFERENCIA</code> (T2).</li>
+<li>Los sobres de esa caja quedan en la cola en <b>C</b>: la caja <b>no se vuelve a intentar sola</b>.</li>
+<li>El usuario la resuelve a mano:</li>
+<li><b>compensa</b> la diferencia (lo normal), o <b>corrige la Y</b> en <code>Form19Y</code> si se digitó mal (la Y sigue abierta);</li>
+<li>después la <b>cierra</b> con el candado (<code>Form3Y.CierraTerminal</code>) o desde Consultas de Cuadratura (<code>Form43</code>, opción 1515, <code>prc_cierre_dia</code>, que cierra solo si la DR es 0).</li>
+<li>La caja <b>vuelve a entrar</b> al paquete solo en dos casos:</li>
+<li>llega <b>otro sobre de esa misma caja</b>, que el trigger pone en P;</li>
+<li>llega una carga de otra terminal del mismo local y día con <code>CA_SIN_SOBRE = S</code>. Esta rama solo toma Y <b>abiertas</b>.</li>
+<li><b>Si el usuario ya la cerró a mano</b> y la caja vuelve a entrar:</li>
+<li>T1 registra <code>YA_CERRADA</code>, porque el estado es mayor a 0 (<code>06</code>), y <b>no graba DI</b>;</li>
+<li>T2 registra <code>YA_CERRADA</code> (<code>07:875</code>) y <b>no modifica</b> la Y (ni el usuario de cierre ni la nota);</li>
+<li>la cola queda en C / YA_CERRADA. No hay doble cierre ni doble compensación.</li>
+<li><b>DI manual previa</b> con la caja abierta: T1 registra <code>DI_MANUAL_PREVIA</code> y no agrega otra DI. Si la DI es de una carga anterior, registra <code>DI_AUTO_PREVIA</code>.</li>
+<li><b>Otro usuario con la F8 abierta</b>: no bloquea, porque el exe no deja la fila bloqueada. Si la fila estuviera tomada, el paquete registra <code>OCUPADA</code> y la caja vuelve a P para la siguiente ejecución.</li>
+<li><b>Brecha B2 (pendiente con negocio)</b>: una caja que el usuario <b>compensó pero no cerró</b> no se cierra sola. Queda abierta hasta que alguien la cierre (candado o CC) o llegue un sobre nuevo de esa caja.</li>
+</ul>
+<h2>12. Cómo retomar (el día de la prueba)</h2>
+<ol>
+<li>Leer este documento (§10 y §11) y la fila 38 del historial en <code>docs/README_FSCC-12901.md</code>.</li>
+<li>Verificar el manifiesto: <code>grep -v '^#' docs/MANIFIESTO_FSCC-12901.md5 | md5sum -c</code>.</li>
+<li>Confirmar con el usuario que el traspaso a test terminó y que los 9 objetos están VALID. Los sinónimos para <code>UINTRANETTS</code> los crea el DBA.</li>
+<li>Revisar H1 y H5. Armar los Excel de 2a y 2b con sobres y terminales nuevos.</li>
+<li>Guiar al usuario <b>por pantallas</b>, como en la prueba 2: Y, después carga, después ejecutar el paquete, después F8 Y. Comparar con la tabla del §10 y con el log.</li>
+<li>Registrar el resultado: capturas, historial, manifiesto y ZIP.</li>
+</ol>
+</body></html>

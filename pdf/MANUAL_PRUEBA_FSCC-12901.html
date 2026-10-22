@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual de prueba FSCC-12901</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .paso { border:1px solid var(--borde); border-left:6px solid var(--azul); border-radius:4px; padding:8px 12px; margin:10px 0 14px; page-break-inside:avoid; }
+  .paso h3 { margin:0 0 6px; }
+  .num { display:inline-block; background:var(--azul); color:#fff; font-weight:700; border-radius:3px; padding:0 8px; margin-right:6px; }
+  .donde { display:inline-block; font-size:8.5pt; font-weight:600; padding:1px 7px; border-radius:9px; margin-left:6px; vertical-align:middle; }
+  .app { background:#e7f5ec; color:#1e7b45; border:1px solid #bfe3cc; }
+  .sql { background:#e8eef8; color:#2d5a8c; border:1px solid #c9d6ea; }
+  .cap { font-size:8.5pt; color:var(--gris); margin:3px 0 8px; font-style:italic; }
+  .shot { width:100%; border:1px solid var(--borde); }
+  /* Maquetas estilo VB6 */
+  .win { border:1px solid #6b7f99; background:#ece9d8; margin:8px 0 4px; page-break-inside:avoid; font-family:Tahoma, Arial, sans-serif; font-size:8.5pt; }
+  .win .tit { background:linear-gradient(90deg,#0a246a,#a6caf0); color:#fff; font-weight:700; padding:3px 6px; }
+  .win .cuerpo { padding:8px 10px; }
+  .win .verde { background:#33cc33; height:14px; margin:-8px -10px 8px; }
+  .fila { display:flex; gap:10px; align-items:center; margin:3px 0; flex-wrap:wrap; }
+  .lbl { color:#8b0000; font-weight:700; min-width:110px; }
+  .inp { background:#fff; border:1px solid #7f9db9; padding:1px 6px; min-width:120px; font-family:Consolas, monospace; }
+  .btn { background:#d4e9b5; border:1px solid #5f7f3f; padding:2px 10px; border-radius:2px; }
+  .btn.marca { outline:2px solid #b3261e; outline-offset:2px; }
+  .est { padding:1px 8px; color:#fff; font-weight:700; }
+  .pend { background:#e00; } .cerr { background:#2e9d3f; } .amar { background:#ffff80; color:#000; }
+  .grid { border-collapse:collapse; width:100%; font-size:8pt; margin:4px 0; }
+  .grid th { background:#c8e6a0; color:#600; border:1px solid #9bbf7a; padding:2px 4px; text-align:left; }
+  .grid td { background:#fff; border:1px solid #ccc; padding:2px 4px; color:#600; }
+  .grid td.n { text-align:right; }
+  .msg { display:inline-block; border:1px solid #6b7f99; background:#ece9d8; min-width:320px; margin:6px 10px 6px 0; vertical-align:top; page-break-inside:avoid; font-family:Tahoma, Arial, sans-serif; font-size:8.5pt; }
+  .msg .tit { background:linear-gradient(90deg,#0a246a,#a6caf0); color:#fff; font-weight:700; padding:3px 6px; }
+  .msg .txt { padding:10px 12px; }
+  .msg .bot { text-align:center; padding:0 0 8px; }
+  .maq { font-size:7.5pt; color:var(--warn); font-weight:600; }
+  .check td:first-child { width:24px; text-align:center; font-size:12pt; }
+</style>
+</head>
+<body>
+
+<section class="portada">
+  <div class="etq">Falabella Colombia · F8 Automático · Manual de prueba</div>
+  <h1>Prueba por pantallas del cierre automático</h1>
+  <div class="sub">FSCC-12901 · T1 compensación automática de DI (FSCC-12957) · T2 cierre de caja automático (FSCC-12958)</div>
+  <table>
+    <tr><td><b>Qué se prueba</b></td><td>La carga del archivo de recaudación en <b>Carga Manual de Sobres</b> (<code>Form133</code>), el proceso automático (T1 → T2) y el resultado en las pantallas de F8</td></tr>
+    <tr><td><b>Ambiente</b></td><td><b>Desarrollo</b> (esquema <code>INTRANETDE</code>, con los objetos de FSCC-12901 instalados). <b>Nunca en producción</b></td></tr>
+    <tr><td><b>Datos</b></td><td>29 sobres reales de <code>PRD 3.xlsx</code> (locales 6 y 13, venta del 28-08-2026) y 23 cajas preparadas con resultados conocidos de antemano</td></tr>
+    <tr><td><b>Archivos</b></td><td><code>docs/sql/FSCC-12901_POC/</code> (scripts <code>01</code>–<code>03</code>, <code>06</code>, <code>98</code>, <code>99</code>) y <code>docs/sql/FSCC-12901_POC/manual/</code> (<code>M1</code>, <code>M2</code>, <code>M9</code> y el Excel de prueba)</td></tr>
+    <tr><td><b>Fecha</b></td><td>08-10-2026</td></tr>
+  </table>
+</section>
+
+<section class="indice">
+  <h2>Contenido</h2>
+  <ol>
+    <li>Qué se prueba y por qué en esta pantalla</li>
+    <li>Cómo funciona el flujo</li>
+    <li>Antes de empezar</li>
+    <li>Las cajas de la prueba y su resultado esperado</li>
+    <li>Paso a paso</li>
+    <li>Lista de verificación final</li>
+    <li>Problemas frecuentes</li>
+    <li>Limpieza y cómo repetir</li>
+  </ol>
+  <div class="nota"><b>Leyenda:</b> <span class="donde app">En el aplicativo</span> = se hace en F8. <span class="donde sql">En SQL</span> = se ejecuta un script en DBeaver o SQL*Plus, conectado a desarrollo. Las figuras marcadas <span class="maq">MAQUETA</span> son una referencia de lo que se debe ver; la pantalla real puede diferir en el formato.</div>
+</section>
+
+<h2>1. Qué se prueba y por qué en esta pantalla</h2>
+<p>La historia FSCC-12901 indica que el proceso automático debe correr <b>al momento de cargar el archivo de recaudación</b>. En la reunión del 06-10 se confirmó que la carga se hace en la pantalla <b>Interfaz de Carga Manual de Sobres</b> (<code>Form133</code>).</p>
+<img class="shot" src="img/form133_carga.png" alt="Carga manual de sobres">
+<div class="cap">Captura real: pantalla principal F8 Colombia (izquierda) y <b>Interfaz de Carga Manual de Sobres</b> con el archivo PRD 3 cargado en la grilla (derecha). El botón <b>Cargar Archivo</b> inicia todo el flujo.</div>
+
+<table>
+  <tr><th>Criterio de la HU</th><th>Cómo se ve en la prueba</th></tr>
+  <tr><td>CA1 · DR −800 → DI 800 y cierre</td><td>Cajas con DR −800 (escenario P1): DI de −800, la caja queda en <b>Cerrado</b></td></tr>
+  <tr><td>CA2 · Límites −1.000 y 20.000 se compensan</td><td>Caja 6/4 (DR −1.000) y caja 6/9 (DR +20.000): DI y cierre</td></tr>
+  <tr><td>CA3 · −1.001 / 20.001 quedan pendientes</td><td>Cajas 13/19 (−30.000) y 13/21 (+25.000): sin DI, quedan <b>Pendiente</b></td></tr>
+  <tr><td>CA4 · Conceptos pendientes impiden el cierre</td><td>Cajas 13/28 y 13/33: DR 0, pero tienen un "sobre no enviado" sin regularizar, así que quedan Pendiente con motivo</td></tr>
+  <tr><td>CA5 / CA7 · DI identificada, con fecha contable = fecha de venta</td><td>DI con usuario <code>PROC_DI_AUTO</code>, glosa "COMPENSACION AUTOMATICA DI" y fecha 28-08-2026</td></tr>
+  <tr><td>CA8 / DF-SCC fila 12 · Cajas sin sobres</td><td>Cajas 6/4 Y2 y 13/5 Y2 sin sobres y sin venta: se cierran solas</td></tr>
+  <tr><td>CA9 · Si la DI deja la DR en 0, se valida y se cierra</td><td>Las 8 cajas con DI se cierran en la misma ejecución</td></tr>
+  <tr><td>FACO solo cierre Y</td><td>La Z del terminal-día no se modifica</td></tr>
+</table>
+
+<h2 class="salto">2. Cómo funciona el flujo</h2>
+<pre>
+ ANALISTA (F8)                            BASE DE DATOS (desarrollo)                         RESULTADO
+ ─────────────                            ──────────────────────────                         ─────────
+ Carga Manual de Sobres  ──INSERT──▶ VTA_FACOPRD (sobres)
+ (Form133) "Cargar Archivo"              │ trigger TRG_VTA_FACOPRD_CIERRE_AI
+                                         ▼
+                                  VTA_FACOPRD_CIERRE (cola: cajas a revisar)
+                                         │
+ JOB (en la prueba: script 06) ──▶ PKG_F8_FACO_CIERRE_AUTO.prc_cierre_automatico
+                                         ├─ T1: ¿DR entre −1.000 y 20.000? → registra la DI
+                                         └─ T2: ¿DR = 0 y pasa las validaciones? → cierra la Y
+                                         ▼
+                        VTA_FACOTERMSTATY (cierres Y) · VTA_FACOMOVDET (DI) · log
+                                                                                    ──▶ F8 (cierre Y) muestra
+ Consultas de Cuadratura (Form43) ◀────────── mismas funciones del paquete               Cerrado / Pendiente
+</pre>
+<div class="alerta"><b>Importante:</b> en la solución aprobada el proceso lo ejecuta un <b>job</b> en la base, no el botón de <code>Form133</code>. En esta prueba ese job se simula con el script <code>06_ejecutar_proceso.sql</code>, justo después de cargar el archivo.</div>
+
+<h2 class="salto">3. Antes de empezar</h2>
+<table class="check">
+  <tr><th></th><th>Requisito</th><th>Cómo se verifica o se resuelve</th></tr>
+  <tr><td>☐</td><td>Objetos de FSCC-12901 instalados en desarrollo</td><td><code>01_preparar.sql</code>, bloque 1: 8 objetos VALID</td></tr>
+  <tr><td>☐</td><td>El exe <code>f8a.exe</code> apunta a <b>desarrollo</b></td><td>El <code>Setup.ini</code> junto al exe (sección <code>[CONNECT]</code>) debe ser el de desarrollo, el que entrega el equipo. Con el de test, el recaudador aparece pero el flujo no se dispara, porque en test no están el trigger ni los paquetes</td></tr>
+  <tr><td>☐</td><td>Versión del exe = versión de la base</td><td>En desarrollo, FACO exige la <b>3.4.9</b> (<code>vta_parametros.vta_ultversion</code>). Si no coincide, se abre el autoactualizador</td></tr>
+  <tr><td>☐</td><td>El usuario puede entrar a Colombia</td><td>En desarrollo el usuario no tenía perfil FACO: <code>M1</code> lo agrega copiando su fila de otra localización, con su misma clave (no se escribe ninguna clave)</td></tr>
+  <tr><td>☐</td><td>Existe el recaudador 00562-PRUEBA</td><td>En desarrollo no había ninguno: lo agrega <code>M1</code></td></tr>
+  <tr><td>☐</td><td>Datos preparados</td><td>Scripts <code>01</code>, <code>02</code>, <code>03</code> y <code>M1</code>. <b>No</b> ejecutar <code>04</code>: los sobres se cargan por pantalla</td></tr>
+  <tr><td>☐</td><td>Archivo de prueba</td><td><code>manual/PRD3_locales_6_13_prueba_manual.xlsx</code> (29 filas reales de PRD 3). Debe tener <b>al menos 2 filas</b>: con una sola, <code>Form133</code> responde "No existen Registros a Cargar"</td></tr>
+  <tr><td>☐</td><td>Excel instalado en el PC</td><td><code>Form133</code> lee el archivo con Excel</td></tr>
+</table>
+
+<h2 class="salto">4. Las cajas de la prueba y su resultado esperado</h2>
+<p>Las cajas del 28-08-2026 se arman en desarrollo con una venta declarada calculada para que, con los sobres reales del archivo, cada una caiga en un escenario conocido. La caja es: local / terminal / cierre Y.</p>
+<table>
+  <tr><th>Caja</th><th>Sobres (Excel)</th><th>Efectivo declarado</th><th>DR después de la carga</th><th>T1 esperado</th><th>T2 esperado</th><th>Estado final</th></tr>
+  <tr><td>6 / 4 / Y1</td><td class="n">2.450.000</td><td class="n">2.451.000</td><td>−1.000 (límite)</td><td>DI −1.000</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>6 / 9 / Y1</td><td class="n">300.000</td><td class="n">280.000</td><td>+20.000 (límite)</td><td>DI +20.000</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>6 / 17, 20, 24, 26, 27, 29, 31, 40 / Y1</td><td>igual al declarado</td><td>igual a los sobres</td><td>0</td><td>Sin DI</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>6 / 44 / Y1</td><td class="n">875.000</td><td class="n">875.800</td><td>−800</td><td>DI −800</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>6 / 4 / <b>Y2</b></td><td>— (sin sobres)</td><td class="n">0</td><td>0</td><td>Sin DI</td><td>Cierra (caja sin movimiento)</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>13 / 5 / Y1 · 13 / 41 / Y1</td><td>1.059.000 · 1.035.000</td><td>+800 sobre los sobres</td><td>−800</td><td>DI −800</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>13 / 6, 11, 43 / Y1</td><td>7.389.000 · 2.029.000 · 85.000</td><td>−3.000 bajo los sobres</td><td>+3.000</td><td>DI +3.000</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>13 / 45 / Y1</td><td class="n">350.000</td><td class="n">350.000</td><td>0</td><td>Sin DI</td><td>Cierra</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>13 / 5 / <b>Y2</b></td><td>— (sin sobres)</td><td class="n">0</td><td>0</td><td>Sin DI</td><td>Cierra (caja sin movimiento)</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>13 / 19 / Y1</td><td class="n">3.135.000</td><td class="n">3.165.000</td><td>−30.000</td><td>Fuera de rango</td><td>Con diferencia</td><td><span class="est pend">Pendiente</span></td></tr>
+  <tr><td>13 / 21 / Y1</td><td class="n">1.670.000</td><td class="n">1.645.000</td><td>+25.000</td><td>Fuera de rango</td><td>Con diferencia</td><td><span class="est pend">Pendiente</span></td></tr>
+  <tr><td>13 / 28 · 13 / 33 / Y1</td><td>2.356.000 · 5.400.000</td><td>igual a los sobres</td><td>0</td><td>Sin DI</td><td>Bloqueada: sobre no enviado (SN) sin regularizar</td><td><span class="est pend">Pendiente</span></td></tr>
+</table>
+<div class="nota"><b>Totales esperados:</b> 23 cajas → <b>19 cerradas</b> (8 de ellas con DI automática), <b>2 con diferencia</b> y <b>2 bloqueadas</b>. <code>M1</code> muestra esta misma tabla desde la base.</div>
+
+<h2 class="salto">5. Paso a paso</h2>
+
+<div class="paso"><h3><span class="num">1</span>Preparar los datos <span class="donde sql">En SQL</span></h3>
+<p>En DBeaver, conectado a <b>desarrollo</b>, ejecuta como script (Alt+X), en este orden:</p>
+<ol>
+  <li><code>01_preparar.sql</code>: verifica los objetos y crea las tablas de control. Esperado: 8 objetos VALID y <code>y_2026_existentes = 0</code>.</li>
+  <li><code>02_datos_test.sql</code>: copia cajas reales de test, que sirven de molde. Tarda unos minutos. Esperado: verificación en OK.</li>
+  <li><code>03_dia_prd3.sql</code>: crea las cajas del 28-08-2026.</li>
+  <li><code>manual/M1_preparar_prueba_manual.sql</code>: recaudador, usuario FACO y opción 1515. Al final muestra la tabla de la sección 4.</li>
+</ol>
+<p><b>No ejecutes <code>04_cargar_sobres.sql</code>.</b> En esta prueba los sobres se cargan por pantalla.</p></div>
+
+<div class="paso"><h3><span class="num">2</span>Entrar al aplicativo como Colombia <span class="donde app">En el aplicativo</span></h3>
+<div class="win" style="max-width:420px"><div class="tit">F8 Automático — Ingreso</div><div class="cuerpo">
+  <div class="fila"><span class="lbl">Usuario</span><span class="inp">RUT del usuario</span></div>
+  <div class="fila"><span class="lbl">Clave</span><span class="inp">••••••••</span></div>
+  <div class="fila"><span class="btn">Aceptar</span></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span></div>
+<ol>
+  <li>Abre <code>f8a.exe</code> (con el <code>Setup.ini</code> de desarrollo) e ingresa con tu usuario y clave.</li>
+  <li>Si tu usuario tiene varios países o perfiles, aparece la pantalla de <b>selección de perfil</b> (<code>Form87</code>): elige <b>Colombia (FACO)</b>.</li>
+  <li>Debe abrirse la pantalla principal con el título "Automático - Colombia - FACO" y la bandera de Colombia.</li>
+</ol></div>
+
+<div class="paso"><h3><span class="num">3</span>Ver una caja ANTES de la carga <span class="donde app">En el aplicativo</span></h3>
+<p>En la pantalla principal F8 (cuadratura por cierre Y), selecciona <b>Local 6</b>, <b>Fecha 28-08-2026</b>, <b>Terminal 4</b> y <b>Cierre de Y 1</b>.</p>
+<div class="win" style="max-width:520px"><div class="tit">F8 — Cuadratura cierre Y · Local 6 · 28-08-2026 · Terminal 4 · Y 1</div><div class="cuerpo">
+  <div class="fila"><span class="lbl">Estado</span><span class="est pend">Pendiente</span></div>
+  <div class="fila"><span class="lbl">Diferencia de Caja</span><span class="inp">-2.451.000</span></div>
+  <div class="fila"><span class="lbl">Compensación</span><span class="inp">0</span></div>
+  <div class="fila"><span class="lbl">Diferencia Real</span><span class="inp">-2.451.000</span></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span> · Sin sobres, la diferencia es todo el efectivo declarado.</div></div>
+
+<div class="paso"><h3><span class="num">4</span>Abrir Carga Manual de Sobres <span class="donde app">En el aplicativo</span></h3>
+<p>En la barra de herramientas, abre la flecha del botón <b>"Estado en línea"</b> y elige <b>"Carga Manual de Sobres"</b>. En el código es la opción <code>CargaManual</code> de <code>MDIForm1</code>, que abre <code>Form133</code>.</p>
+<div class="win" style="max-width:360px"><div class="tit">Barra de herramientas · Estado en línea ▼</div><div class="cuerpo">
+  <div>Recaudación de sobres</div><div>Control de Dinero Acumulado</div><div>Detalle de Sobres Retiro</div><div>Registro de Transacciones</div>
+  <div>Informe Sobres Pendientes por Prosegur</div><div>…</div><div style="background:#316ac5;color:#fff;padding:1px 3px"><b>Carga Manual de Sobres</b></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span> · Si no ves la opción, tu perfil no la tiene habilitada.</div></div>
+
+<div class="paso"><h3><span class="num">5</span>Elegir recaudador y archivo <span class="donde app">En el aplicativo</span></h3>
+<ol>
+  <li><b>Recaudador:</b> elige <b>00562-PRUEBA</b>.</li>
+  <li><b>Buscar:</b> selecciona <code>PRD3_locales_6_13_prueba_manual.xlsx</code>.</li>
+  <li>Aparece "Proceso de despliegue completado con éxito." y la grilla muestra los <b>29 registros</b>.</li>
+</ol>
+<img class="shot" src="img/form133_1fila.png" alt="Form133">
+<div class="cap">Captura real de la pantalla con el recaudador elegido y la grilla con sus columnas (en la captura, un archivo de 1 fila; en la prueba son 29). Las columnas se graban en <code>VTA_FACOPRD</code>: LOCAL → <code>prv_local</code>, TERMINAL → <code>prv_terminal</code>, NUM SOBRE → <code>prv_sobre</code>, MONTO SOBRE → <code>prv_montosobre</code>, MONTO DIFERENCIA → <code>prv_montodif</code>, NUM RECUENTO → <code>prv_numrec</code>, FECHA VENTA → <code>prv_fechavta</code>, CIERRE Y → <code>prv_cierrey</code>.</div></div>
+
+<div class="paso"><h3><span class="num">6</span>Cargar el archivo <span class="donde app">En el aplicativo</span></h3>
+<p>Presiona <b>Cargar Archivo</b> y confirma.</p>
+<div class="msg"><div class="tit">Confirma Carga Archivo</div><div class="txt">Se cargará el archivo de recaudación, desea continuar?</div><div class="bot"><span class="btn">Sí</span> <span class="btn">No</span></div></div>
+<div class="msg"><div class="tit">F8</div><div class="txt">Se Cargaron 29 Registros</div><div class="bot"><span class="btn">Aceptar</span></div></div>
+<div class="cap"><span class="maq">MAQUETA</span> · Textos tomados del código de <code>Form133</code>.</div>
+<p><b>Qué pasó en la base:</b> cada sobre se grabó en <code>VTA_FACOPRD</code>. El <b>trigger</b> de FSCC-12901 lo dejó en la cola <code>VTA_FACOPRD_CIERRE</code>, y <code>Form133</code> creó o reabrió la Z de cada terminal (comportamiento normal de la pantalla). Para comprobarlo, el bloque 1 de <code>M2</code> debe dar 29 sobres y 29 en cola.</p></div>
+
+<div class="paso"><h3><span class="num">7</span>Ver la caja DESPUÉS de la carga y ANTES del proceso <span class="donde app">En el aplicativo</span></h3>
+<p>Vuelve a la pantalla principal y consulta otra vez la caja 6 / 4 / Y1 (28-08-2026):</p>
+<div class="win" style="max-width:520px"><div class="tit">F8 — Cuadratura cierre Y · Local 6 · 28-08-2026 · Terminal 4 · Y 1</div><div class="cuerpo">
+  <div class="fila"><span class="lbl">Estado</span><span class="est pend">Pendiente</span></div>
+  <div class="fila"><span class="lbl">Diferencia de Caja</span><span class="inp">-1.000</span></div>
+  <div class="fila"><span class="lbl">Compensación</span><span class="inp">0</span></div>
+  <div class="fila"><span class="lbl">Diferencia Real</span><span class="inp">-1.000</span></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span> · El sobre de 2.450.000 contra 2.451.000 declarado deja la DR en −1.000.</div></div>
+
+<div class="paso"><h3><span class="num">8</span>Ejecutar el proceso automático (el job) <span class="donde sql">En SQL</span></h3>
+<p>Ejecuta <code>06_ejecutar_proceso.sql</code>. Hace lo mismo que el job agendado:</p>
+<pre>begin PKG_F8_FACO_CIERRE_AUTO.prc_cierre_automatico; end;</pre>
+<p>La salida debe decir: "Ejecucion N terminada en X segundos", seguida de un resumen por proceso (T1 y T2) y resultado.</p></div>
+
+<div class="paso"><h3><span class="num">9</span>Ver el resultado en F8 <span class="donde app">En el aplicativo</span></h3>
+<p>Consulta otra vez la caja 6 / 4 / Y1. Si la pantalla ya estaba abierta, cámbiate de terminal y vuelve para que se refresque.</p>
+<div class="win" style="max-width:520px"><div class="tit">F8 — Cuadratura cierre Y · Local 6 · 28-08-2026 · Terminal 4 · Y 1</div><div class="cuerpo">
+  <div class="fila"><span class="lbl">Estado</span><span class="est cerr">Cerrado</span></div>
+  <div class="fila"><span class="lbl">Diferencia de Caja</span><span class="inp">-1.000</span></div>
+  <div class="fila"><span class="lbl">Compensación</span><span class="inp">-1.000</span> <span style="font-size:7.5pt">(DI automática)</span></div>
+  <div class="fila"><span class="lbl">Diferencia Real</span><span class="inp">0</span></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span></div>
+<p>Revisa también, para comparar:</p>
+<ul>
+  <li><b>13 / 19 / Y1:</b> Pendiente con DR −30.000 (fuera de rango, sin DI).</li>
+  <li><b>13 / 28 / Y1:</b> Pendiente con DR 0, porque tiene un "sobre no enviado" (SN) sin regularizar. Si intentas cerrarla a mano, el sistema muestra "Falta regularizar el Sobres No Enviado declarada, o elimine el registro".</li>
+  <li><b>6 / 4 / Y2:</b> Cerrado (caja sin movimiento).</li>
+</ul></div>
+
+<div class="paso"><h3><span class="num">10</span>Consultas de Cuadratura <span class="donde app">En el aplicativo</span></h3>
+<p>En la barra, botón <b>"Consulta Cuadratura"</b> (CC) → informe <b>Terminal</b>, local 6 o 13, rango 28-08-2026 → <b>Consulta</b>.</p>
+<p><b>Con el exe actual</b> (sin compilar los cambios de FSCC-12901), la pantalla solo muestra las cajas con diferencia y su botón "Cerrar Terminal" no cierra nada en Colombia:</p>
+<img class="shot" src="img/DF-SCC_F8_Colombia_CC.png" alt="Form43 actual">
+<div class="cap">Captura real (DF-SCC): Consultas de Cuadratura en Colombia hoy, que solo lista Dif. Real distinta de 0.</div>
+<p><b>Con el exe compilado con el nuevo <code>Form43</code></b>, se ven todas las cajas, también las de Dif. Real 0, con los valores calculados por el paquete. Ejemplo para el local 13:</p>
+<div class="win"><div class="tit">Consultas de Cuadratura</div><div class="cuerpo">
+<table class="grid">
+  <tr><th>Fecha</th><th>Local</th><th>Terminal</th><th>Cierre Y</th><th>Dif. de Caja</th><th>Compensación</th><th>Dif. Real</th><th>Estado</th></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>5</td><td>1</td><td class="n">-800</td><td class="n">-800</td><td class="n">0</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>5</td><td>2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>6</td><td>1</td><td class="n">3.000</td><td class="n">3.000</td><td class="n">0</td><td><span class="est cerr">Cerrado</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>19</td><td>1</td><td class="n">-30.000</td><td class="n">0</td><td class="n">-30.000</td><td><span class="est pend">Pendiente</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>21</td><td>1</td><td class="n">25.000</td><td class="n">0</td><td class="n">25.000</td><td><span class="est pend">Pendiente</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>28</td><td>1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td><span class="est pend">Pendiente</span></td></tr>
+  <tr><td>28/08/2026</td><td>13</td><td>45</td><td>1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td><span class="est cerr">Cerrado</span></td></tr>
+</table>
+<div class="fila"><span class="btn">Consulta</span><span class="btn marca">Cerrar Terminal</span><span style="font-size:7.5pt">(visible con la opción 1515, que habilita M1)</span></div>
+</div></div><div class="cap"><span class="maq">MAQUETA</span> · Extracto. Así se ven las "cajas sin movimiento" que pide el DF-SCC (fila 12), como en F8 Chile.</div>
+<p><b>Cerrar Terminal</b> (nuevo <code>Form43</code>) intenta cerrar las Y abiertas con las mismas reglas. Sobre el local 13, después del proceso, debería informar <i>"No hay Terminales que Cumplan con el Proceso de Cierre — Cierres Y no cerrados: 4"</i>: 2 con diferencia y 2 con SN pendiente. El detalle queda en <code>VTA_FACOLOG_CIERRE_AUTO</code>, con <code>log_proceso = 'CC'</code>.</p></div>
+
+<div class="paso"><h3><span class="num">11</span>Confirmar los resultados <span class="donde sql">En SQL</span></h3>
+<p>Ejecuta <code>manual/M2_resultados_prueba_manual.sql</code>:</p>
+<ul>
+  <li><b>Bloque 2:</b> las 23 cajas con <code>control = OK</code>.</li>
+  <li><b>Bloque 3:</b> CERRADA_Y 19, CON_DIFERENCIA 2, BLOQUEADA 2 (T2), y DI_REGISTRADA 8 (T1).</li>
+  <li><b>Bloque 4:</b> 8 DI. El monto es igual a la DR con el mismo signo, la fecha contable es 28-08-2026, el usuario es <code>PROC_DI_AUTO</code> y la glosa "COMPENSACION AUTOMATICA DI".</li>
+  <li><b>Bloque 5:</b> las Z creadas por <code>Form133</code> siguen sin cerrar (el proceso no toca la Z).</li>
+</ul></div>
+
+<h2 class="salto">6. Lista de verificación final</h2>
+<table class="check">
+  <tr><th></th><th>Verificación</th><th>Dónde</th></tr>
+  <tr><td>☐</td><td>Se cargaron los 29 registros y quedaron 29 en cola</td><td>Mensaje de <code>Form133</code> y <code>M2</code> bloque 1</td></tr>
+  <tr><td>☐</td><td>Caja 6/4/Y1: DI −1.000, DR 0, Cerrado</td><td>F8 (paso 9)</td></tr>
+  <tr><td>☐</td><td>19 cajas cerradas por <code>PROC_CIERRE_AUTO</code></td><td><code>M2</code> bloques 2 y 3</td></tr>
+  <tr><td>☐</td><td>8 DI automáticas, cada una por el monto de la DR y con fecha contable 28-08-2026</td><td><code>M2</code> bloque 4</td></tr>
+  <tr><td>☐</td><td>13/19 y 13/21 pendientes, sin DI (fuera de rango)</td><td>F8 y <code>M2</code></td></tr>
+  <tr><td>☐</td><td>13/28 y 13/33 pendientes por SN sin regularizar</td><td>F8 y <code>M2</code> bloque 6</td></tr>
+  <tr><td>☐</td><td>Cajas sin movimiento (Y2) cerradas</td><td>F8 y <code>M2</code></td></tr>
+  <tr><td>☐</td><td>La Z no fue cerrada por el proceso</td><td><code>M2</code> bloque 5</td></tr>
+  <tr><td>☐</td><td>(Con el exe nuevo) Consultas de Cuadratura muestra las cajas con DR 0</td><td><code>Form43</code> (paso 10)</td></tr>
+</table>
+
+<h2>7. Problemas frecuentes</h2>
+<table>
+  <tr><th>Mensaje o síntoma</th><th>Causa</th><th>Qué hacer</th></tr>
+  <tr><td>"No existen Registros a Cargar"</td><td>El archivo tiene una sola fila (en Colombia <code>Form133</code> exige más de una)</td><td>Usar el archivo de 29 filas</td></tr>
+  <tr><td>"Carga No Realizada. Ya existen los registros"</td><td>Esos sobres ya estaban cargados (misma fecha y número), por ejemplo porque se ejecutó <code>04</code> o una carga anterior</td><td>Ejecutar <code>M9</code> (y <code>98</code>) y repetir desde <code>M1</code></td></tr>
+  <tr><td>El combo Recaudador está vacío</td><td>El exe apunta a desarrollo y no hay recaudadoras</td><td>Ejecutar <code>M1</code></td></tr>
+  <tr><td>El combo muestra 00562-PRUEBA, pero nada se cierra</td><td>El exe apunta a <b>test</b>, donde no están el trigger ni los paquetes</td><td>Usar el <code>Setup.ini</code> de desarrollo</td></tr>
+  <tr><td>No aparece Colombia al entrar</td><td>El usuario no tiene perfil FACO en desarrollo</td><td>Ejecutar <code>M1</code> (con el RUT correcto en el bloque EDITAR)</td></tr>
+  <tr><td>Se abre el autoactualizador y el exe se cierra</td><td>La versión del exe no es la 3.4.9 que exige la base</td><td>Usar un exe 3.4.9</td></tr>
+  <tr><td>La caja queda <code>SIN_LIBVTA</code> o <code>SIN_TERMSTAT</code> en <code>M2</code></td><td>No se ejecutaron <code>02</code> y <code>03</code></td><td>Ejecutarlos y repetir</td></tr>
+  <tr><td>Consultas de Cuadratura no muestra las cajas con DR 0</td><td>El exe no tiene compilado el nuevo <code>Form43</code></td><td>Normal con el exe actual; compilar para verlo</td></tr>
+</table>
+
+<h2>8. Limpieza y cómo repetir</h2>
+<table>
+  <tr><th>Quiero…</th><th>Ejecutar</th></tr>
+  <tr><td>Repetir la prueba (cargar de nuevo por pantalla)</td><td><code>M9_limpiar_prueba_manual.sql</code> → <code>98_reiniciar.sql</code> → <code>M1</code> → pasos 5 a 11</td></tr>
+  <tr><td>Dejar desarrollo como estaba</td><td><code>M9_limpiar_prueba_manual.sql</code> → <code>99_limpiar.sql</code></td></tr>
+</table>
+<p><code>M9</code> quita lo propio de la prueba manual: los sobres cargados por pantalla y su cola, las Z que creó <code>Form133</code>, y el recaudador, la fila FACO del usuario y la opción 1515, si los agregó <code>M1</code>. <code>99</code> borra el resto (cajas, DI, log) y restaura <code>CA_DIAS</code>.</p>
+
+<div class="pie">Manual generado el 08-10-2026 a partir del código de <code>Form133</code>, <code>MDIForm1</code> y <code>Form43</code>, de los scripts de <code>docs/sql/FSCC-12901_POC/</code> y de consultas de solo lectura a desarrollo y test. Índice del requerimiento: <code>docs/README_FSCC-12901.md</code>.</div>
+</body>
+</html>

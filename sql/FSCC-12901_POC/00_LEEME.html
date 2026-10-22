@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POC FSCC-12901</title>
+<style>
+  :root { --azul:#1f3a5f; --azul2:#2d5a8c; --gris:#5b6573; --borde:#d4dbe5; --fondo:#f3f6fa;
+          --ok:#1e7b45; --okf:#e7f5ec; --warn:#a86400; --warnf:#fdf3e6; --bad:#b3261e; --badf:#fbeceb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,sans-serif; font-size:15px; line-height:1.55; color:#1d232b; background:#eef2f7; }
+  header { background:linear-gradient(135deg,var(--azul),var(--azul2)); color:#fff; padding:28px 16px 30px; }
+  header .in, main { max-width:1040px; margin:0 auto; }
+  header .etq { opacity:.8; font-size:13px; letter-spacing:.6px; text-transform:uppercase; }
+  header h1 { margin:6px 0 8px; font-size:28px; }
+  header p { margin:0; opacity:.92; max-width:800px; }
+  main { padding:18px 16px 40px; }
+  nav { background:#fff; border:1px solid var(--borde); border-radius:10px; padding:10px 14px; margin:-34px 0 18px; position:relative;
+        box-shadow:0 2px 8px rgba(0,0,0,.06); display:flex; flex-wrap:wrap; gap:6px 14px; font-size:14px; }
+  nav a { color:var(--azul2); text-decoration:none; } nav a:hover { text-decoration:underline; }
+  section { background:#fff; border:1px solid var(--borde); border-radius:10px; padding:16px 20px; margin:0 0 18px; }
+  h2 { color:var(--azul); font-size:20px; margin:0 0 10px; }
+  h3 { color:var(--azul); font-size:16px; margin:14px 0 6px; }
+  code { font-family:Consolas,"Courier New",monospace; font-size:13px; background:var(--fondo); padding:1px 5px; border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin:6px 0 4px; }
+  th { background:var(--azul); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { border-bottom:1px solid var(--borde); padding:7px 9px; vertical-align:top; }
+  tr:nth-child(even) td { background:#fafbfd; }
+  .tabla { overflow-x:auto; }
+  .amb { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+  .amb div { border:1px solid var(--borde); border-radius:8px; padding:12px 14px; }
+  .amb .t { border-top:5px solid var(--warn); } .amb .d { border-top:5px solid var(--ok); }
+  .amb h3 { margin-top:0; }
+  .flujo { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 2px; }
+  .flujo .c { background:var(--fondo); border:1px solid var(--borde); border-radius:8px; padding:8px 11px; font-size:14px; }
+  .flujo .c b { color:var(--azul); display:block; font-size:13px; }
+  .flujo .f { color:var(--gris); font-size:20px; }
+  .pasos { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+  .paso { border:1px solid var(--borde); border-left:5px solid var(--azul2); border-radius:8px; padding:11px 13px; }
+  .paso .num { display:inline-block; background:var(--azul); color:#fff; border-radius:50%; width:26px; height:26px; text-align:center; line-height:26px; font-weight:700; margin-right:6px; }
+  .paso h3 { display:inline; margin:0; font-size:15px; }
+  .paso p { margin:8px 0 6px; font-size:14px; }
+  .badge { display:inline-block; font-size:12px; font-weight:600; padding:1px 8px; border-radius:10px; margin-left:4px; }
+  .graba { background:var(--warnf); color:var(--warn); border:1px solid #f0d2a6; }
+  .lee { background:var(--okf); color:var(--ok); border:1px solid #bfe3cc; }
+  .revierte { background:#e8eef8; color:var(--azul2); border:1px solid #c9d6ea; }
+  .test { background:#fff0f0; color:var(--bad); border:1px solid #f0c4c1; }
+  .ok { color:var(--ok); font-weight:600; }
+  .nota { background:#eef4fb; border-left:4px solid var(--azul2); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  .alerta { background:var(--warnf); border-left:4px solid var(--warn); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  .peligro { background:var(--badf); border-left:4px solid var(--bad); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  ul, ol { margin:6px 0 6px 20px; padding:0; } li { margin:3px 0; }
+  footer { color:var(--gris); font-size:13px; text-align:center; padding:6px 16px 26px; }
+  @media (max-width:600px) { header h1 { font-size:22px; } section { padding:14px; } }
+  @media print { body { background:#fff; } nav { display:none; } section { break-inside:avoid; } }
+</style>
+</head>
+<body>
+
+<header><div class="in">
+  <div class="etq">Falabella Colombia · F8 · FSCC-12901</div>
+  <h1>POC: flujo completo con datos reales</h1>
+  <p>Prueba desde SQL de <b>T1 (DI automática) → T2 (cierre automático de cierres Y)</b>, sin pasar por el exe, con cajas reales copiadas de test y con los <b>486 sobres reales de PRD 3</b>.</p>
+</div></header>
+
+<main>
+<nav>
+  <a href="#ambientes">Ambientes</a><a href="#rapido">Inicio rápido</a><a href="#flujo">Flujo</a><a href="#a">Datos de test</a>
+  <a href="#b">Día PRD 3</a><a href="#pasos">Pasos</a><a href="#resultados">Qué mirar</a><a href="#deshacer">Deshacer</a><a href="#cuidado">Cuidados</a>
+</nav>
+
+<section id="ambientes">
+  <h2>Ambientes</h2>
+  <div class="amb">
+    <div class="t"><h3>Test</h3>
+      <ul><li>Tiene datos reales: cajas de 2026.</li><li><b>No</b> permite crear objetos.</li>
+      <li>En la POC solo se <b>lee</b>, con <code>02g_generar_datos_test.sql</code>.</li></ul></div>
+    <div class="d"><h3>Desarrollo (<code>INTRANETDE</code>)</h3>
+      <ul><li>Permite crear objetos y tiene instalados los 8 objetos de FSCC-12901.</li><li>Casi no tiene datos de FACO (hasta 2022).</li>
+      <li>Aquí se <b>carga y se ejecuta</b> todo.</li></ul></div>
+  </div>
+  <div class="nota">Los dos esquemas están en la misma base, pero desarrollo no puede leer las tablas de test. Por eso los datos pasan como un script de INSERTs (<code>02_datos_test.sql</code>), ya generado. Las claves no se guardan en estos archivos.</div>
+</section>
+
+<section id="rapido">
+  <h2>Inicio rápido</h2>
+  <ol>
+    <li>Conéctate a <b>desarrollo</b> en DBeaver y activa la salida del servidor (<b>Ctrl+Shift+O</b>).</li>
+    <li>Ejecuta como script (<b>Alt+X</b>), en orden: <code>01</code> → <code>02</code> → <code>03</code> → <code>04</code> → <code>05</code> → <code>06</code> → <code>07</code>.</li>
+    <li>En <code>07</code> revisa que la columna <b>diferentes = 0</b> en todos los escenarios.</li>
+    <li>Para repetir: <code>98_reiniciar.sql</code> → <code>06</code> → <code>07</code>. Para dejar el ambiente limpio: <code>99_limpiar.sql</code>.</li>
+  </ol>
+</section>
+
+<section id="flujo">
+  <h2>Flujo que se prueba</h2>
+  <div class="flujo">
+    <div class="c"><b>Datos</b>Cajas reales (test)<br>+ día PRD 3</div><div class="f">→</div>
+    <div class="c"><b>Carga</b>Sobres en <code>VTA_FACOPRD</code><br>(como <code>Form133</code>)</div><div class="f">→</div>
+    <div class="c"><b>Trigger</b>Cola<br><code>VTA_FACOPRD_CIERRE</code></div><div class="f">→</div>
+    <div class="c"><b>Universo</b>Vista con cola<br>+ cajas sin sobre</div><div class="f">→</div>
+    <div class="c"><b>T1</b>DI si la DR está<br>en −1000..20000</div><div class="f">→</div>
+    <div class="c"><b>T2</b>Cierra la Y si la DR = 0<br>y pasa las reglas RY</div><div class="f">→</div>
+    <div class="c"><b>Resultado</b>Log + esperado<br>frente a obtenido</div>
+  </div>
+</section>
+
+<section id="a">
+  <h2>A. Cajas reales de test</h2>
+  <p>Son <b>714 cierres Y de 2026</b> (446 abiertos) en 55 local-día, sobre todo del 07-01-2026. Se copian con su libro de ventas, el detalle <code>zzz</code> y las tarjetas reales. En test no tienen sobres, así que la POC los genera simulando <code>Form133</code>:</p>
+  <div class="tabla"><table>
+    <tr><th>Escenario</th><th>Sobre</th><th>Esperado T1</th><th>Esperado T2</th></tr>
+    <tr><td><b>R0</b></td><td>Depósito = efectivo declarado (como haría la tienda)</td><td colspan="2">El que den sus datos reales (previsión de <code>05</code>)</td></tr>
+    <tr><td><b>E1</b></td><td>Calculado para DR −800</td><td><code>DI_REGISTRADA</code></td><td><code>CERRADA_Y</code></td></tr>
+    <tr><td><b>E2</b></td><td>Calculado para DR 0</td><td><code>DR_CERO</code></td><td><code>CERRADA_Y</code></td></tr>
+    <tr><td><b>E3</b></td><td>Calculado para DR −30000</td><td><code>FUERA_RANGO</code></td><td><code>CON_DIFERENCIA</code></td></tr>
+    <tr><td><b>S0</b></td><td>Sin sobre (entra como <code>SIN_SOBRE</code>)</td><td colspan="2">Previsión de <code>05</code></td></tr>
+  </table></div>
+  <div class="nota">E1, E2 y E3 solo se asignan a cajas sin DI previa y sin reglas que las bloqueen; si una caja no califica, pasa a R0.</div>
+</section>
+
+<section id="b">
+  <h2>B. Día PRD 3 (28-08-2026)</h2>
+  <p>Se cargan los <b>486 sobres reales</b> de <code>PRD 3.xlsx</code> (357 cajas, 27 locales, $992.569.000). En test no hay cajas de ese día, así que se crean los cierres Y y el libro de ventas usando como molde una fila real de test. El efectivo declarado se calcula para que la DR quede en el valor del escenario:</p>
+  <div class="tabla"><table>
+    <tr><th>Escenario</th><th>Cajas</th><th>DR</th><th>Esperado T1</th><th>Esperado T2</th><th>Criterio</th></tr>
+    <tr><td><b>P0</b></td><td>~50%</td><td>0</td><td><code>DR_CERO</code></td><td><code>CERRADA_Y</code></td><td>—</td></tr>
+    <tr><td><b>P1</b></td><td>~15%</td><td>−800</td><td><code>DI_REGISTRADA</code></td><td><code>CERRADA_Y</code></td><td>CA1, CA9</td></tr>
+    <tr><td><b>P2</b></td><td>~15%</td><td>+3000</td><td><code>DI_REGISTRADA</code></td><td><code>CERRADA_Y</code></td><td>CA1</td></tr>
+    <tr><td><b>P3</b></td><td>2</td><td>−1000 y +20000</td><td><code>DI_REGISTRADA</code></td><td><code>CERRADA_Y</code></td><td>CA2 (límites)</td></tr>
+    <tr><td><b>P4</b></td><td>~10%</td><td>−30000 y +25000</td><td><code>FUERA_RANGO</code></td><td><code>CON_DIFERENCIA</code></td><td>CA3</td></tr>
+    <tr><td><b>P5</b></td><td>~10%</td><td>0 + SN sin regularizar</td><td><code>DR_CERO</code></td><td><code>BLOQUEADA</code> RY-03</td><td>CA4</td></tr>
+    <tr><td><b>P6</b></td><td>1 por local</td><td>Y 2 sin sobres ni venta (0)</td><td><code>DR_CERO</code></td><td><code>CERRADA_Y</code></td><td>DF-SCC fila 12</td></tr>
+    <tr><td><b>P7</b></td><td>1 cada 3 locales</td><td>Y 3 sin sobres, venta 5000 (−5000)</td><td><code>FUERA_RANGO</code></td><td><code>CON_DIFERENCIA</code></td><td>CA8</td></tr>
+  </table></div>
+</section>
+
+<section id="pasos">
+  <h2>Pasos</h2>
+  <div class="pasos">
+    <div class="paso"><span class="num">0</span><h3><code>02g_generar_datos_test.sql</code></h3><span class="badge test">en test</span><span class="badge lee">solo lee</span>
+      <p><b>Opcional.</b> Regenera <code>02_datos_test.sql</code> desde test con SQL*Plus. Ya viene generado (07-10-2026).</p></div>
+    <div class="paso"><span class="num">1</span><h3><code>01_preparar.sql</code></h3><span class="badge graba">graba</span>
+      <p>Verifica los 8 objetos y los parámetros, y que no haya datos de 2026. Crea las tablas <code>VTA_FACOPOC_*</code> y sube <code>CA_DIAS</code> a 4000.</p>
+      <p><b>Revisar:</b> <code>y_2026_existentes = 0</code> y <code>cola_pendiente = 0</code>.</p></div>
+    <div class="paso"><span class="num">2</span><h3><code>02_datos_test.sql</code></h3><span class="badge graba">graba</span>
+      <p>Carga las cajas reales de test (unos 3.200 INSERTs, 2 MB; tarda unos minutos).</p>
+      <p><b>Revisar:</b> la verificación final en <span class="ok">OK</span> para las 4 tablas.</p></div>
+    <div class="paso"><span class="num">3</span><h3><code>03_dia_prd3.sql</code></h3><span class="badge graba">graba</span>
+      <p>Carga el archivo PRD 3 y crea las cajas del 28-08-2026 con sus escenarios.</p>
+      <p><b>Revisar:</b> 486 filas, 357 cajas, 27 locales y el conteo por escenario.</p></div>
+    <div class="paso"><span class="num">4</span><h3><code>04_cargar_sobres.sql</code></h3><span class="badge graba">graba</span>
+      <p>Simula <code>Form133</code>: inserta los sobres y el trigger los encola.</p>
+      <p><b>Revisar:</b> <code>dr_revisar = 0</code> (la DR quedó en el objetivo).</p></div>
+    <div class="paso"><span class="num">5</span><h3><code>05_simular.sql</code></h3><span class="badge lee">solo previsión</span>
+      <p>Anticipa qué harán T1 y T2 en cada caja.</p>
+      <p><b>Revisar:</b> el bloque 2 debe devolver 0 filas.</p></div>
+    <div class="paso"><span class="num">6</span><h3><code>06_ejecutar_proceso.sql</code></h3><span class="badge graba">graba</span>
+      <p>Ejecuta el proceso como el job (T1 → T2) y mide la duración.</p></div>
+    <div class="paso"><span class="num">7</span><h3><code>07_resultados.sql</code></h3><span class="badge lee">no graba</span>
+      <p>Muestra esperado frente a obtenido, las DI, los cierres, la cola, la Z y el rendimiento. Ver "Qué mirar".</p></div>
+    <div class="paso"><span class="num">8</span><h3><code>08_opcional_form43.sql</code></h3><span class="badge graba">graba</span>
+      <p>El botón "Cerrar Terminal" (<code>prc_cierre_rango</code>) sobre un local del día PRD 3, con log <code>CC</code>. Para verlo cerrar cajas, ejecútalo antes de <code>06</code> o después de <code>98</code>.</p></div>
+    <div class="paso"><span class="num">98</span><h3><code>98_reiniciar.sql</code></h3><span class="badge revierte">revierte</span>
+      <p>Deshace solo lo que hizo el proceso, para volver a ejecutar <code>06</code> con los mismos datos.</p></div>
+    <div class="paso"><span class="num">99</span><h3><code>99_limpiar.sql</code></h3><span class="badge revierte">revierte</span>
+      <p>Borra todo lo del POC, restaura <code>CA_DIAS</code> y borra las tablas POC.</p></div>
+  </div>
+</section>
+
+<section id="resultados">
+  <h2>Qué mirar en <code>07_resultados.sql</code></h2>
+  <div class="tabla"><table>
+    <tr><th>Bloque</th><th>Qué debe dar</th></tr>
+    <tr><td>2. Esperado frente a obtenido</td><td><code>diferentes</code> = <b>0</b> en todos los escenarios</td></tr>
+    <tr><td>3. Detalle de diferencias</td><td>0 filas. Si hay, trae la regla y el mensaje</td></tr>
+    <tr><td>4. DI registradas</td><td><code>monto_igual_dr</code>, <code>fecha_contable_ok</code> y <code>glosa_ok</code> iguales a <code>di</code> en P1, P2, P3 y E1. En R0, <code>monto_igual_dr</code> puede ser 0, porque su DR no es fija</td></tr>
+    <tr><td>5. Cierres Y</td><td>Cerradas por <code>PROC_CIERRE_AUTO</code>; las demás siguen abiertas con su motivo en el log</td></tr>
+    <tr><td>7. La Z</td><td><code>z_cerradas_por_el_proceso</code> = <b>0</b> (FACO solo cierre Y)</td></tr>
+    <tr><td>8. Rendimiento</td><td>Segundos por caja con el volumen de una carga real</td></tr>
+  </table></div>
+</section>
+
+<section id="deshacer">
+  <h2>Marcas para deshacer</h2>
+  <div class="tabla"><table>
+    <tr><th>Qué</th><th>Cómo se identifica</th></tr>
+    <tr><td>Sobres</td><td><code>prv_modifpor = 'POC_FSCC12901'</code></td></tr>
+    <tr><td>Libro de ventas y <code>zzz</code> copiados de test</td><td>techkey entre 900.000.000 y 989.999.999</td></tr>
+    <tr><td>Libro de ventas y <code>zzz</code> del día PRD 3</td><td>techkey desde 990.000.000</td></tr>
+    <tr><td>Local-día cargados</td><td>Tabla <code>VTA_FACOPOC_DIAS</code> (origen TEST / PRD3)</td></tr>
+  </table></div>
+</section>
+
+<section id="cuidado">
+  <h2>Cuidados</h2>
+  <div class="peligro"><b>Solo en desarrollo.</b> Nunca en producción.</div>
+  <div class="peligro"><b>Revisa <code>07</code> antes de <code>98</code> o <code>99</code>:</b> borran la evidencia.</div>
+  <div class="alerta">Si <code>01</code> muestra datos de 2026 o la cola con pendientes, ejecuta antes <code>99_limpiar.sql</code>.</div>
+  <div class="alerta"><code>03</code> depende de <code>02</code>: usa una fila real copiada de test como molde.</div>
+</section>
+</main>
+
+<footer>POC FSCC-12901 · docs/sql/FSCC-12901_POC/ · Índice del requerimiento: docs/README_FSCC-12901.md</footer>
+</body>
+</html>

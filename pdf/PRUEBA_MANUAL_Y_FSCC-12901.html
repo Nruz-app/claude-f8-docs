@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Prueba manual cierre Y FACO</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .ok { display:inline-block; background:#1e7b45; color:#fff; font-weight:700; padding:2px 10px; border-radius:3px; }
+  .paso { border:1px solid var(--borde); border-left:6px solid var(--azul); border-radius:4px; padding:8px 12px; margin:10px 0 14px; page-break-inside:avoid; }
+  .paso h3 { margin:0 0 6px; }
+  .num { display:inline-block; background:var(--azul); color:#fff; font-weight:700; border-radius:3px; padding:0 8px; margin-right:6px; }
+  .shot { width:100%; border:1px solid var(--borde); margin-top:6px; }
+  .cap { font-size:8.5pt; color:var(--gris); margin:3px 0 8px; font-style:italic; }
+  .meta { color:var(--gris); margin-bottom:12px; }
+</style>
+</head>
+<body>
+<h1>Prueba manual del cierre Y por pantallas &ndash; FACO</h1>
+<div class="meta">FSCC-12901 &middot; 15-10-2026 &middot; base de test <code>sgfinperds</code> &middot; exe 3.4.9 &middot; sin paquete (<code>PKG_F8_CIERRE_AUTO</code> no instalado)</div>
+<p><span class="ok">RESULTADO OK</span>&nbsp; La Y 1 del local 6, terminal 27, fecha de venta 28-08-2026 qued&oacute; <b>Cerrada</b> con <b>Diferencia Real 0</b>.</p>
+
+<h2>1. Objetivo y datos</h2>
+<p>Probar el camino feliz de la l&oacute;gica de la Y desde el aplicativo: Y manual (<code>Form19Y</code>) &rarr; carga de sobres (<code>Form133</code>) &rarr; F8 por cierre Y (<code>Form3Y</code>) con Diferencia Real 0 &rarr; Cerrar Terminal. Reemplaza la prueba del 14-10.</p>
+<table>
+<tr><th>Sobre</th><th>Monto</th><th>Dif.</th><th>Recuento</th><th>Fecha venta</th><th>Y</th></tr>
+<tr><td>3404295622</td><td>846.000</td><td>0</td><td>123</td><td>20260828</td><td>1</td></tr>
+<tr><td>3476295623</td><td>4.000.000</td><td>0</td><td>123</td><td>20260828</td><td>1</td></tr>
+<tr><td>3482295624</td><td>2.737.000</td><td>0</td><td>123</td><td>20260828</td><td>1</td></tr>
+<tr><td><b>Total</b></td><td><b>7.583.000</b></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p>Archivo: <code>docs/sql/FSCC-12901_PROC_Y/prueba_manual_Y/PRD-LIST-TEST-V2.xlsx</code>.</p>
+
+<h2>2. Pasos y evidencia</h2>
+
+<div class="paso"><h3><span class="num">1</span>Ingreso de la Y (bot&oacute;n Y del toolbar, <code>Form19Y</code>)</h3>
+<p>Antes: F8 abierta con fecha 28-08-2026, local 6, terminal 27 (<code>Form19Y.Oklt</code> valida la terminal con la fecha de la F8 abierta).</p>
+<p>Identificaci&oacute;n: fecha 28-08-2026, local 6, terminal 27, <b>N&deg; de Y 0</b>, hora 12:00, secuencia 1, boleta 1, vendedor 1, cont. reposici&oacute;n 1. <i>Validar Identificaci&oacute;n</i> &rarr; el N&deg; de Y pasa a <b>1</b> (m&aacute;ximo del d&iacute;a + 1).</p>
+<img class="shot" src="../sql/FSCC-12901_PROC_Y/prueba_manual_Y/capturas/01_Form19Y_identificacion.png">
+<div class="cap">Captura 01 &ndash; identificaci&oacute;n antes de validar (N&deg; de Y 0).</div>
+</div>
+
+<div class="paso"><h3><span class="num">2</span>Montos de la Y y grabaci&oacute;n</h3>
+<p><b>EFECTIVO 7.583.000</b> y <b>BOLETAS 7.583.000</b> (TOTALES de ventas = formas de pago); el resto en 0. <i>Aceptar</i> &rarr; S&iacute;. La columna &laquo;Diferencia (Z &minus; S(Y))&raquo; es informativa: en FACO no hay Z ingresada.</p>
+<img class="shot" src="../sql/FSCC-12901_PROC_Y/prueba_manual_Y/capturas/02_Form19Y_montos.png">
+<div class="cap">Captura 02 &ndash; N&deg; de Y 1 tras validar y efectivo 7.583.000 (despu&eacute;s se complet&oacute; BOLETAS con el mismo monto).</div>
+</div>
+
+<div class="paso"><h3><span class="num">3</span>Carga de sobres (Estado en l&iacute;nea &rarr; Carga Manual de Sobres, <code>Form133</code>)</h3>
+<p>Recaudador, Excel, desplegar y <i>Cargar Archivo</i>: 3 filas <code>F8</code>/<code>EFE</code> en <code>vta_FACOprd</code> con <code>prv_cierrey = 1</code>; reabre la Z. En la F8 de la Z aparece &laquo;Y 1&raquo; y la recaudaci&oacute;n del banco 7.583.000; la diferencia de la Z (7.583.000) es esperada en FACO.</p>
+<img class="shot" src="../sql/FSCC-12901_PROC_Y/prueba_manual_Y/capturas/03_F8_Z_pendiente.png">
+<div class="cap">Captura 03 &ndash; F8 de la Z con la Y 1 y los sobres cargados.</div>
+</div>
+
+<div class="paso"><h3><span class="num">4</span>F8 por cierre Y (doble clic en la Y 1, <code>Form3Y</code>)</h3>
+<p>Recaudaci&oacute;n banco 7.583.000 = efectivo Y 7.583.000; Diferencias (B&minus;Y) 0; <b>Diferencia de Caja 0, Compensaci&oacute;n 0, Diferencia Real 0</b>; estado Pendiente.</p>
+<img class="shot" src="../sql/FSCC-12901_PROC_Y/prueba_manual_Y/capturas/04_F8_Y1_DR0_pendiente.png">
+<div class="cap">Captura 04 &ndash; Y 1 cuadrada, pendiente de cierre.</div>
+</div>
+
+<div class="paso"><h3><span class="num">5</span>Cerrar Terminal</h3>
+<p>Con la F8 de la Y activa, <b>primer candado</b> del toolbar (junto a la impresora; Key <code>Cerrar</code>, tooltip &laquo;Cerrar Terminal&raquo; &rarr; <code>Form3Y.CierraTerminal</code>) &rarr; S&iacute;. El otro candado (cerca de &laquo;FH&raquo;) es otra opci&oacute;n.</p>
+<img class="shot" src="../sql/FSCC-12901_PROC_Y/prueba_manual_Y/capturas/05_F8_Y1_cerrada.png">
+<div class="cap">Captura 05 &ndash; Y 1 Cerrada con Diferencia Real 0.</div>
+</div>
+
+<h2>3. Esperado frente a obtenido</h2>
+<table>
+<tr><th>Control</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td>N&deg; de Y asignado al validar</td><td>1</td><td>1</td></tr>
+<tr><td>Sobres cargados</td><td>3 (7.583.000)</td><td>3 (7.583.000)</td></tr>
+<tr><td>Diferencias (B&minus;Y) efectivo</td><td>0</td><td>0</td></tr>
+<tr><td>Diferencia Real de la Y</td><td>0</td><td>0</td></tr>
+<tr><td>Estado de la Y tras Cerrar Terminal</td><td>Cerrado</td><td>Cerrado</td></tr>
+<tr><td>Z de la terminal</td><td>Pendiente, sin tocar</td><td>Pendiente</td></tr>
+</table>
+
+<h2>4. Lecciones para repetirla</h2>
+<ul>
+<li>El N&deg; de Y se deja en 0: lo calcula el sistema. Si la caja ya tiene una Y, saldr&aacute; 2 o m&aacute;s y no cuadrar&aacute; con la columna H del Excel.</li>
+<li>Abrir primero la F8 con la fecha de la prueba, o sale &laquo;Relacion Local /Terminal no existe&raquo;.</li>
+<li>Poner BOLETAS igual al efectivo (evita &laquo;Y descuadrada&raquo; en perfiles con la opci&oacute;n 103).</li>
+<li><code>Form133</code> detecta duplicados por n&uacute;mero de sobre + fecha de venta (sin local): para repetir con el mismo Excel hay que borrar antes los sobres.</li>
+<li>Cerrar desde la pantalla de la Y, no desde la Z.</li>
+</ul>
+
+<h2>5. Datos que quedan en test</h2>
+<p>La Y 1 cerrada, los 3 sobres y la fila de la Z (estado 0, &laquo;CARGA MANUAL DE SOBRES&raquo;) quedan en la base de test. Para repetir en la misma caja: <code>P9_limpiar.sql</code> (lo ejecuta el usuario). Gu&iacute;a y scripts en <code>docs/sql/FSCC-12901_PROC_Y/prueba_manual_Y/</code>.</p>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# MANIFIESTO FSCC-12948 - estado congelado: 1 trigger + 1 package PKG_TRANSACC_DEPO_QUEUE (validacion comun FN_VALIDA_MATCH), SIN ejecutar en la base (19-10)
+# Fecha: 2026-10-19. 01 = package (PROC_TRANSACC_DEPO_QUEUE + FN_VALIDA_MATCH), 02 = trigger que llama a la funcion, 03 = drop del SP suelto. Version 15-10 en anterior_2026-10-15/. F8_TRANSACC_DEPO_PKG y Form173 sin cambios.
+# Verificar desde C:\Repositorio-f8\F8 (Git Bash):  grep -v '^#' docs/MANIFIESTO_FSCC-12948.md5 | md5sum -c
+ab9906384fe71f85e90ab232f1657f47 *CLAUDE.md
+ee3fe0bd15b2b54f78310c42b4fe69f5 *docs/README_FSCC-12948.md
+785de206015926187f95bbc990803c4c *docs/sql/FSCC-12948/00_prechecks.sql
+640fbc7912fe8cb2d832ecb5fd657bc4 *docs/sql/FSCC-12948/01_pkg_transacc_depo_queue.sql
+73943425ba7748258f53049c87a9c284 *docs/sql/FSCC-12948/02_trg_transacc_depo_queue.sql
+cf8df20a5b0e12b3b1255cdd0e077837 *docs/sql/FSCC-12948/03_drop_proc_transacc_depo_queue.sql
+be7bde051cbe4e0db804e9a3d197c538 *docs/sql/FSCC-12948/99_rollback.sql
+37a8c740f6d203a13787cb69220afb95 *docs/sql/FSCC-12948/INSTALAR.sql
+48d9fe775c6f744246016a322ed1ad6a *docs/sql/FSCC-12948/README.md
+3d54a43d93ef7d1158ebf3d7080f149d *docs/sql/FSCC-12948/anterior_2026-10-15/01_proc_transacc_depo_queue.sql
+fdd80e561a1c339170c7a183fab1c798 *docs/sql/FSCC-12948/anterior_2026-10-15/02_trg_transacc_depo_queue.sql
+cba8fec522af3065f7e5b962fe12b172 *docs/sql/FSCC-12948/ddl_actual_desarrollo/01_tabla_prosegur_transactions_queue.sql
+e957223c8aa0b02f2d55070c04b2b0b0 *docs/sql/FSCC-12948/ddl_actual_desarrollo/02_trg_transacc_depo_queue.sql
+ff8be11546adb24cd3bc60547a5152b7 *docs/sql/FSCC-12948/ddl_actual_desarrollo/03_proc_transacc_depo_queue.sql
+729d35a6b2d230bbedce89522e880e8f *docs/sql/FSCC-12948/ddl_actual_desarrollo/04_f8_transacc_depo_pkg_spec.sql
+bce391791cb8cea27a25c87c1f519b3e *docs/sql/FSCC-12948/ddl_actual_desarrollo/05_f8_transacc_depo_pkg_body.sql

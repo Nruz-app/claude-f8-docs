@@ -1,0 +1,25 @@
+# MANIFIESTO FCDVT-14 - estado congelado: insercion masiva de Y FACO. Submenu Y (MDIForm1) + permiso 460 (ejecutado en test) + Form174 con Buscar y Exportar Excel; Cargar pendiente (20-10)
+# Fecha: 2026-10-20. Exe sin compilar despues del ultimo cambio de Form174. Retomar por docs/README_FCDVT-14.md S8.
+# Verificar desde C:\Repositorio-f8\F8 (Git Bash):  grep -v '^#' docs/MANIFIESTO_FCDVT-14.md5 | md5sum -c
+c2d58054078007306526836d1a464596 *CLAUDE.md
+e8c95317fca0fdb8a93b8510c258eb36 *docs/README_FCDVT-14.md
+2697b3451dd088f825a06a6e62b71bf0 *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+d7c5885fb6007779dbdc3d3fd0af2925 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
+20ad54ebdeea5186c9cb075e2552f9d2 *docs/sql/CLAUDE.md
+b53ccb976977b0f34f454d816d4ffaa4 *docs/sql/FCDVT-14/00_LEEME.md
+03a4525767b5ef2629209c627176a369 *docs/sql/FCDVT-14/00_prechecks.sql
+4623a236daee4abb03e753c738f94130 *docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql
+ad208caa974d3e7f5100d48a0a1a22d0 *docs/sql/FCDVT-14/99_rollback.sql
+2697b3451dd088f825a06a6e62b71bf0 *docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+d7c5885fb6007779dbdc3d3fd0af2925 *docs/sql/FCDVT-14/plantilla_carga_Y_FACO.csv
+32b1633e853ae10d8087aa28fb429aa7 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
+9d032f555cb47a4fca38b6284919fe69 *FTEPROD/MDIForm1.frm
+01f688cda1d7e336a13e5358f143c7ee *FTEPROD/MDIForm1.frm.bak_FCDVT-14
+0d7ba0705cc619a0d2742177831d4405 *FTEPROD/MDIForm1.frm.bak_FCDVT-14_Form174
+5dc1e839b3153014247ee4c8e822b7a3 *FTEPROD/MDIForm1.frx
+d94c2819638703e1d94ae4b0e4523e6f *FTEPROD/Form174.frm
+cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
+59a9ff73f64a47f89a9498057518d08f *FTEPROD/Form174.frm.bak_FCDVT-14
+e9432ce51bd668ce2dee620648d97ebd *FTEPROD/Form174.frm.bak_FCDVT-14_Exportar
+692a13fa336a9d91f8412cf03753ee05 *FTEPROD/recaudacion.vbp
+76e3d15bab470cc93f27e6a0415e1015 *FTEPROD/Form19Y.frm

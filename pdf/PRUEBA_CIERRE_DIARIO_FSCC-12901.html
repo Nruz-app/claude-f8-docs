@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Prueba cierre diario FACO</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .pend { display:inline-block; background:#b8860b; color:#fff; font-weight:700; padding:2px 10px; border-radius:3px; }
+  .paso { border:1px solid var(--borde); border-left:6px solid var(--azul); border-radius:4px; padding:8px 12px; margin:10px 0 14px; page-break-inside:avoid; }
+  .paso h3 { margin:0 0 6px; }
+  .num { display:inline-block; background:var(--azul); color:#fff; font-weight:700; border-radius:3px; padding:0 8px; margin-right:6px; }
+  .meta { color:var(--gris); margin-bottom:12px; }
+  .warn { border:1px solid #d9a400; background:#fff8e1; border-radius:4px; padding:6px 10px; margin:8px 0; page-break-inside:avoid; }
+  pre { background:#f4f6f8; border:1px solid var(--borde); border-radius:3px; padding:6px 8px; font-size:8.5pt; white-space:pre-wrap; }
+  td.blank { min-width:90px; }
+  .chk { font-family:monospace; }
+</style>
+</head>
+<body>
+<h1>Guía de prueba del cierre diario de cajas &ndash; FACO</h1>
+<div class="meta">FSCC-12901 &middot; 20-10-2026 &middot; base de test <code>sgfinperds</code> (esquema <code>INTRANETTS</code>) &middot; paquete <code>PKG_F8_CIERRE_DIARIO</code> &middot; carpeta <code>docs/sql/FSCC-12901_CIERRE_DIARIO/</code></div>
+<p><span class="pend">POR EJECUTAR</span>&nbsp; Completar la columna &laquo;Obtenido&raquo; de cada tabla durante la prueba.</p>
+
+<h2>1. Qué se prueba</h2>
+<p>Desde el 19-10, la carga de sobres (<code>Form133</code>) solo registra la DI automática y deja la caja <b>Pendiente</b>. El <b>cierre diario</b> cierra, una vez al día, las cajas de una fecha de venta que quedaron sin diferencia. Lo llamará <b>nhal1</b>:</p>
+<pre>begin PKG_F8_CIERRE_DIARIO.prc_cierre_diario('FACO', null); end;   -- fecha nula = día anterior</pre>
+<p>Simula el botón <b>&laquo;Cerrar Terminal&raquo; de Consultas de Cuadratura</b> (<code>Form43</code>) para todos los locales de la fecha:</p>
+<table>
+<tr><th>Regla</th><th>Qué hace el proceso</th></tr>
+<tr><td>Universo</td><td>Cierres Y <b>Pendientes</b> de la fecha con libro de ventas de la Y (la misma consulta de CC). No toca Cerrado, Impreso ni Sin Datos</td></tr>
+<tr><td>RY-05 Dif. Real</td><td>Cierra solo si la Dif. Real de la <b>F8 de la Y</b> <u>y</u> la de la <b>grilla de CC</b> son 0</td></tr>
+<tr><td>RY-01 Cheque a fecha</td><td>La gestión de cheques a fecha tiene que coincidir con la tesorería del día y la terminal. Mismo mensaje que el botón (parámetro <code>CD_VAL_CHEQ</code> = S)</td></tr>
+<tr><td>RY-03 Conceptos</td><td>No puede haber SN, AF, ND, FN, NP, BF, CR, CT, CA ni DP sin regularizar en la Y. Mismos mensajes</td></tr>
+<tr><td>RY-06 ZZZ</td><td>Apagada (<code>CD_VAL_ZZZ</code> = N), como en la práctica hoy</td></tr>
+<tr><td>Cierre</td><td><code>ter_estado = 1</code>, <code>ter_cerradopor = PROC_CIERRE_DIARIO</code>, grabado caja por caja. La Z no se toca</td></tr>
+</table>
+
+<h2>2. Requisitos e instalación</h2>
+<div class="paso"><h3><span class="num">0</span>Instalar (conectado como <code>INTRANETTS</code>)</h3>
+<ol>
+<li><b>Versión multipaís de <code>PKG_F8_COMPENSA_DI_CARGA</code></b>: <code>FSCC-12901_COMPENSA_DI/04</code> &rarr; <code>05</code>, paquete VALID. Opcional: el bloque 8 de <code>07_pruebas.sql</code>, que con y sin país debe dar el mismo valor.</li>
+<li><code>CIERRE_DIARIO/00_prechecks.sql</code>: la <b>consulta 2</b> debe devolver filas (<code>FN_DIF_REAL</code> con <code>P_FLG_PAIS</code>) y la <b>consulta 3</b>, ninguna.</li>
+<li><code>INSTALAR.sql</code>, o en DBeaver 01 &rarr; 02 &rarr; 03 &rarr; 04. Se espera <b>4 objetos VALID</b> y nada en <code>user_errors</code>.</li>
+<li><code>05_grants_sinonimos.sql</code>, solo si la prueba o nhal1 usan otro usuario.</li>
+</ol>
+<table>
+<tr><th>Control</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td><code>PKG_F8_COMPENSA_DI_CARGA</code> multipaís</td><td>VALID, con <code>P_FLG_PAIS</code></td><td class="blank"></td></tr>
+<tr><td>Objetos del cierre diario</td><td>4 VALID (paquete, body, log, secuencia)</td><td class="blank"></td></tr>
+<tr><td>Parámetros 1502</td><td><code>CD_ACTIVO</code> S, <code>CD_VAL_CHEQ</code> S, <code>CD_VAL_ZZZ</code> N</td><td class="blank"></td></tr>
+</table>
+</div>
+
+<h2>3. Datos de la prueba (ya existen en test)</h2>
+<p>No hace falta cargar nada. Se usan las cajas del <b>local 6</b> que dejaron las pruebas anteriores: el 31-08-2026 las de COMPENSA_DI y el 28-08-2026 la prueba 3 de la v2.</p>
+<table>
+<tr><th>Fecha</th><th>Terminal</th><th>Y</th><th>Estado hoy</th><th>Dif. Real</th><th>Esperado</th></tr>
+<tr><td>31-08-2026</td><td>24</td><td>1</td><td>Pendiente</td><td>0 (cuadre)</td><td><b>CERRADA</b></td></tr>
+<tr><td>31-08-2026</td><td>40</td><td>1</td><td>Pendiente</td><td>0 (DI automática +15.000)</td><td><b>CERRADA</b></td></tr>
+<tr><td>31-08-2026</td><td>31</td><td>1</td><td>Pendiente</td><td>&minus;5.000</td><td>CON_DIFERENCIA (RY-05)</td></tr>
+<tr><td>31-08-2026</td><td>29</td><td>1</td><td>Cerrado</td><td>0</td><td>No entra (ya cerrada)</td></tr>
+<tr><td>28-08-2026</td><td>31</td><td>1</td><td>Pendiente</td><td>&minus;1.500</td><td>CON_DIFERENCIA</td></tr>
+<tr><td>28-08-2026</td><td>44</td><td>1</td><td>Pendiente</td><td>+25.000</td><td>CON_DIFERENCIA</td></tr>
+<tr><td>28-08-2026</td><td>24, 27, 29, 40 (Y1 y Y2), 41</td><td>&mdash;</td><td>Cerrado</td><td>0</td><td>No entran</td></tr>
+</table>
+<p>Scripts en <code>docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/</code>.</p>
+
+<h2>4. Pasos</h2>
+
+<div class="paso"><h3><span class="num">1</span>Estado inicial en pantalla</h3>
+<p>Abrir Consultas de Cuadratura (botón CC) con Informe por Terminal, local 6, Fecha Inicio 28-08-2026, Fecha Fin 31-08-2026, y pulsar <i>Consulta</i>. Se espera la tabla de la sección 3: T24 y T40 del 31-08 <b>Pendiente</b> con Dif. Real 0.</p>
+<p><b>No usar &laquo;Cerrar Terminal&raquo;</b>: esta vez el cierre lo hace el proceso.</p>
+</div>
+
+<div class="paso"><h3><span class="num">2</span>Simulación sin grabar: <code>P0_simulacion.sql</code></h3>
+<table>
+<tr><th>Caja</th><th>dr_f8</th><th>dr_cc</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td>31-08 T24 Y1</td><td>0</td><td>0</td><td>CERRABLE</td><td class="blank"></td></tr>
+<tr><td>31-08 T40 Y1</td><td>0</td><td>0</td><td>CERRABLE</td><td class="blank"></td></tr>
+<tr><td>31-08 T31 Y1</td><td>&minus;5000</td><td>&minus;5000</td><td>CON_DIFERENCIA -5000</td><td class="blank"></td></tr>
+<tr><td>28-08 T31 Y1</td><td>&minus;1500</td><td>&minus;1500</td><td>CON_DIFERENCIA -1500</td><td class="blank"></td></tr>
+<tr><td>28-08 T44 Y1</td><td>25000</td><td>25000</td><td>CON_DIFERENCIA 25000</td><td class="blank"></td></tr>
+</table>
+<p>La consulta 3 no debería mostrar otros locales con cajas Pendientes en esas fechas. Si los muestra, revisarlos antes del paso 3, porque el proceso toma <b>todos</b> los locales de la fecha.</p>
+</div>
+
+<div class="paso"><h3><span class="num">3</span>Ejecución: <code>P1_ejecutar.sql</code> (cierra)</h3>
+<p>Ejecutar cada bloque y leer la salida de <code>dbms_output</code>:</p>
+<table>
+<tr><th>Prueba</th><th>Llamada</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td>A</td><td>31-08-2026</td><td>cerradas 2, no cerradas 1</td><td class="blank"></td></tr>
+<tr><td>B</td><td>28-08-2026</td><td>cerradas 0, no cerradas 2</td><td class="blank"></td></tr>
+<tr><td>C</td><td>31-08-2026 de nuevo</td><td>cerradas 0, no cerradas 1 (T24 y T40 ya no entran)</td><td class="blank"></td></tr>
+<tr><td>D (opcional)</td><td>como nhal1, fecha nula</td><td>INICIO y FIN con el día anterior a hoy (normalmente 0 cajas)</td><td class="blank"></td></tr>
+</table>
+</div>
+
+<div class="paso"><h3><span class="num">4</span>Resultados: <code>P2_resultados.sql</code></h3>
+<table>
+<tr><th>Control</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td>Log 31-08 (A)</td><td>INICIO; T24 CERRADA; T31 CON_DIFERENCIA RY-05; T40 CERRADA; FIN &laquo;evaluadas 3, cerradas 2, con diferencia 1&raquo;</td><td class="blank"></td></tr>
+<tr><td>Log 28-08 (B)</td><td>T31 y T44 CON_DIFERENCIA</td><td class="blank"></td></tr>
+<tr><td>Estado T24 y T40 del 31-08</td><td><code>ter_estado</code> 1, <code>ter_cerradopor</code> PROC_CIERRE_DIARIO</td><td class="blank"></td></tr>
+<tr><td>T31 del 31-08, T31 y T44 del 28-08</td><td>Siguen Pendiente</td><td class="blank"></td></tr>
+<tr><td>Z de las terminales (<code>VTA_FACOTERMSTAT</code>)</td><td>Sin cambios</td><td class="blank"></td></tr>
+</table>
+</div>
+
+<div class="paso"><h3><span class="num">5</span>Verificación en pantalla</h3>
+<p>Repetir la consulta del paso 1 en CC. Se espera T24 y T40 del 31-08 en <b>Cerrado</b> (verde) y el resto igual que antes. En la F8 de la Y (doble clic en la Y 1 de la T40), la caja debe estar Cerrada con Diferencia Real 0.</p>
+</div>
+
+<div class="paso"><h3><span class="num">6</span>Repetir (opcional): <code>P9_reabrir.sql</code></h3>
+<p>Vuelve a Pendiente lo que cerró el proceso en esas fechas. Modifica datos y no hace commit solo: revisar el control y hacer <code>commit</code> a mano. El log no se borra.</p>
+</div>
+
+<h2>5. Pruebas negativas (opcionales)</h2>
+<table>
+<tr><th>Caso</th><th>Cómo</th><th>Esperado</th><th>Obtenido</th></tr>
+<tr><td>Proceso apagado</td><td><code>CD_ACTIVO</code> = N y ejecutar A</td><td>Una fila INACTIVO en el log y nada cerrado. Después volver a S</td><td class="blank"></td></tr>
+<tr><td>País no habilitado</td><td><code>06_pruebas.sql</code> bloque 5 (<code>'XX'</code>)</td><td>ORA-20001 Pais no habilitado para el cierre diario</td><td class="blank"></td></tr>
+<tr><td>Caja ocupada</td><td>Con CC abierta y la caja en edición, o con un <code>select ... for update</code> en otra sesión</td><td>OCUPADA; queda para la próxima ejecución</td><td class="blank"></td></tr>
+</table>
+
+<h2>6. Si algo falla</h2>
+<ul>
+<li><b><code>04</code> no compila (PLS-00306):</b> falta la versión multipaís de <code>PKG_F8_COMPENSA_DI_CARGA</code> (paso 0.1).</li>
+<li><b>CON_DIFERENCIA_CC:</b> la F8 de la Y da 0 pero la grilla de CC no. Comparar <code>dr_f8</code> y <code>dr_cc</code> en P0. CC además suma sobres DOL, euros y todas las tarjetas, e incluye el concepto AL pero no el CA de movimientos.</li>
+<li><b>BLOQUEADA RY-01:</b> la gestión de cheques a fecha no coincide con la tesorería del día y la terminal (el mismo mensaje del botón).</li>
+<li><b>BLOQUEADA RY-03:</b> hay un concepto sin regularizar en la Y (el mensaje dice cuál).</li>
+<li><b>INACTIVO:</b> el parámetro 1502 <code>CD_ACTIVO</code> no está en S.</li>
+</ul>
+
+<h2>7. Después de la prueba</h2>
+<ul>
+<li>Programar en <b>nhal1</b>, una vez al día y después de la carga de sobres: <code>begin PKG_F8_CIERRE_DIARIO.prc_cierre_diario('FACO', null); end;</code>. Si nhal1 no se conecta como el dueño, ejecutar antes <code>05_grants_sinonimos.sql</code>.</li>
+<li>Revisión diaria: <code>select * from VTA_FACOLOG_CIERRE_DIARIO where log_ejecucion = (select max(log_ejecucion) from VTA_FACOLOG_CIERRE_DIARIO) order by log_id;</code></li>
+<li>Para apagarlo sin desinstalar, poner <code>CD_ACTIVO</code> en N. La vuelta atrás completa está en <code>99_rollback.sql</code>, que se ejecuta por partes.</li>
+</ul>
+</body>
+</html>

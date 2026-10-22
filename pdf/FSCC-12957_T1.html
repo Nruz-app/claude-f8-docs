@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FSCC-12957 · T1 Compensación automática de DI</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<section class="portada">
+  <div class="etq">Falabella Colombia · F8 Automático · SCCFIN</div>
+  <h1>FSCC-12957 · HU-01-T1<br>Compensación automática de Diferencia No Imputable</h1>
+  <div class="sub">Documento técnico-funcional para desarrollar la subtarea</div>
+  <table>
+    <tr><td><b>Historia principal</b></td><td>FSCC-12901 · Compensación automática de DI dentro de un rango — Falabella Colombia</td></tr>
+    <tr><td><b>Subtarea hermana</b></td><td>FSCC-12958 · HU-01-T2 Cierre de caja automático (documento aparte)</td></tr>
+    <tr><td><b>Sistema</b></td><td><code>f8a.exe</code> (VB6, proyecto <code>FTEPROD/recaudacion.vbp</code>) + Oracle 10g, esquema <code>INTRANETTS</code></td></tr>
+    <tr><td><b>Fuentes</b></td><td>Código VB6; base de test <code>sgfnprds</code> (06-10-2026, solo lectura); Jira FSCC-12901/12957/12958; <code>docs/FSCC-12901_Analisis.md</code>, <code>docs/CierreCaja_FACO_Reglas.md</code></td></tr>
+    <tr><td><b>Fecha</b></td><td>06-10-2026</td></tr>
+  </table>
+</section>
+
+<section class="indice">
+  <h2>Contenido</h2>
+  <ol>
+    <li>Ficha de la tarea</li>
+    <li>Magnitud y componentes</li>
+    <li>Lo que hay que saber antes de empezar</li>
+    <li>Reglas de negocio</li>
+    <li>Diseño en base de datos</li>
+    <li>Cambios en el exe VB6</li>
+    <li>Algoritmo</li>
+    <li>Casos de prueba</li>
+    <li>Decisiones pendientes y vacíos de información</li>
+    <li>Riesgos, despliegue y vuelta atrás</li>
+    <li>Diagramas del requerimiento (BPMN) y correspondencia con el sistema</li>
+    <li><b>Enfoque implementado: base de datos, integrado con el cierre automático (T2)</b></li>
+  </ol>
+  <div class="nota"><b>Actualización 06-10-2026:</b> T1 se implementó en Oracle reutilizando la cola, el trigger, el log y el cálculo de diferencia real de T2, que lo invoca primero. Ver la sección 12 y los scripts en <code>docs/sql/FSCC-12957/</code>. Las secciones 5 a 7 describen el diseño anterior (llamada desde <code>Form133</code>) y quedan como referencia.</div>
+  <div class="alerta"><b>Actualización 07-10-2026:</b> FACO opera solo con cierre Y. T1 ya trabajaba por cierre Y y su lógica no cambia; T2 deja de cerrar la Z. Se suma el criterio CA9 de la HU actualizada. Ver la sección 12.6.</div>
+</section>
+
+<h2>1. Ficha de la tarea</h2>
+<table>
+  <tr><th style="width:24%">Campo</th><th>Detalle</th></tr>
+  <tr><td>Objetivo</td><td>Al terminar la carga de recaudación del día, registrar en forma automática una <b>DI (Diferencia No Imputable)</b> por el monto de la Diferencia Real (DR) de cada caja de la carga cuya DR esté entre <b>−1.000 y +20.000</b> (inclusive, DR ≠ 0).</td></tr>
+  <tr><td>Hace</td><td>Calcula la DR de cada caja (cierre Y) de la carga · decide si está en rango · graba la DI con usuario de proceso y glosa fija · registra un resumen (compensadas / excluidas con motivo).</td></tr>
+  <tr><td>No hace</td><td><b>No cierra cajas</b> (eso es T2). No crea DI fuera de rango. No toca cajas ya cerradas.</td></tr>
+  <tr><td>Disparador</td><td>Final exitoso de la carga de sobres de Colombia: <code>Form133.CargarArchivo</code> ("Interfaz de Carga Manual de Sobres", toolbar <code>CargaManual</code>).</td></tr>
+  <tr><td>Resultado esperado</td><td>Cajas con DR en rango quedan con DR = 0, listas para T2. Las demás quedan Pendientes y aparecen en el resumen con su motivo.</td></tr>
+  <tr><td>Criterios de aceptación cubiertos</td><td>CA 1 (parte compensación), 2, 3, 5, 6, 7, 8 de FSCC-12901.</td></tr>
+  <tr><td>Diagramas</td><td>"Flujo general de la historia" y "Proceso 1 · Compensación automática de DI" (carpeta <code>docs/Requeriemintos-FSCC-12901</code>). Reproducidos y contrastados en la sección 11.</td></tr>
+  <tr><td>Precondiciones (del diagrama general)</td><td>(1) La carga fue <b>correcta</b>: si se rechaza, no se ejecuta T1. (2) El parámetro <b>T1 activa</b> = S.</td></tr>
+</table>
+
+<h2>2. Magnitud y componentes</h2>
+<p>Magnitud global: <b>media</b>. La lógica de cálculo ya existe en dos lugares (VB6 y una función PL/SQL de Chile) y hay que <b>portarla</b> a Colombia a nivel de cierre Y; lo nuevo es la orquestación, el log y el enganche en la carga.</p>
+<table>
+  <tr><th>#</th><th>Componente</th><th>Tipo</th><th>Acción</th><th>Complejidad</th></tr>
+  <tr><td>1</td><td>Función de Diferencia Real Colombia por Y</td><td>PL/SQL</td><td>Crear (a partir de <code>FUN_F8_COMPENSACION_DI_DR</code>)</td><td class="warn">Media-Alta</td></tr>
+  <tr><td>2</td><td>Procedimiento de compensación automática</td><td>PL/SQL</td><td>Crear</td><td class="warn">Media</td></tr>
+  <tr><td>3</td><td>Tabla de log / resumen + secuencia</td><td>DDL</td><td>Crear</td><td class="ok">Baja</td></tr>
+  <tr><td>4</td><td>Parámetros de rango</td><td>DML en <code>vta_FACOparam</code></td><td>Modificar o crear (según P2)</td><td class="ok">Baja</td></tr>
+  <tr><td>5</td><td>Llamada al proceso al final de la carga</td><td>VB6 <code>Form133.frm</code></td><td>Modificar</td><td class="ok">Baja</td></tr>
+  <tr><td>6</td><td>Pantalla o Excel del resumen</td><td>VB6 (nuevo form o Excel)</td><td>Crear (compartido con T2)</td><td class="warn">Media</td></tr>
+  <tr><td>7</td><td>Identificación en Envío Contable</td><td>VB6 <code>Form62.frm</code></td><td>Modificar <b>solo si</b> P9 lo exige</td><td class="warn">Media</td></tr>
+  <tr><td>8</td><td>Versión del exe</td><td>VB6 <code>Módulo1.bas</code> + <code>vta_parametros</code></td><td>Modificar</td><td class="ok">Baja</td></tr>
+  <tr><td>9</td><td>Interruptores T1 activa / T2 activa (diagrama general)</td><td>DML en <code>vta_FACOparam</code></td><td>Crear</td><td class="ok">Baja</td></tr>
+  <tr><td>10</td><td>Carga "todo o nada": validar el Excel completo antes de grabar (diagrama: "¿Carga correcta? No → carga rechazada")</td><td>VB6 <code>Form133.frm</code></td><td>Modificar</td><td class="warn">Media</td></tr>
+  <tr><td>11</td><td>Reabrir también la Y que recibe sobres (diagrama: "reabrir las cajas que cambian")</td><td>VB6 <code>Form133.frm</code> (<code>AbrirTerminal</code>)</td><td>Modificar <b>si se aprueba</b> (N3)</td><td class="ok">Baja</td></tr>
+</table>
+
+<h2>3. Lo que hay que saber antes de empezar</h2>
+<h3>3.1 Conceptos</h3>
+<ul>
+  <li><b>Caja</b> = un <b>cierre Y</b> de un terminal en un día (<code>vta_FACOtermstaty</code>: fecha, local, terminal, <code>ter_cierrey</code>). Colombia trabaja con varias Y por terminal y una Z (<code>vta_FACOtermstat</code>).</li>
+  <li><b>La DI en Colombia solo existe a nivel Y</b>: la pantalla de DI (<code>Form38</code>) la bloquea en la F8 por terminal/Z (<code>Form38.frm:462</code>, <code>:650</code>). La compensación de la Z es la suma de las de sus Y.</li>
+  <li><b>Diferencia Real (DR)</b> = Diferencia de Caja − Compensado. Es el <code>Label70</code> de <code>Form3Y</code> (<code>Form3Y.frm:2704</code> <code>FormateaDatos</code>). Fórmula completa en <code>docs/CierreCaja_FACO_Reglas.md</code> §2.</li>
+  <li>Estados de caja (<code>ter_estado</code>): −1/0 Pendiente, 1 Cerrado, 2 Impreso, 3 Sin datos.</li>
+</ul>
+
+<h3>3.2 Cómo llega la recaudación (la "carga")</h3>
+<p><code>Form133.CargarArchivo</code> (<code>Form133.frm:1671</code>), rama Colombia (<code>Else</code>), lee un Excel e inserta cada sobre en <code>vta_FACOprd</code> con <code>SEQ_VTA_FACOPRS</code>:</p>
+<table>
+  <tr><th>Col. Excel</th><th>Campo</th><th>Col. Excel</th><th>Campo</th></tr>
+  <tr><td>0 local</td><td><code>prv_local</code></td><td>4 diferencia</td><td><code>prv_montodif</code></td></tr>
+  <tr><td>1 terminal</td><td><code>prv_terminal</code></td><td>5 n° recibo</td><td><code>prv_numrec</code></td></tr>
+  <tr><td>2 sobre</td><td><code>prv_sobre</code></td><td>6 fecha venta (yyyymmdd)</td><td><code>prv_fechavta</code></td></tr>
+  <tr><td>3 monto</td><td><code>prv_montosobre</code></td><td>7 <b>cierre Y</b></td><td><code>prv_cierrey</code></td></tr>
+</table>
+<p>Fijos: <code>prv_tiporec='F8'</code>, <code>prv_tiposobre='EFE'</code>, <code>prv_fechadep=hoy</code>, <code>prv_cod_recaud</code> = recaudador del combo. Después de cada sobre, <code>AbrirTerminal</code> (<code>:707</code>) pone la <b>Z</b> en <code>ter_estado=0</code> con nota 'CARGA MANUAL DE SOBRES' (no toca las Y).</p>
+
+<h3>3.3 Lo que se verificó en la base de test (06-10-2026)</h3>
+<table>
+  <tr><th>Hecho</th><th>Consecuencia para T1</th></tr>
+  <tr><td><code>vta_FACOparam</code> 1500 'DI' = −500 y 1501 'DI' = 20000 (rango de la DI manual)</td><td>La HU pide −1.000 → decisión P2</td></tr>
+  <tr><td>Concepto DI existe: <code>vta_FACOconcepdif</code> coddif 8 "Diferencia no Imputable"</td><td>Se usa tal cual</td></tr>
+  <tr><td><code>vta_FACOmovdet</code> PK = solo <code>mov_techkey</code></td><td><b>Nada impide duplicar DI</b>: el proceso debe controlar la DI previa</td></tr>
+  <tr><td>Hay DI con <code>mov_rol</code> 45…62 además de <code>mov_rol=0</code></td><td>El control de DI previa debe mirar <b>todas</b> las DI de la Y</td></tr>
+  <tr><td>NOT NULL con default: <code>MOV_NOMEMPLEADO</code>, <code>MOV_EMPEMPLEADO</code> (' '), <code>MOV_REGUL</code> ('N'), <code>MOV_CIERREY</code> (0)</td><td>Informar siempre <code>mov_cierrey</code>; si queda 0 la DI no compensa la Y</td></tr>
+  <tr><td><code>vta_FACOcompdes.cpd_secuencia</code> la llena el trigger <code>TRG_VTA_FACOCOMPDES_I_SEQ</code> (<code>SEQ_VTA_FACOCOMPDES</code>); <code>cpd_obs</code> VARCHAR2(1024)</td><td>La glosa fija se inserta sin manejar secuencia</td></tr>
+  <tr><td>Doble conteo en compensaciones (NP/FT, VC): <b>descartado</b></td><td>La DR calculada es confiable</td></tr>
+  <tr><td>~2.180 Z precreadas por día en −1, solo 0–10 con venta</td><td>Recorrer <b>solo</b> cajas de la carga</td></tr>
+  <tr><td>Y pendientes sin libro de ventas (<code>libvta</code>)</td><td>Sin DR calculable → excluir con motivo</td></tr>
+  <tr><td>Prueba de fórmula en 183/953 sin sobres: DR −4.218.659, +1.417.438, +4.041.760, −678.030</td><td>Coherente con el negocio: sin sobres queda fuera de rango</td></tr>
+</table>
+
+<h2>4. Reglas de negocio</h2>
+<table>
+  <tr><th>#</th><th>Regla</th><th>Fuente</th><th>Estado</th></tr>
+  <tr><td>R1</td><td>Base: la DR que muestra hoy la F8, después de compensaciones manuales previas (dotaciones, billetes falsos…)</td><td>T1, reunión 29-09</td><td class="ok">Confirmada</td></tr>
+  <tr><td>R2</td><td>Se compensa si −1.000 ≤ DR ≤ 20.000, límites incluidos, DR ≠ 0</td><td>T1, HU, DF fila 57, negocio 01-10</td><td class="ok">Confirmada</td></tr>
+  <tr><td>R3</td><td>Rango parametrizable sin cambio de código</td><td>HU CA6</td><td class="warn">Confirmada · dónde: P2</td></tr>
+  <tr><td>R4</td><td>Monto DI = DR, <b>mismo signo</b> (DR −22 → DI −22)</td><td>T1, reunión 29-09</td><td class="ok">Confirmada (corregir texto CA1 de la HU)</td></tr>
+  <tr><td>R5</td><td>Fecha contable = fecha de venta</td><td>T1, negocio 01-10</td><td class="ok">Ya es así hoy (<code>MOV_FECHAREG = mov_fecha</code>)</td></tr>
+  <tr><td>R6</td><td>Cajas sin sobre se tratan igual</td><td>T1, negocio 01-10</td><td class="ok">Confirmada</td></tr>
+  <tr><td>R7</td><td>Fuera de rango: sin DI, caja pendiente, aparece en resumen</td><td>T1, HU CA3</td><td class="ok">Confirmada</td></tr>
+  <tr><td>R8</td><td>Usuario de proceso + glosa fija para distinguirla en informes y Envío Contable</td><td>T1 (DUD-052)</td><td class="warn">Confirmada · Envío Contable: P9</td></tr>
+  <tr><td>R9</td><td>Segunda carga: si ya hay DI automática, no crear otra; queda para revisión</td><td>T1 (DUD-050, propuesta)</td><td class="warn">DI manual previa: P8</td></tr>
+  <tr><td>R10</td><td>T1 no cierra cajas</td><td>T1</td><td class="ok">Confirmada</td></tr>
+  <tr><td>R11</td><td>T1 se activa o desactiva por configuración ("Leer configuración: T1 activa y rango")</td><td>Diagrama general</td><td class="warn">Nueva: parámetro (5.6)</td></tr>
+  <tr><td>R12</td><td>Si la carga no es correcta, se rechaza y no se ejecutan las tareas</td><td>Diagrama general</td><td class="warn">Nueva: hoy la carga puede quedar parcial (N2)</td></tr>
+  <tr><td>R13</td><td>Si DR = 0, no se crea DI y la caja pasa al Proceso 2</td><td>Diagrama proceso 1</td><td class="ok">Confirmada</td></tr>
+</table>
+
+<h2 class="salto">5. Diseño en base de datos</h2>
+<h3>5.1 Objetos existentes que se reutilizan</h3>
+<table>
+  <tr><th>Objeto</th><th>Uso</th></tr>
+  <tr><td><code>FUN_F8_COMPENSACION_DI_DR</code> (2025-08-12)</td><td><b>Plantilla</b> de la función de DR (es la de Chile; ver ajustes 5.3)</td></tr>
+  <tr><td><code>FUN_F8_COMPENSACION_DI_PRD</code></td><td>Plantilla de suma de sobres (adaptar a <code>vta_FACOprd</code> + <code>prv_cierrey</code>)</td></tr>
+  <tr><td><code>PKG_F8_FACO_CIERRE_TER_PM_AP</code></td><td>Paquete de Colombia que ya cierra por Y (T2). Recomendado alojar aquí las rutinas nuevas o en un paquete hermano</td></tr>
+  <tr><td><code>SEQ_VTA_FACOVEN</code></td><td><code>mov_techkey</code> de la DI (misma que usa el exe)</td></tr>
+  <tr><td><code>vta_FACOmovdet</code>, <code>vta_FACOcompdes</code>, <code>vta_FACOconcepdif</code>, <code>vta_FACOparam</code></td><td>Tablas de DI, glosa, concepto y rango</td></tr>
+  <tr><td><code>vta_FACOtermstaty</code>, <code>vta_FACOlibvta</code>, <code>vta_FACOzzz</code>, <code>vta_FACOprd</code>, <code>vta_FACOtarj</code>, <code>vta_FACOtesor</code>, <code>vta_FACOrecmex</code>, <code>vta_FACOdifvend</code>, <code>vta_FACOcartaaviso</code></td><td>Lectura para el cálculo de DR</td></tr>
+</table>
+
+<h3>5.2 Objetos nuevos</h3>
+<table>
+  <tr><th>Objeto (nombre sugerido)</th><th>Tipo</th><th>Para qué</th></tr>
+  <tr><td><code>FN_F8_FACO_DIF_REAL_Y</code></td><td>Función</td><td>DR de una caja (fecha, local, terminal, cierrey). Devuelve NULL si la Y no tiene libro de ventas</td></tr>
+  <tr><td><code>PR_F8_FACO_COMPENSA_DI_AUTO</code></td><td>Procedimiento</td><td>Orquesta T1 sobre las cajas de la carga; devuelve id de ejecución</td></tr>
+  <tr><td><code>VTA_FACOLOG_PROC_AUTO</code> + <code>SEQ_VTA_FACOLOG_PROC_AUTO</code></td><td>Tabla + secuencia</td><td>Resumen por caja (compartido con T2)</td></tr>
+  <tr><td>Sinónimos + <code>GRANT EXECUTE/SELECT</code> a <code>UINTRANETTS</code></td><td>DCL</td><td>El exe se conecta con el usuario de aplicación, que accede vía sinónimos</td></tr>
+  <tr><td>Parámetros de rango (si P2 = códigos propios)</td><td>DML</td><td>Ver 5.6</td></tr>
+</table>
+
+<h3>5.3 Ajustes de <code>FUN_F8_COMPENSACION_DI_DR</code> para Colombia (nivel Y)</h3>
+<table>
+  <tr><th>Aspecto</th><th>Chile (actual)</th><th>Colombia (requerido)</th></tr>
+  <tr><td>Tablas</td><td><code>vta_movdet</code>, <code>vta_libvta</code>…</td><td><code>vta_FACO*</code></td></tr>
+  <tr><td>Nivel</td><td>Z (<code>tiporeg='F8'</code>)</td><td>Y: <code>tiporeg='Y'</code>, <code>vta_secuencia=:cierrey</code>, y <code>*_cierrey=:cierrey</code> en prd, tarj, tesor, recmex, movdet, cartaaviso, difvend</td></tr>
+  <tr><td>Tarjetas recaudadas</td><td>Todas</td><td><code>vta_cod_tarj between 2000 and 2999</code></td></tr>
+  <tr><td>Tarjetas declaradas</td><td><code>rec_mtarj</code></td><td><code>rec_mtarj + rec_msodimac</code></td></tr>
+  <tr><td>Vendedor-cajero</td><td><code>VEN_REGUL='S'</code></td><td>Sin filtro <code>VEN_REGUL</code></td></tr>
+  <tr><td>CA en movdet</td><td>Excluido</td><td>Incluido (además de <code>cartaaviso</code>)</td></tr>
+  <tr><td>Rama AL</td><td>Sin cruce</td><td>Cruce con <code>libvta</code>/<code>zzz</code>, <code>tiporeg='Y'</code>, <code>mov_secuencia=vta_secuencia</code></td></tr>
+  <tr><td>Dólares</td><td>No suma USD</td><td>Suma USD recaudados (<code>recmex</code> 305 de la Y)</td></tr>
+  <tr><td>Tesorería</td><td><code>sum(tes_chefecha)</code></td><td>Igual, filtrando <code>tes_cierrey</code></td></tr>
+  <tr><td>Redondeo</td><td>No</td><td><code>round(dr, n)</code> con decimales de <code>gFormat</code> de Colombia</td></tr>
+  <tr><td>Error</td><td>Devuelve 1</td><td>Devolver NULL y registrar el error en el log</td></tr>
+</table>
+
+<h3>5.4 Fórmula a implementar (por Y)</h3>
+<pre>DR = (prsefe − totefe) + (prschd − totchd) + totDol + (teschf − totchf) + (tesTarjeta − totTarjeta) − Compensado
+
+declarado (libvta Y ⋈ zzz, vta_secuencia = :cierrey):
+  totefe = Σ rec_mefectivo   totchd = Σ rec_mchkdia   totchf = Σ rec_mchkfecha
+  totTarjeta = Σ rec_mtarj + Σ rec_msodimac
+recaudado (filtrando por :cierrey):
+  prsefe/prschd = Σ (prv_montosobre + prv_montodif) de vta_FACOprd, tiporec 'F8', tiposobre EFE/CHE
+  teschf        = tes_chefecha de vta_FACOtesor
+  tesTarjeta    = Σ vta_monto_inf de vta_FACOtarj, códigos 2000–2999
+  totDol        = Σ mex_monto de vta_FACOrecmex, id_mdareg 305
+Compensado = consulta de CierreCaja_FACO_Reglas.md §2.3 (versión Y), mismas 13 ramas</pre>
+<div class="nota">Validar la función comparándola contra la F8 (<code>Label50</code>/<code>Label60</code>/<code>Label70</code> de <code>Form3Y</code>) en al menos 10 cajas reales de test antes de usarla para grabar DI.</div>
+
+<h3>5.5 Registro de la DI (replica <code>InsertarRegistroMovDet</code>, <code>Módulo1.bas:3777</code>)</h3>
+<pre>insert into vta_FACOmovdet
+  (mov_fecha, mov_local, mov_terminal, mov_tipomov, mov_rol, mov_nombre, mov_secuencia,
+   mov_numero, mov_monto, mov_hechopor, mov_regul, mov_fechareg, mov_techkey, mov_cierrey)
+values
+  (:fecha_venta, :local, :terminal, 'DI', 0, ' ', 0,
+   0, round(:dr, 2), :usuario_proceso, 'S', :fecha_venta, SEQ_VTA_FACOVEN.nextval, :cierrey);
+
+insert into vta_FACOcompdes (cpd_fecha, cpd_local, cpd_terminal, cpd_tipmov, cpd_obs, cpd_cierrey)
+values (:fecha_venta, :local, :terminal, 'DI', 'Compensación automática DI', :cierrey);
+-- cpd_secuencia la asigna TRG_VTA_FACOCOMPDES_I_SEQ</pre>
+<p>Control de DI previa (antes de insertar):</p>
+<pre>select count(*), sum(case when mov_hechopor = :usuario_proceso then 1 else 0 end)
+from   vta_FACOmovdet
+where  mov_fecha = :fecha_venta and mov_local = :local and mov_terminal = :terminal
+and    mov_cierrey = :cierrey and mov_tipomov = 'DI';          -- todas las mov_rol
+-- automática previa  -> excluir 'DI_AUTO_PREVIA' (R9)
+-- manual previa      -> según P8 (propuesta: excluir 'DI_MANUAL_PREVIA')</pre>
+
+<h3>5.6 Parámetros de rango</h3>
+<pre>-- Opción A (P2 = mismo rango manual y automático): cambia también la DI manual de Form38
+update vta_FACOparam set vta_xglosa = '-1000' where vta_ccodtipo = 1500 and vta_ccodigo = 'DI';
+
+-- Opción B (P2 = rango propio del proceso): no afecta Form38
+insert into vta_FACOparam (vta_ccodtipo, vta_ccodigo, vta_xglosa /*, demás columnas obligatorias */)
+values (1500, 'DIA', '-1000');
+insert into vta_FACOparam (vta_ccodtipo, vta_ccodigo, vta_xglosa)
+values (1501, 'DIA', '20000');
+-- Verificar columnas obligatorias de vta_FACOparam antes de ejecutar.
+
+-- Interruptores del diagrama general ("T1 activa", "T2 activa"); tipo 1502 libre en test
+insert into vta_FACOparam (vta_ccodtipo, vta_ccodigo, vta_xglosa) values (1502, 'DIA_T1', 'S');
+insert into vta_FACOparam (vta_ccodtipo, vta_ccodigo, vta_xglosa) values (1502, 'DIA_T2', 'S');</pre>
+
+<h3>5.7 Tabla de log (compartida con T2)</h3>
+<pre>create table vta_FACOlog_proc_auto (
+  log_id        number        not null,   -- SEQ_VTA_FACOLOG_PROC_AUTO
+  log_ejecucion number        not null,   -- mismo valor para toda la corrida
+  log_proceso   varchar2(2)   not null,   -- 'T1' compensación / 'T2' cierre
+  log_fecha_vta date          not null,
+  log_local     number        not null,
+  log_terminal  number        not null,
+  log_cierrey   number,                   -- null = Z
+  log_dr_antes  number,
+  log_monto_di  number,
+  log_dr_despues number,
+  log_resultado varchar2(30)  not null,   -- COMPENSADA, FUERA_RANGO, DR_CERO, DI_AUTO_PREVIA,
+                                          -- DI_MANUAL_PREVIA, SIN_LIBVTA, CERRADA, ERROR
+  log_regla     varchar2(10),             -- RY-03 etc. (T2)
+  log_mensaje   varchar2(1000),
+  log_usuario   varchar2(50),             -- analista que ejecutó la carga
+  log_fechahora date default sysdate not null,
+  constraint pk_vta_facolog_proc_auto primary key (log_id));
+create index ind_vta_facolog_proc_auto_01 on vta_FACOlog_proc_auto (log_ejecucion);</pre>
+
+<h3>5.8 Firma sugerida</h3>
+<pre>procedure pr_f8_faco_compensa_di_auto (
+  p_fechadep     in  date,          -- prv_fechadep de la carga (hoy)
+  p_cod_recaud   in  varchar2,      -- recaudador elegido en Form133
+  p_usuario      in  varchar2,      -- LOGINUSER del analista (para el log)
+  o_ejecucion    out number,        -- id para leer el resumen
+  o_compensadas  out number,
+  o_excluidas    out number);</pre>
+<p>Universo: cajas Y con sobres de esa carga:</p>
+<pre>select distinct p.prv_fechavta, p.prv_local, p.prv_terminal, p.prv_cierrey
+from   vta_FACOprd p, vta_FACOtermstaty y
+where  p.prv_fechadep = :p_fechadep and p.prv_cod_recaud = :p_cod_recaud and p.prv_tiporec = 'F8'
+and    y.ter_fecha = p.prv_fechavta and y.ter_local = p.prv_local
+and    y.ter_terminal = p.prv_terminal and y.ter_cierrey = p.prv_cierrey
+and    y.ter_estado in (-1, 0);</pre>
+<div class="alerta">Cajas sin sobres (R6): no aparecen en este universo porque no tienen filas en <code>prd</code>. Si el negocio quiere compensarlas en la misma corrida, hay que definir su universo (por ejemplo, todas las Y pendientes con libro de ventas de las fechas de venta de la carga). Ver P15.</div>
+
+<h2 class="salto">6. Cambios en el exe VB6</h2>
+<table>
+  <tr><th>Archivo</th><th>Rutina</th><th>Cambio</th></tr>
+  <tr><td><code>FTEPROD/Form133.frm</code></td><td><code>CargarArchivo</code> (<code>:1671</code>), rama <code>Else</code> (Colombia)</td><td>Al terminar el ciclo, si <code>X &gt; 0</code> y sin error, llamar al procedimiento y mostrar el resumen. Hacerlo <b>solo para</b> <code>Flg_Pais$ = "FACO"</code>.</td></tr>
+  <tr><td>Nuevo formulario (p. ej. <code>Form174.frm</code>, libre)</td><td>—</td><td>Grilla con el resumen leído de <code>vta_FACOlog_proc_auto</code> por <code>log_ejecucion</code>; botón Excel con <code>GeneraCualquierExcel(Grid, ruta)</code> (<code>Módulo1.bas:6873</code>). Alta en <code>recaudacion.vbp</code>. Compartido con T2.</td></tr>
+  <tr><td><code>FTEPROD/Form133.frm</code></td><td><code>Command4_Click</code> (<code>:616</code>) / <code>CargarArchivo</code></td><td><b>Carga correcta o rechazada (N2):</b> antes de insertar, validar todas las filas (local y terminal existen, sobre no duplicado <b>por local</b>, Y informada y existente en <code>termstaty</code>, montos numéricos). Si alguna falla: rechazar la carga completa, mostrar los errores y no ejecutar T1/T2. Hoy un error a mitad deja la carga parcial.</td></tr>
+  <tr><td><code>FTEPROD/Form133.frm</code></td><td><code>AbrirTerminal</code> (<code>:707</code>)</td><td><b>Solo si se aprueba N3:</b> además de la Z, reabrir la Y del sobre (<code>update vta_FACOtermstaty set ter_estado = 0 … and ter_cierrey = :y</code>) para "reabrir las cajas que cambian".</td></tr>
+  <tr><td><code>FTEPROD/Form62.frm</code></td><td><code>LECTURATCOMPEZTXS</code> (<code>:3231</code>, DI en <code>:4391</code>)</td><td><b>Solo si P9 lo exige</b>: separar la DI automática (por <code>mov_hechopor</code>) en línea/glosa propia del Envío Contable. Hoy se suma por fecha y local.</td></tr>
+  <tr><td><code>FTEPROD/Módulo1.bas</code></td><td><code>Global Const Gversion</code> (<code>:203</code>)</td><td>Subir versión y actualizar <code>vta_parametros.vta_ultversion</code> de Colombia.</td></tr>
+</table>
+<p>Llamada sugerida (patrón de <code>Form130.CargarCierre</code>, pero sin silenciar errores):</p>
+<pre>'CK: FSCC-12957 - Compensación automática DI al finalizar la carga
+If Flg_Pais$ = "FACO" And X > 0 Then
+    Set conexion = CreateObject("ADODB.Command")
+    conexion.ActiveConnection = Ado_Conn
+    conexion.CommandType = 4  'adCmdStoredProc
+    conexion.CommandText = "PR_F8_FACO_COMPENSA_DI_AUTO"
+    ' parámetros: fecha depósito, recaudador, LOGINUSER, salidas
+    On Error GoTo oraerrorDI
+    conexion.Execute
+    ' leer o_ejecucion y abrir Form174 con el resumen (T1 + T2)
+End If</pre>
+<div class="nota">Convenciones del proyecto: archivos en Windows-1252 con CRLF; comentar cada cambio con iniciales y número de caso; no borrar código, dejarlo comentado; usar <code>SystemMsg</code> + <code>frmLogOraError</code> para errores. <code>ADODB.Command</code> con parámetros ya se usa en <code>Form173</code>.</div>
+
+<h2>7. Algoritmo</h2>
+<pre>o_ejecucion := SEQ_VTA_FACOLOG_PROC_AUTO.nextval (marca de corrida)
+si parámetro DIA_T1 &lt;&gt; 'S' -> log T1_INACTIVA ; terminar (T2 igual puede correr)
+leer rango (vta_FACOparam, según P2)
+para cada caja del universo (5.8):
+    savepoint caja
+    dr := FN_F8_FACO_DIF_REAL_Y(fecha, local, terminal, cierrey)
+    si dr is null            -> log SIN_LIBVTA ; continuar
+    si dr = 0                -> log DR_CERO (pasa a T2) ; continuar
+    si dr < min o dr > max   -> log FUERA_RANGO ; continuar
+    si existe DI automática  -> log DI_AUTO_PREVIA ; continuar
+    si existe DI manual      -> log DI_MANUAL_PREVIA ; continuar          (P8)
+    insertar DI (5.5) + glosa
+    dr2 := FN_F8_FACO_DIF_REAL_Y(...)
+    si dr2 <> 0 -> rollback to caja ; log ERROR 'DR no quedó en 0' ; continuar
+    log COMPENSADA (dr, monto, dr2)
+    commit
+excepción por caja -> rollback to caja ; log ERROR (sqlerrm) ; seguir con la siguiente
+log con PRAGMA AUTONOMOUS_TRANSACTION</pre>
+
+<h2 class="salto">8. Casos de prueba</h2>
+<div class="alerta">En test no hay cargas de sobres de Colombia desde 2022. Para probar: elegir Y pendientes con libro de ventas (ej. 183/953 del 07-09-2026) y cargar sobres con <code>Form133</code> (Excel con las 8 columnas) para dejar la DR en el valor de cada caso.</div>
+<table>
+  <tr><th>#</th><th>Caso</th><th>Esperado</th><th>Verificación</th></tr>
+  <tr><td>1</td><td>DR = −800 (CA1)</td><td>DI −800; DR después = 0; log COMPENSADA</td><td>movdet DI con <code>mov_hechopor</code> = usuario proceso y <code>mov_cierrey</code> correcto; Form3Y muestra Dif. Real 0</td></tr>
+  <tr><td>2</td><td>DR = −1.000 y DR = 20.000 (CA2)</td><td>Se compensa</td><td>log COMPENSADA</td></tr>
+  <tr><td>3</td><td>DR = −1.001 y 20.001 (CA3)</td><td>Sin DI; log FUERA_RANGO</td><td>No hay DI nueva</td></tr>
+  <tr><td>4</td><td>Cambio de parámetro (CA6)</td><td>La corrida siguiente usa el nuevo rango</td><td>log con nuevo límite</td></tr>
+  <tr><td>5</td><td>Venta 28-09 cargada otro día (CA7)</td><td><code>mov_fecha = mov_fechareg</code> = 28-09</td><td>select de la DI</td></tr>
+  <tr><td>6</td><td>Caja sin sobres con DR en rango (CA8)</td><td>Se compensa igual (según P15)</td><td>log COMPENSADA</td></tr>
+  <tr><td>7</td><td>DI identificada (CA5)</td><td>Visible como automática en Informe de Diferencias (<code>Form7</code>, <code>mov_hechopor</code>) y en Envío Contable (según P9)</td><td>Correr informes</td></tr>
+  <tr><td>8</td><td>Segunda carga mismo día con DI automática previa</td><td>No crea otra; log DI_AUTO_PREVIA</td><td>Una sola DI automática</td></tr>
+  <tr><td>9</td><td>Y con DI manual previa</td><td>Según P8</td><td>DI manual intacta</td></tr>
+  <tr><td>10</td><td>Y sin libro de ventas</td><td>log SIN_LIBVTA</td><td>Sin DI</td></tr>
+  <tr><td>11</td><td>DR = 0</td><td>log DR_CERO, sin DI</td><td>Queda para T2</td></tr>
+  <tr><td>12</td><td>Error a mitad de la corrida</td><td>Solo esa caja falla; resto procesa; log ERROR</td><td>Contar filas del log</td></tr>
+  <tr><td>13</td><td>Carga con error de Excel a mitad</td><td>No se ejecuta T1</td><td>Sin log nuevo</td></tr>
+  <tr><td>14</td><td>Comparación con la F8</td><td>DR de la función = Label70 de Form3Y en 10 cajas</td><td>Planilla de comparación</td></tr>
+</table>
+
+<h2>9. Decisiones pendientes y vacíos de información</h2>
+<table>
+  <tr><th>ID</th><th>Tema</th><th>Propuesta</th><th>¿Bloquea T1?</th></tr>
+  <tr><td>P2</td><td>Rango: ¿mismo parámetro que la DI manual (hoy −500/20.000) o propio?</td><td>Propio (Opción B) para no cambiar la regla manual</td><td class="bad">Sí</td></tr>
+  <tr><td>P3</td><td>"Caja" = cierre Y</td><td>Sí: DI por Y; la Z no lleva DI</td><td class="warn">Confirmar</td></tr>
+  <tr><td>P5</td><td>Usuario de proceso</td><td>Usuario fijo (ej. <code>PROC_DI_AUTO</code>, máx. 50) en <code>mov_hechopor</code>; analista en el log</td><td class="bad">Sí (nombre)</td></tr>
+  <tr><td>P8</td><td>DI manual previa en la Y</td><td>Excluir y dejar para el analista</td><td class="bad">Sí</td></tr>
+  <tr><td>P9</td><td>Envío Contable: ¿línea/glosa separada?</td><td>Acordar con Contabilidad; impacta <code>Form62</code></td><td class="warn">Solo componente 7</td></tr>
+  <tr><td>P11</td><td>Redondeo de DR</td><td>Redondear a los decimales de Colombia antes de comparar</td><td class="warn">Confirmar</td></tr>
+  <tr><td>P12</td><td>Y cerrada que recibe sobres</td><td>T1 no las toca; resumen las informa (T2)</td><td>No</td></tr>
+  <tr><td>P13</td><td>Duplicados de sobre sin local en <code>Form133.existe</code></td><td>Corregir fuera de esta HU o incluir</td><td>No</td></tr>
+  <tr><td>P15</td><td>Universo de cajas sin sobres en la carga</td><td>Incluir Y pendientes con libro de ventas de las fechas de la carga</td><td class="bad">Sí (CA8)</td></tr>
+  <tr><td>N2</td><td>Carga "todo o nada" (diagrama: carga rechazada)</td><td>Validar el Excel completo antes de grabar</td><td class="warn">Confirmar alcance</td></tr>
+  <tr><td>N3</td><td>"Reabrir las cajas que cambian": hoy solo se reabre la Z</td><td>Reabrir también la Y del sobre</td><td class="warn">Confirmar alcance</td></tr>
+  <tr><td>N4</td><td>Ramas que faltan en el proceso 1: DI manual previa, Y sin libro de ventas, error técnico</td><td>Agregarlas al diagrama (ya están en el algoritmo, sección 7)</td><td>No</td></tr>
+  <tr><td>V1</td><td>Cuerpo de <code>PKG_F8_COMPENSACION_DI</code> (Chile)</td><td>Pedir al DBA (referencia, no imprescindible)</td><td>No</td></tr>
+  <tr><td>V2</td><td>Excel DF-SCC-vf (fila 57)</td><td>Revisar antes de cerrar el refinamiento</td><td class="warn">Recomendado</td></tr>
+</table>
+
+<h2>10. Riesgos, despliegue y vuelta atrás</h2>
+<h3>Riesgos</h3>
+<ul>
+  <li><b>DR mal calculada</b> → DI por monto incorrecto con impacto contable. Mitigación: caso 14 (comparación con la F8) obligatorio antes de habilitar.</li>
+  <li><b>DI duplicada</b> (no hay restricción en BD) → control explícito 5.5 + caso 8.</li>
+  <li><b>Sobres sin <code>prv_cierrey</code></b> → DR de la Y errónea. En test no hay casos; verificar en producción.</li>
+  <li><b>Y cerrada que recibe sobres</b> (P12): queda fuera de T1; la Z no cerrará en T2.</li>
+  <li><b>Sin transacciones en el exe</b>: toda la lógica nueva va en PL/SQL con savepoint por caja.</li>
+</ul>
+<h3>Orden de despliegue</h3>
+<ol>
+  <li>DDL: secuencia + tabla de log (5.7).</li>
+  <li>Parámetros (5.6, según P2).</li>
+  <li>Función DR y procedimiento (compilar, sinónimos, grants a <code>UINTRANETTS</code>).</li>
+  <li>Prueba de la función contra la F8 (caso 14).</li>
+  <li>Exe con <code>Form133</code> + formulario de resumen; nueva <code>Gversion</code> y <code>vta_ultversion</code>.</li>
+  <li>Piloto en un local; revisar log y DI generadas.</li>
+</ol>
+<h3>Vuelta atrás</h3>
+<pre>-- deshabilitar: volver al exe anterior (rollback exe + vta_ultversion)
+-- revertir DI generadas por una corrida:
+delete from vta_FACOcompdes c
+ where c.cpd_tipmov = 'DI' and c.cpd_obs = 'Compensación automática DI'
+   and exists (select 1 from vta_FACOlog_proc_auto l
+               where l.log_ejecucion = :ejecucion and l.log_resultado = 'COMPENSADA'
+                 and l.log_fecha_vta = c.cpd_fecha and l.log_local = c.cpd_local
+                 and l.log_terminal = c.cpd_terminal and l.log_cierrey = c.cpd_cierrey);
+delete from vta_FACOmovdet m
+ where m.mov_tipomov = 'DI' and m.mov_hechopor = :usuario_proceso
+   and exists (... mismo criterio contra el log ...);
+-- solo si las cajas siguen Pendientes y no hubo Envío Contable de esa fecha</pre>
+
+<h2 class="salto">11. Diagramas del requerimiento (BPMN) y correspondencia con el sistema</h2>
+<h3>11.1 Flujo general de la historia</h3><p>Diagrama en la página siguiente (horizontal).</p>
+<div class="horizontal"><div class="titulo">Flujo general de la historia (FSCC-12901)</div><img src="img/flujo_general.png" alt="Flujo general"></div>
+<table>
+  <tr><th>Paso del diagrama</th><th>Hoy en el sistema</th><th>Qué implica para T1</th></tr>
+  <tr><td>Analista: cargar el archivo de recaudación del día</td><td class="ok">Existe: <code>Form133</code> (Excel)</td><td>Punto de enganche</td></tr>
+  <tr><td>Validar y grabar la recaudación · ¿Carga correcta? No → carga rechazada</td><td class="warn">Parcial: graba sobre por sobre y puede quedar a medias</td><td>N2: validar todo el archivo antes; T1 solo si la carga fue completa</td></tr>
+  <tr><td>Recalcular la cuadratura y reabrir las cajas que cambian <i>(vigente)</i></td><td class="bad">No coincide: solo reabre la Z; la cuadratura se calcula al vuelo</td><td>N3: reabrir la Y del sobre; si no, esa Y queda fuera de T1 (P12)</td></tr>
+  <tr><td>Iniciar las tareas con el alcance de la carga</td><td>Nuevo</td><td>Universo de 5.8</td></tr>
+  <tr><td>Leer configuración: T1 activa y rango · ¿T1 activa?</td><td>Nuevo (el rango manual existe: 1500/1501)</td><td>Parámetros 5.6</td></tr>
+  <tr><td>Seleccionar las cajas pendientes de la carga → T1: compensar cada caja</td><td>Nuevo</td><td>Procedimiento 5.8 y algoritmo 7</td></tr>
+  <tr><td>Consolidar y mostrar el resumen</td><td>Nuevo</td><td>Tabla de log 5.7 + formulario de resumen</td></tr>
+  <tr><td>Analista: revisar el resumen · gestionar a mano (reabrir, compensar, Cerrar Terminal)</td><td class="ok">Existen: <code>Form20</code>, <code>Form4</code>→<code>Form38</code>, <code>Form3Y</code>/<code>Form3</code></td><td>El resumen debe mostrar fecha, local, terminal, Y y motivo</td></tr>
+  <tr><td>Datos: "Registro de ejecución (nuevo)"</td><td>Nuevo</td><td>Confirma la tabla <code>vta_FACOlog_proc_auto</code></td></tr>
+</table>
+
+<h3>11.2 Proceso 1 · Compensación automática de DI</h3>
+<img src="img/proceso1_T1.png" alt="Proceso 1 (versión 05-10; ver la versión actualizada en 12.6)" style="width:100%; border:1px solid #c9d1dc;">
+<table>
+  <tr><th>Elemento del diagrama</th><th>Diseño (este documento)</th></tr>
+  <tr><td>Inicio: "Terminal-día o cierre Y de la carga"</td><td>En Colombia siempre es <b>cierre Y</b> (la DI no existe a nivel Z). Sugerencia: ajustar el texto del diagrama</td></tr>
+  <tr><td>Calcular DC, compensaciones y DR con la lógica de F8</td><td><code>FN_F8_FACO_DIF_REAL_Y</code> (5.3, 5.4); validar contra <code>Form3Y</code> (caso 14)</td></tr>
+  <tr><td>¿DR = 0? Sí → sin DI, pasa al Proceso 2</td><td>Log <code>DR_CERO</code></td></tr>
+  <tr><td>¿−1.000 ≤ DR ≤ 20.000? (VTA_FACOPARAM) No → fuera de rango → gestión de tiendas</td><td>Log <code>FUERA_RANGO</code>; parámetros según P2</td></tr>
+  <tr><td>¿Ya tiene DI automática de una carga anterior? Sí → revisión (DUD-050)</td><td>Log <code>DI_AUTO_PREVIA</code> (detecta <code>mov_hechopor</code> = usuario de proceso)</td></tr>
+  <tr><td>Registrar DI = DR mismo signo; fecha contable = fecha de venta; usuario de proceso</td><td>INSERT 5.5 + glosa en <code>vta_FACOcompdes</code></td></tr>
+  <tr><td>Log: compensado → pasa al Proceso 2</td><td>Log <code>COMPENSADA</code> con DR antes y después</td></tr>
+  <tr><td><i>No está en el diagrama</i></td><td>Ramas agregadas: <code>DI_MANUAL_PREVIA</code> (P8), <code>SIN_LIBVTA</code>, <code>ERROR</code>, <code>T1_INACTIVA</code> (N4)</td></tr>
+</table>
+
+<h2 class="salto">12. Enfoque implementado: base de datos, integrado con el cierre automático (T2)</h2>
+<pre>Form133 / Form21 / Form124 ...  --INSERT-->  VTA_FACOPRD
+                                   | TRG_VTA_FACOPRD_CIERRE_AI   (FSCC-12958, reutilizado)
+                                   v
+                         VTA_FACOPRD_CIERRE   (cola: cajas de la carga, estado P)
+                                   |  + cajas sin sobres del mismo local-dia (CA_SIN_SOBRE)
+                         VTA_FACOV_CAJAS_CIERRE   (vista: universo comun T1 / T2)
+                                   |
+ job --> PKG_F8_FACO_CIERRE_AUTO.PRC_CIERRE_AUTOMATICO
+            1. omitidas / vencidas en la cola
+            2. PKG_F8_FACO_COMPENSA_DI.PRC_COMPENSA_DI      &lt;-- T1 (FSCC-12957)  [CA_DI_ACTIVO]
+                 por cada Y: DR (fn_dif_real) -> rango -> DI previa -> registra DI -> control DR = 0
+            3. cierre de Y y Z                               &lt;-- T2 (FSCC-12958)  [CA_ACTIVO]
+                                   |
+         VTA_FACOMOVDET (DI) + VTA_FACOCOMPDES (glosa) + VTA_FACOLOG_CIERRE_AUTO (log_proceso T1/T2)</pre>
+
+<h3>12.1 Decisiones (06-10-2026)</h3>
+<table>
+  <tr><th>Tema</th><th>Decisión</th></tr>
+  <tr><td>Rango</td><td>Parámetros propios <code>CA_DI_MIN</code> = −1000 y <code>CA_DI_MAX</code> = 20000 (tipo 1502, inclusivos). La DI manual (1500/1501 'DI' = −500 / 20.000) no cambia</td></tr>
+  <tr><td>DI manual previa</td><td>No se toca; la caja queda para el analista (<code>DI_MANUAL_PREVIA</code>)</td></tr>
+  <tr><td>Identificación</td><td><code>mov_hechopor = 'PROC_DI_AUTO'</code> + glosa <code>'COMPENSACION AUTOMATICA DI'</code> en <code>VTA_FACOCOMPDES</code></td></tr>
+  <tr><td>Conexión con T2</td><td>Paquete propio <code>PKG_F8_FACO_COMPENSA_DI</code>; <code>PRC_CIERRE_AUTOMATICO</code> lo invoca primero. Interruptores independientes <code>CA_DI_ACTIVO</code> / <code>CA_ACTIVO</code></td></tr>
+</table>
+
+<h3>12.2 Reglas implementadas (orden)</h3>
+<table>
+  <tr><th>#</th><th>Regla</th><th>Log (T1)</th></tr>
+  <tr><td>1</td><td>Caja existente y abierta (bloqueo NOWAIT)</td><td><code>SIN_TERMSTAT</code> / <code>OCUPADA</code> / <code>YA_CERRADA</code></td></tr>
+  <tr><td>2</td><td>Diferencia real de la F8 (<code>fn_dif_real</code> de T2), después de compensaciones previas</td><td><code>SIN_LIBVTA</code></td></tr>
+  <tr><td>3</td><td>DR = 0: sin DI, pasa a T2</td><td><code>DR_CERO</code></td></tr>
+  <tr><td>4</td><td>Fuera de [−1000, 20000]: pendiente para gestión de tiendas</td><td><code>FUERA_RANGO</code></td></tr>
+  <tr><td>5</td><td>Ya tiene DI automática (segunda carga, DUD-050)</td><td><code>DI_AUTO_PREVIA</code></td></tr>
+  <tr><td>6</td><td>Ya tiene DI manual</td><td><code>DI_MANUAL_PREVIA</code></td></tr>
+  <tr><td>7</td><td>Registrar DI = DR (mismo signo), fecha contable = fecha de venta; control DR = 0, si no, revierte</td><td><code>DI_REGISTRADA</code> / <code>ERROR</code></td></tr>
+</table>
+
+<h3>12.3 Registro (igual que el exe)</h3>
+<pre>VTA_FACOMOVDET (Modulo1.InsertarRegistroMovDet): mov_tipomov 'DI', mov_rol 0, mov_nombre ' ',
+  mov_secuencia 0, mov_numero 0, mov_monto round(DR,2), mov_hechopor 'PROC_DI_AUTO', mov_regul 'S',
+  mov_fechareg = mov_fecha = fecha de venta, mov_techkey SEQ_VTA_FACOVEN.nextval, mov_cierrey = Y
+VTA_FACOCOMPDES (Form45.GrabarObs): cpd_tipmov 'DI', cpd_obs 'COMPENSACION AUTOMATICA DI', cpd_cierrey = Y
+  (UPDATE si existe; cpd_secuencia por TRG_VTA_FACOCOMPDES_I_SEQ)</pre>
+
+<h3>12.4 Scripts (<code>docs/sql/FSCC-12957/</code>)</h3>
+<table>
+  <tr><th>Script</th><th>Contenido</th></tr>
+  <tr><td><code>00_prechecks.sql</code></td><td>9 verificaciones de solo lectura (en test coinciden las 3–8)</td></tr>
+  <tr><td><code>01_ajuste_log.sql</code></td><td>Columna <code>log_proceso</code> (idempotente)</td></tr>
+  <tr><td><code>02_parametros.sql</code></td><td><code>CA_DI_ACTIVO</code>, <code>CA_DI_MIN</code>, <code>CA_DI_MAX</code></td></tr>
+  <tr><td><code>03</code> / <code>04</code></td><td><code>PKG_F8_FACO_COMPENSA_DI</code>: <code>prc_compensa_di</code>, <code>fn_evalua_caja</code> (simulación), <code>fn_estado_di</code></td></tr>
+  <tr><td><code>05</code>, <code>06</code>, <code>99</code></td><td>Permisos y sinónimos, pruebas (14 casos), vuelta atrás (apagar T1 sin afectar T2)</td></tr>
+</table>
+<h3>12.5 Ajuste por el DF-SCC (06-10-2026)</h3>
+<ul>
+  <li>Fila 57 del DF ("DI automática hasta −1.000 faltante e inferior a 20.000 sobrante") corresponde a esta subtarea. "Faltante" es la DR negativa, por lo que el signo de la DI coincide con el de la DR. "Inferior" podría leerse como límite exclusivo; la respuesta de negocio del 01-10 dice inclusivo y se mantiene, configurable con <code>CA_DI_MIN</code> / <code>CA_DI_MAX</code>.</li>
+  <li>Fila 12 (cajas sin movimiento): T1 ya no recorre la cola directamente sino la vista <code>VTA_FACOV_CAJAS_CIERRE</code>, que suma a la cola los cierres Y abiertos sin sobres del mismo local y día de la carga. Así, una caja sin sobres con DR en rango también recibe la DI automática antes de que T2 la cierre.</li>
+  <li>El botón "Cerrar Terminal" de <code>Form43</code> (<code>prc_cierre_rango</code> de T2) <b>no</b> ejecuta T1: la DI automática solo la registra el proceso agendado.</li>
+</ul>
+<h3>12.6 Documentación actualizada (07-10-2026)</h3>
+<img src="img/proceso1_T1_v2.png" alt="Proceso 1 actualizado" style="width:100%; border:1px solid #c9d1dc;">
+<ul>
+  <li>El diagrama nuevo del Proceso 1 tiene la misma lógica que el implementado. Usa la pregunta "¿Ya compensada en otra carga?", que es el caso <code>DI_AUTO_PREVIA</code>; la DI manual previa sigue como <code>DI_MANUAL_PREVIA</code>.</li>
+  <li><b>CA9</b> de la HU ("DR = 0 por la imputación automática → validar y cerrar"): ya se cumple, porque T1 corre dentro de <code>prc_cierre_automatico</code> antes del cierre y T2 recalcula la DR en la misma ejecución.</li>
+  <li><b>FACO solo cierre Y:</b> T1 siempre compensó por cierre Y (la Z no lleva DI). Las funciones de T2 que usa (<code>fn_dif_real</code>) ahora exigen el número de Y.</li>
+  <li>La HU pide ejecutar el proceso "al momento de la carga" (<code>Form133</code>); se mantiene el job externo y el resumen se consulta por SQL (decisión 07-10, punto abierto con negocio).</li>
+</ul>
+<p><b>Instalación de T1 + T2:</b> carpeta consolidada <code>docs/sql/FSCC-12901_T1_T2/</code> (<code>INSTALAR.sql</code>, pasos 00 a 10 y 99, con un README que documenta todo el flujo). La carpeta <code>docs/sql/FSCC-12957/</code> documenta solo esta subtarea. Pendiente fuera de la base de datos: separar la DI automática en el Envío Contable (<code>Form62</code>), si Contabilidad lo pide.</p>
+
+<div class="pie">Generado a partir del análisis del código VB6 de F8, de consultas de solo lectura a la base de test sgfnprds y de los diagramas BPMN del requerimiento (06-10-2026). Referencias detalladas en docs/FSCC-12901_Analisis.md, docs/CierreCaja_FACO_Reglas.md y docs/sql/FSCC-12957/README.md.</div>
+</body>
+</html>

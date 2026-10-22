@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FSCC-12901 v2 multipais</title>
+<style>
+  :root { --azul:#1f3a5f; --azul2:#2d5a8c; --gris:#5b6573; --borde:#d4dbe5; --fondo:#f3f6fa;
+          --ok:#1e7b45; --okf:#e7f5ec; --warn:#a86400; --warnf:#fdf3e6; --bad:#b3261e; --badf:#fbeceb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,sans-serif; font-size:15px; line-height:1.55; color:#1d232b; background:#eef2f7; }
+  header { background:linear-gradient(135deg,var(--azul),var(--azul2)); color:#fff; padding:28px 16px 30px; }
+  header .in, main { max-width:1040px; margin:0 auto; }
+  header .etq { opacity:.8; font-size:13px; letter-spacing:.6px; text-transform:uppercase; }
+  header h1 { margin:6px 0 8px; font-size:28px; }
+  header p { margin:0; opacity:.92; max-width:800px; }
+  main { padding:18px 16px 40px; }
+  nav { background:#fff; border:1px solid var(--borde); border-radius:10px; padding:10px 14px; margin:-34px 0 18px; position:relative;
+        box-shadow:0 2px 8px rgba(0,0,0,.06); display:flex; flex-wrap:wrap; gap:6px 14px; font-size:14px; }
+  nav a { color:var(--azul2); text-decoration:none; } nav a:hover { text-decoration:underline; }
+  section { background:#fff; border:1px solid var(--borde); border-radius:10px; padding:16px 20px; margin:0 0 18px; }
+  h2 { color:var(--azul); font-size:20px; margin:0 0 10px; }
+  h3 { color:var(--azul); font-size:16px; margin:14px 0 6px; }
+  code { font-family:Consolas,"Courier New",monospace; font-size:13px; background:var(--fondo); padding:1px 5px; border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin:6px 0 4px; }
+  th { background:var(--azul); color:#fff; text-align:left; padding:7px 9px; font-weight:600; }
+  td { border-bottom:1px solid var(--borde); padding:7px 9px; vertical-align:top; }
+  tr:nth-child(even) td { background:#fafbfd; }
+  .tabla { overflow-x:auto; }
+  .amb { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+  .amb div { border:1px solid var(--borde); border-radius:8px; padding:12px 14px; }
+  .amb .t { border-top:5px solid var(--warn); } .amb .d { border-top:5px solid var(--ok); }
+  .amb h3 { margin-top:0; }
+  .flujo { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 2px; }
+  .flujo .c { background:var(--fondo); border:1px solid var(--borde); border-radius:8px; padding:8px 11px; font-size:14px; }
+  .flujo .c b { color:var(--azul); display:block; font-size:13px; }
+  .flujo .f { color:var(--gris); font-size:20px; }
+  .pasos { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+  .paso { border:1px solid var(--borde); border-left:5px solid var(--azul2); border-radius:8px; padding:11px 13px; }
+  .paso .num { display:inline-block; background:var(--azul); color:#fff; border-radius:50%; width:26px; height:26px; text-align:center; line-height:26px; font-weight:700; margin-right:6px; }
+  .paso h3 { display:inline; margin:0; font-size:15px; }
+  .paso p { margin:8px 0 6px; font-size:14px; }
+  .badge { display:inline-block; font-size:12px; font-weight:600; padding:1px 8px; border-radius:10px; margin-left:4px; }
+  .graba { background:var(--warnf); color:var(--warn); border:1px solid #f0d2a6; }
+  .lee { background:var(--okf); color:var(--ok); border:1px solid #bfe3cc; }
+  .revierte { background:#e8eef8; color:var(--azul2); border:1px solid #c9d6ea; }
+  .test { background:#fff0f0; color:var(--bad); border:1px solid #f0c4c1; }
+  .ok { color:var(--ok); font-weight:600; }
+  .nota { background:#eef4fb; border-left:4px solid var(--azul2); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  .alerta { background:var(--warnf); border-left:4px solid var(--warn); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  .peligro { background:var(--badf); border-left:4px solid var(--bad); padding:9px 12px; border-radius:6px; margin:10px 0; }
+  ul, ol { margin:6px 0 6px 20px; padding:0; } li { margin:3px 0; }
+  footer { color:var(--gris); font-size:13px; text-align:center; padding:6px 16px 26px; }
+  @media (max-width:600px) { header h1 { font-size:22px; } section { padding:14px; } }
+  @media print { body { background:#fff; } nav { display:none; } section { break-inside:avoid; } }
+</style>
+</head>
+<body>
+
+<header><div class="in">
+  <div class="etq">Falabella Colombia · F8 · FSCC-12901 · v2</div>
+  <h1>Cierre automático y DI automática multipaís</h1>
+  <p>Los paquetes reciben el país (<code>p_flg_pais</code>, el mismo valor que <code>Flg_Pais$</code> del exe) y arman las tablas con su prefijo. Hoy solo está habilitado <b>FACO</b>, con <b>la misma lógica</b> que v1. La v1 queda intacta.</p>
+</div></header>
+
+<main>
+<nav>
+  <a href="#cambios">Qué cambia</a><a href="#carga">Una ejecución por carga</a><a href="#pais">Agregar un país</a>
+  <a href="#archivos">Archivos</a><a href="#orden">Orden</a><a href="#cuidados">Cuidados</a>
+</nav>
+
+<section id="cambios">
+  <h2>Qué cambia frente a v1</h2>
+  <div class="tabla"><table>
+    <tr><th>Tema</th><th>v1</th><th>v2</th></tr>
+    <tr><td>Paquetes</td><td><code>PKG_F8_FACO_CIERRE_AUTO</code><br><code>PKG_F8_FACO_COMPENSA_DI</code></td><td><code>PKG_F8_CIERRE_AUTO</code><br><code>PKG_F8_COMPENSA_DI_AUTO</code><br>Uno por base, para todos los países. El nombre no choca con el <code>PKG_F8_COMPENSACION_DI</code> de Chile.</td></tr>
+    <tr><td>País</td><td>Fijo (FACO)</td><td>Primer parámetro <code>p_flg_pais</code> en todas las rutinas públicas</td></tr>
+    <tr><td>Tablas</td><td><code>VTA_FACO*</code> fijas</td><td><code>VTA_{P}…</code> con el prefijo del país, en SQL dinámico con binds (como <code>"vta_" &amp; Flg_Pais$ &amp; "…"</code> en VB6)</td></tr>
+    <tr><td>Particularidades</td><td>Fijas en el código</td><td><code>pr_config</code>: prefijo, <code>vta_localiz</code>, nivel Y, tarjetas 2000–2999, dólar 305, secuencia de <code>MOVDET</code> y modo del universo</td></tr>
+    <tr><td>País no configurado</td><td>—</td><td>ORA-20001 <i>Pais no habilitado para cierre automatico</i></td></tr>
+    <tr><td>Universo</td><td>Vista <code>VTA_FACOV_CAJAS_CIERRE</code> + ventana <code>CA_DIAS</code> (30 días; la caja se reevalúa en cada ejecución)</td><td><b>Carga del día</b>: cada ejecución toma la cola, la evalúa una vez y la deja procesada. Sin <code>CA_DIAS</code> y sin vista (<code>fn_universo</code>)</td></tr>
+    <tr><td>Estados de la cola</td><td>P / C / O / V</td><td>P / <b>E</b> / C / O</td></tr>
+    <tr><td>DR, compensado, reglas RY, DI, log</td><td colspan="2" class="ok">Sin cambios: copiados línea a línea; solo cambian las tablas</td></tr>
+  </table></div>
+</section>
+
+<section id="carga">
+  <h2>Una ejecución por carga (Colombia)</h2>
+  <div class="flujo">
+    <div class="c"><b>Form133</b>sobre cargado</div><span class="f">→</span>
+    <div class="c"><b>Trigger</b>cola en <code>P</code></div><span class="f">→</span>
+    <div class="c"><b>Job</b>toma la carga <code>P → E</code></div><span class="f">→</span>
+    <div class="c"><b>T1</b>DI si la DR está en rango</div><span class="f">→</span>
+    <div class="c"><b>T2</b>cierra la Y con DR 0</div><span class="f">→</span>
+    <div class="c"><b>Cola</b><code>C</code> procesada</div>
+  </div>
+  <ul>
+    <li>Job: <code>begin PKG_F8_CIERRE_AUTO.prc_cierre_automatico(p_flg_pais =&gt; 'FACO'); end;</code></li>
+    <li>Lo que llega mientras corre el proceso queda en P para la próxima ejecución. Una ejecución interrumpida deja filas en E, que la siguiente vuelve a tomar.</li>
+    <li>Cada caja evaluada queda en <b>C</b> con su resultado. Excepciones: <code>OCUPADA</code> y lo no evaluado por <code>p_max_cajas</code> vuelven a P. Con T2 apagado, la cola queda en C con <code>SOLO_T1</code>.</li>
+    <li>Una segunda ejecución sin carga nueva no evalúa nada. La caja vuelve a evaluarse solo si recibe un sobre nuevo.</li>
+    <li>"Cerrar Terminal" de <code>Form43</code> usa <code>prc_cierre_dia</code>: cierra <b>un solo día</b> (fecha, local y terminal de la pantalla). Reemplaza al <code>prc_cierre_rango</code> de v1, porque el DF-SCC no pide un rango.</li>
+  </ul>
+</section>
+
+<section id="pais">
+  <h2>Cómo se agregaría otro país (ejemplo Chile, NO habilitado)</h2>
+  <div class="alerta">Para Chile no se crea nada. El bloque de Chile en <code>pr_config</code> está comentado.</div>
+  <ol>
+    <li><b>Configuración:</b> en <code>07_pkg_cierre_auto_body.sql</code> → <code>pr_config</code>, descomentar y completar el ejemplo (prefijo vacío → <code>VTA_TERMSTATY</code>, <code>VTA_PRD</code>…).</li>
+    <li><b>Comparar con el exe:</b> revisar sus diferencias de cuadratura. Si cierra por Z, agregar <code>pr_procesa_z</code>. Si usa una ventana de días, implementar el modo <code>DIAS</code> (fecha de proceso − <code>CA_DIAS</code>) en <code>fn_universo</code>.</li>
+    <li><b>Objetos del país:</b> crearlos copiando los scripts <code>*_FACO.sql</code> (cola, log, parámetros, opción 1515, trigger), con FACO reemplazado por su prefijo.</li>
+    <li><b>Exe:</b> extender la condición <code>Flg_Pais$ = "FACO"</code> de <code>Form43</code> (ver <code>FORM43_cambios_v2.md</code>).</li>
+  </ol>
+</section>
+
+<section id="archivos">
+  <h2>Archivos</h2>
+  <div class="tabla"><table>
+    <tr><th>Script</th><th>Tipo</th><th>Qué hace</th></tr>
+    <tr><td><code>00_prechecks.sql</code></td><td><span class="badge lee">lee</span></td><td>Verificaciones (sin SET ni PROMPT)</td></tr>
+    <tr><td><code>01_cola_FACO.sql</code></td><td>País</td><td>Cola + secuencia (P/E/C/O)</td></tr>
+    <tr><td><code>02_log_FACO.sql</code></td><td>País</td><td>Log + secuencia</td></tr>
+    <tr><td><code>03_parametros_FACO.sql</code></td><td>País</td><td>Parámetros 1502 <b>sin <code>CA_DIAS</code></b></td></tr>
+    <tr><td><code>03c_permiso_FACO.sql</code></td><td>País</td><td>Opción 1515</td></tr>
+    <tr><td><code>04</code> – <code>07</code></td><td>Genérico</td><td>Especificaciones y cuerpos de los paquetes (en ese orden)</td></tr>
+    <tr><td><code>08_trigger_FACO.sql</code></td><td>País</td><td>Trigger de la cola</td></tr>
+    <tr><td><code>09_grants_sinonimos.sql</code></td><td>—</td><td>Permisos (reemplazar <code>USUARIO_APP</code> / <code>DUENIO</code>)</td></tr>
+    <tr><td><code>10_pruebas.sql</code></td><td><span class="badge graba">graba en 8, 9c y 11</span></td><td>Paridad v1 = v2, configuración del país, ejecución, "segunda ejecución sin nada"</td></tr>
+    <tr><td><code>99_rollback.sql</code></td><td><span class="badge revierte">revierte</span></td><td>Apagar, revertir una ejecución o desinstalar</td></tr>
+    <tr><td><code>INSTALAR.sql</code></td><td>—</td><td>Base <b>sin v1</b> (SQL*Plus)</td></tr>
+    <tr><td><code>MIGRAR_DESDE_V1.sql</code></td><td>—</td><td>Base <b>con v1</b>: agrega el estado E y compila 04–07. No borra nada de v1</td></tr>
+    <tr><td><code>MIGRAR_99_volver_v1.sql</code></td><td><span class="badge revierte">revierte</span></td><td>Deshace la migración</td></tr>
+    <tr><td><code>FORM43_cambios_v2.md</code></td><td>Documento</td><td>Cambios VB de <code>Form43</code> (no aplicados)</td></tr>
+    <tr><td><code>poc/</code></td><td>POC</td><td>La POC adaptada a v2 (mismos escenarios; <code>01</code> ya no toca <code>CA_DIAS</code>)</td></tr>
+  </table></div>
+</section>
+
+<section id="orden">
+  <h2>Orden en desarrollo (v1 ya instalado)</h2>
+  <div class="pasos">
+    <div class="paso"><span class="num">1</span><h3>Verificar</h3><p><code>00_prechecks.sql</code>. Que aparezcan los objetos de FACO es lo esperado.</p></div>
+    <div class="paso"><span class="num">2</span><h3>Migrar</h3><p><code>MIGRAR_DESDE_V1.sql</code> → <code>04</code> → <code>05</code> → <code>06</code> → <code>07</code>. <code>user_errors</code> debe quedar vacío.</p></div>
+    <div class="paso"><span class="num">3</span><h3>Paridad</h3><p><code>10_pruebas.sql</code> 1–7. La prueba <b>3b</b> debe dar 0 filas (DR de v1 = DR de v2).</p></div>
+    <div class="paso"><span class="num">4</span><h3>POC</h3><p><code>poc/01</code> → … → <code>07</code>, con "diferentes" en 0. Prueba manual: <code>M1</code> → <code>Form133</code> → <code>poc/06</code> → <code>M2</code>.</p></div>
+    <div class="paso"><span class="num">5</span><h3>Una por carga</h3><p><code>10_pruebas.sql</code> 9b y 9c: la cola queda en C y la segunda ejecución evalúa 0 cajas.</p></div>
+  </div>
+  <div class="nota">Base nueva sin v1: <code>INSTALAR.sql</code> y después el paso 09.</div>
+</section>
+
+<section id="cuidados">
+  <h2>Cuidados</h2>
+  <ul>
+    <li>No ejecutar a la vez el job de v1 y el de v2 sobre la misma cola.</li>
+    <li>Scripts en ASCII, sin prefijo de esquema, sin <code>&amp;</code>, compatibles con Oracle 10.2 (q-quote y <code>DBMS_SQL</code>). No se guardan claves.</li>
+  </ul>
+  <div class="peligro"><b>No probado en la base.</b> Se entrega como scripts: compilar y ejecutar en desarrollo lo hace el usuario.</div>
+</section>
+</main>
+<footer>FSCC-12901 v2 multipaís · 13-10-2026</footer>
+</body>
+</html>

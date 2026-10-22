@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FSCC-12958 · T2 Cierre de caja automático</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<section class="portada">
+  <div class="etq">Falabella Colombia · F8 Automático · SCCFIN</div>
+  <h1>FSCC-12958 · HU-01-T2<br>Cierre de caja automático</h1>
+  <div class="sub">Documento técnico-funcional para desarrollar la subtarea</div>
+  <table>
+    <tr><td><b>Historia principal</b></td><td>FSCC-12901 · Compensación automática de DI dentro de un rango — Falabella Colombia</td></tr>
+    <tr><td><b>Subtarea previa</b></td><td>FSCC-12957 · HU-01-T1 Compensación automática de DI (documento aparte)</td></tr>
+    <tr><td><b>Sistema</b></td><td><code>f8a.exe</code> (VB6, <code>FTEPROD/recaudacion.vbp</code>) + Oracle 10g, esquema <code>INTRANETTS</code></td></tr>
+    <tr><td><b>Fuentes</b></td><td>Código VB6; base de test <code>sgfnprds</code> (06-10-2026, solo lectura); Jira; <code>docs/CierreCaja_FACO_Reglas.md</code>, <code>docs/FSCC-12901_Analisis.md</code></td></tr>
+    <tr><td><b>Fecha</b></td><td>06-10-2026</td></tr>
+  </table>
+</section>
+
+<section class="indice">
+  <h2>Contenido</h2>
+  <ol>
+    <li>Ficha de la tarea</li>
+    <li>Magnitud y componentes</li>
+    <li>Lo que ya existe: cierre automático de Colombia</li>
+    <li>Validaciones de "Cerrar Terminal" a replicar</li>
+    <li>Diseño en base de datos</li>
+    <li>Cambios en el exe VB6</li>
+    <li>Algoritmo</li>
+    <li>Casos de prueba</li>
+    <li>Decisiones pendientes y vacíos de información</li>
+    <li>Riesgos, despliegue y vuelta atrás</li>
+    <li>Diagramas del requerimiento (BPMN) y correspondencia con el sistema</li>
+    <li><b>Enfoque aprobado: implementación en base de datos (tabla homóloga + trigger + procedimiento)</b></li>
+  </ol>
+  <div class="nota"><b>Actualización 06-10-2026:</b> se aprobó resolver T2 en Oracle, sin depender del exe. Ver la sección 12 y los scripts en <code>docs/sql/FSCC-12958/</code>. Las secciones 5 a 7 describen el diseño anterior (llamada desde <code>Form133</code>) y quedan como referencia. <b>Ajuste DF-SCC:</b> cajas sin movimiento y Consultas de Cuadratura (<code>Form43</code>) en la sección 12.5.</div>
+  <div class="alerta"><b>Actualización 07-10-2026: FACO opera solo con cierre Y.</b> El proceso cierra únicamente cierres Y (<code>vta_FACOtermstaty</code>), igual que <code>Form3Y.CierraTerminal</code>, y <b>no toca la Z</b> (<code>vta_FACOtermstat</code>). Todo lo que este documento dice sobre el cierre de la Z (sección 4.2, reglas RZ, fase Z del algoritmo, casos de la Z) queda <b>sin efecto</b>. Ver la sección 12.6.</div>
+</section>
+
+<h2>1. Ficha de la tarea</h2>
+<table>
+  <tr><th style="width:24%">Campo</th><th>Detalle</th></tr>
+  <tr><td>Objetivo</td><td>Después de T1, cerrar automáticamente cada caja de la carga que quede con <b>Diferencia Real 0</b> y cumpla <b>todas</b> las validaciones de "Cerrar Terminal".</td></tr>
+  <tr><td>Hace</td><td>Recorre cada caja abierta de la carga (<b>incluidas las que ya estaban cuadradas</b>) · recalcula DR · aplica validaciones · cierra la Y · cuando todas las Y del terminal-día están cerradas, valida y cierra la Z · registra el motivo de cada caja no cerrada.</td></tr>
+  <tr><td>No hace</td><td>No crea compensaciones (eso es T1). No reabre cajas cerradas.</td></tr>
+  <tr><td>Disparador</td><td>Inmediatamente después de T1, en la misma llamada desde <code>Form133</code>.</td></tr>
+  <tr><td>Criterios de aceptación cubiertos</td><td>CA 1 (parte cierre), 2, 4, 9 de FSCC-12901.</td></tr>
+  <tr><td>Diagramas</td><td>"Flujo general de la historia" y "Proceso 2 · Cierre de caja automático" (<code>docs/Requeriemintos-FSCC-12901</code>). Reproducidos y contrastados en la sección 11.</td></tr>
+  <tr><td>Precondiciones (diagrama general)</td><td>(1) La carga fue correcta. (2) El parámetro <b>T2 activa</b> = S. Si T1 está inactiva, T2 corre igual sobre las cajas abiertas de la carga.</td></tr>
+  <tr><td>Marca del cierre (diagrama proceso 2)</td><td>"Estado cerrado, cerrado por <b>usuario de proceso</b>, <b>fecha y nota</b>": <code>ter_estado = 1</code>, <code>ter_cerradopor</code> = usuario de proceso, <code>ter_notas</code> = texto con fecha y hora (la columna de fecha no existe; ver P4).</td></tr>
+</table>
+
+<h2>2. Magnitud y componentes</h2>
+<p>Magnitud global: <b>media-alta</b>. Hay que portar a PL/SQL unas 20 validaciones que hoy viven en dos formularios VB6 (<code>Form3Y</code> para la Y y <code>Form3</code> para la Z), incluida una validación dinámica (Z = ΣY) que depende de la tabla de configuración <code>vta_paint_z</code>. Existe un paquete de cierre automático de Colombia que conviene extender, pero <b>su código no está visible</b>.</p>
+<table>
+  <tr><th>#</th><th>Componente</th><th>Tipo</th><th>Acción</th><th>Complejidad</th></tr>
+  <tr><td>1</td><td>Validaciones de cierre de Y (RY)</td><td>PL/SQL</td><td>Crear / extender paquete existente</td><td class="warn">Media</td></tr>
+  <tr><td>2</td><td>Validaciones de cierre de Z (RZ), incluida Z = ΣY dinámica</td><td>PL/SQL</td><td>Crear / extender</td><td class="bad">Alta</td></tr>
+  <tr><td>3</td><td>Procedimiento de cierre automático (orquestación)</td><td>PL/SQL</td><td>Extender <code>PKG_F8_FACO_CIERRE_TER_PM_AP</code> o crear</td><td class="warn">Media</td></tr>
+  <tr><td>4</td><td>Fecha de cierre</td><td>DDL</td><td>Agregar columna (solo si P4 lo pide)</td><td class="ok">Baja</td></tr>
+  <tr><td>5</td><td>Log/resumen</td><td>Tabla de T1</td><td>Reutilizar (<code>log_proceso='T2'</code>)</td><td class="ok">Baja</td></tr>
+  <tr><td>6</td><td>Llamada y resumen en el exe</td><td>VB6 <code>Form133</code> + form resumen de T1</td><td>Modificar</td><td class="ok">Baja</td></tr>
+</table>
+
+<h2>3. Lo que ya existe: cierre automático de Colombia</h2>
+<table>
+  <tr><th>Objeto</th><th>Qué se sabe</th></tr>
+  <tr><td><code>PKG_F8_FACO_CIERRE_TER_PM_AP</code> (INTRANETTS, 2022-02-09)</td><td>Especificación: <code>CIERRE_TERMINAL(FECHA_PROCESO)</code>, <code>VALOR_COMPENSADO(fecha, local, terminal, COD_SECY)</code>, <code>VALIDA_CONCEPTO(fecha, local, terminal, tipo, COD_SECY)</code>. Trabaja <b>por cierre Y</b>. <b>Cuerpo no visible</b> con el usuario de test.</td></tr>
+  <tr><td>Evidencia en datos (test)</td><td>556 Y y 117 Z cerradas con <code>ter_cerradopor='AUTOMATICO'</code> entre 2022 y el 23-09-2026. 166 de 187 terminales Autopago (<code>vta_FACOterminales.ter_tipo=2</code>) y el terminal 3016 de muchos locales. Las Y cerradas así tienen montos en 0.</td></tr>
+  <tr><td>Quién lo ejecuta</td><td>No lo llama el exe; no hay jobs visibles. <b>Desconocido</b> (P14).</td></tr>
+  <tr><td>Mantenedor de tipos de terminal</td><td><code>Form50</code> ("Terminales POS MOBILE y AUTOPAGO"): <code>ter_tipo</code> 0 normal, 1 POS Mobile, 2 Autopago.</td></tr>
+</table>
+<div class="nota"><b>Recomendación:</b> T2 debe <b>extender</b> este paquete (mismo usuario <code>AUTOMATICO</code> o el de proceso de T1, según P5) para que haya un solo cierre automático en Colombia. Requiere obtener primero su cuerpo (DBA) para no romper el cierre actual de Autopago.</div>
+
+<h2 class="salto">4. Validaciones de "Cerrar Terminal" a replicar</h2>
+<p>Fuente: <code>Form3Y.CierraTerminal</code> (<code>Form3Y.frm:2801</code>) para la Y y <code>Form3.CierraTerminal</code> (<code>Form3.frm:3439</code>) para la Z. SQL completo de cada una en <code>docs/CierreCaja_FACO_Reglas.md</code> §3–§6. Se evalúan <b>en orden</b>; la primera que falla bloquea y su mensaje va al log.</p>
+<div class="alerta"><b>Diferencias con el diagrama del proceso 2.</b> El diagrama resume las validaciones como "conceptos por regularizar, tarjetas, monto por compensar, suma Y = Z, Y abiertos". En el sistema real, para Colombia: <b>tarjetas no aplica</b> (solo ARG/SOAR/SOUY/CHI/CMCL); <b>faltan</b> cheque a fecha (RY-01/RZ-01), estado Impreso o Sin datos (RY-02), ZZZ (opción 103) y dólares (opción 109); "suma Y = Z" e "Y abiertos" son validaciones <b>de la Z</b> (RZ-06, RZ-07), no de la Y. El diseño de este documento usa la lista real.</div>
+
+<h3>4.1 Cierre de Y</h3>
+<table>
+  <tr><th>ID</th><th>Regla</th><th>Bloquea si</th><th>Mensaje (log)</th><th>Nota para el proceso</th></tr>
+  <tr><td>RY-01</td><td>Cheque a fecha</td><td>Σ <code>VTA_FACOCHEQUES</code> tipo 1 ≠ Σ <code>vta_FACOtesor.tes_chefecha</code> (día completo)</td><td>"Existe diferencia para el concepto cheques a Fecha…"</td><td>D7: compara todo el día aunque se cierre una Y</td></tr>
+  <tr><td>RY-02</td><td>Y no cerrada</td><td><code>ter_estado &gt; 0</code> (1, 2, 3)</td><td>"Terminal ya se Encuentra Cerrado"</td><td>Impreso (2) y Sin datos (3) también bloquean</td></tr>
+  <tr><td>RY-03</td><td>Sin conceptos pendientes en la Y</td><td>Existe SN, AF, ND, FN, NP, BF, CR, CT, CA (cartaaviso), DP con <code>mov_regul</code> nulo/' '/'N' y <code>mov_cierrey</code> = Y</td><td>"Falta regularizar … , o elimine el registro"</td><td>CA4: el resumen debe decir qué concepto</td></tr>
+  <tr><td>RY-05</td><td>DR = 0</td><td>DR (función de T1) ≠ 0</td><td>"Falta Monto por Compensar"</td><td>Reutilizar <code>FN_F8_FACO_DIF_REAL_Y</code></td></tr>
+  <tr><td>RY-06</td><td>Fórmula ZZZ de la Y</td><td>Solo si el perfil tiene opción 103: F7−F6−…−F1 ≠ 0 (<code>vta_paint_z.vta_validadorzzz</code>)</td><td>"Error, Y descuadrada…"</td><td>D1: hoy el exe pasa el local en vez de la Y ⇒ no valida. Decidir</td></tr>
+</table>
+<pre>update vta_FACOtermstaty
+   set ter_estado = '1', ter_cerradopor = :usuario_proceso,
+       ter_notas = substr('CIERRE AUTOMATICO FSCC-12901 ' || to_char(sysdate,'dd-mm-yyyy hh24:mi')
+                          || nvl2(ter_notas, ' | ' || ter_notas, ''), 1, 2500)
+ where ter_fecha = :f and ter_local = :l and ter_terminal = :t and ter_cierrey = :y;</pre>
+
+<h3>4.2 Cierre de Z (solo cuando todas las Y del terminal-día están cerradas)</h3>
+<div class="alerta"><b>No aplica desde el 07-10-2026:</b> FACO opera solo con cierre Y y el proceso no cierra la Z. Se deja como referencia del análisis de <code>Form3.CierraTerminal</code>.</div>
+<table>
+  <tr><th>ID</th><th>Regla</th><th>Bloquea si</th><th>Nota</th></tr>
+  <tr><td>RZ-01</td><td>Cheque a fecha (día)</td><td>Igual a RY-01</td><td>Exentos perfiles 8, 10, 12 → P5</td></tr>
+  <tr><td>RZ-02</td><td>Z no cerrada</td><td><code>ter_estado &gt; 0</code></td><td></td></tr>
+  <tr><td>RZ-03</td><td>Sin conceptos pendientes del día</td><td>Mismos tipos que RY-03, <b>sin</b> filtro de Y</td><td>PM, DE, VC son solo de Chile</td></tr>
+  <tr><td>RZ-05</td><td>DR de la Z = 0</td><td>Versión Z de la función (día completo, <code>tiporeg='F8'</code>)</td><td>La Z no lleva DI: si ≠ 0 queda Pendiente con motivo</td></tr>
+  <tr><td>RZ-06</td><td>Z = Σ Y</td><td>Por cada campo de <code>vta_paint_z</code> (FACO, sin pop-up, <code>vta_order_z</code> fuera de 56..76): Σ campo Z ≠ Σ campo Y</td><td><b>SQL dinámico</b> (<code>EXECUTE IMMEDIATE</code>) o lista fija de campos</td></tr>
+  <tr><td>RZ-07</td><td>Todas las Y cerradas</td><td>Alguna Y con estado ≠ 1</td><td>D2: si no hay Y, hoy deja pasar</td></tr>
+  <tr><td>RZ-08</td><td>ZZZ de la Z</td><td>Opción 103</td><td>P5</td></tr>
+  <tr><td>RZ-09</td><td>USD declarados = USD Prosegur</td><td>Opción 109: Σ(−<code>recmex.mex_cantidad</code> 305) + Σ(<code>prd</code> DOL) ≠ 0</td><td>Base: <code>FUN_F8_COMPENSACION_DI</code></td></tr>
+</table>
+<pre>update vta_FACOtermstat
+   set ter_estado = '1', ter_cerradopor = :usuario_proceso,
+       ter_notas = substr('CIERRE AUTOMATICO FSCC-12901 ' || to_char(sysdate,'dd-mm-yyyy hh24:mi')
+                          || nvl2(ter_notas, ' | ' || ter_notas, ''), 1, 2500)
+ where ter_fecha = :f and ter_local = :l and ter_terminal = :t;
+-- ter_fechacierre NO existe en Colombia: la fecha va en ter_notas (diagrama: "fecha y nota"), ver P4</pre>
+<div class="nota"><b>El diagrama cierra la Z apenas se cierra la última Y</b> ("¿Cierre Y y todas las Y cerradas? Sí → Cerrar el terminal-día (Z)"). En el sistema la Z tiene validaciones propias (RZ-05, RZ-06, RZ-09) que pueden fallar aunque todas las Y estén en 0. El diseño ejecuta las RZ antes de cerrar la Z; si fallan, la Z queda Pendiente con motivo (N5).</div>
+
+<h3>4.3 Validaciones que dependen del perfil (P5)</h3>
+<p>Un proceso automático no tiene perfil. Opciones: (a) evaluar con el perfil del analista que ejecutó la carga (<code>PERFILUSER</code>, consultando <code>vta_FACOrelpermen</code>); (b) definir un perfil fijo de proceso. Consulta de permiso:</p>
+<pre>select 1 from vta_FACOrelpermen p, vta_FACOmenu m
+ where p.mnu_codigo = m.mnu_codigo and p.per_codigo = :perfil
+   and p.mnu_codigo = :opcion and p.rel_estado &lt; 0;     -- 103 ZZZ, 109 dólares</pre>
+
+<h2 class="salto">5. Diseño en base de datos</h2>
+<h3>5.1 Objetos</h3>
+<table>
+  <tr><th>Objeto (nombre sugerido)</th><th>Acción</th><th>Para qué</th></tr>
+  <tr><td><code>PKG_F8_FACO_CIERRE_TER_PM_AP</code></td><td>Extender (recomendado)</td><td>Agregar <code>PR_CIERRE_AUTO_CARGA</code> que recorra las cajas de la carga; reutilizar <code>VALOR_COMPENSADO</code> y <code>VALIDA_CONCEPTO</code> si su lógica coincide con RY-03 / RY-05 (verificar con el cuerpo)</td></tr>
+  <tr><td><code>FN_F8_FACO_DIF_REAL_Y</code> (de T1)</td><td>Reutilizar + variante Z</td><td>RY-05 y RZ-05</td></tr>
+  <tr><td><code>FN_F8_FACO_VALIDA_Y</code> / <code>FN_F8_FACO_VALIDA_Z</code></td><td>Crear</td><td>Devuelven código de regla y mensaje de la primera que falla</td></tr>
+  <tr><td><code>VTA_FACOLOG_PROC_AUTO</code> (de T1)</td><td>Reutilizar</td><td>Resumen con <code>log_proceso='T2'</code>, <code>log_regla</code>, <code>log_mensaje</code></td></tr>
+  <tr><td><code>ter_fechacierre</code> en <code>vta_FACOtermstat</code> y <code>vta_FACOtermstaty</code></td><td>Crear solo si P4 exige columna</td><td>CA1 "fecha de cierre". Alternativa sin DDL: fecha y hora en <code>ter_notas</code> (VARCHAR2 2500, existe)</td></tr>
+  <tr><td><code>vta_FACOparam</code> 1502 'DIA_T2'</td><td>Crear (lo inserta T1)</td><td>Interruptor "T2 activa" del diagrama general</td></tr>
+</table>
+<pre>-- Solo si P4 = agregar columna
+alter table vta_FACOtermstat  add (ter_fechacierre date);
+alter table vta_FACOtermstaty add (ter_fechacierre date);</pre>
+
+<h3>5.2 Universo</h3>
+<ul>
+  <li>Y: las cajas de la carga (mismo universo de T1) en estado −1/0, <b>incluidas</b> las de DR 0 que T1 no tocó (T2: "incluidas las ya cuadradas").</li>
+  <li>Z: los terminal-día de esas Y. Nunca recorrer todas las Z pendientes: hay ~2.180 precreadas por día en −1.</li>
+  <li>Excluir con motivo: Y sin libro de ventas (<code>SIN_LIBVTA</code>), Y cerradas que recibieron sobres (P12, <code>Y_CERRADA_CON_DIF</code>).</li>
+</ul>
+
+<h3>5.3 Firma sugerida</h3>
+<pre>procedure pr_cierre_auto_carga (
+  p_ejecucion  in  number,     -- id de la corrida de T1 (mismo resumen)
+  p_fechadep   in  date,
+  p_cod_recaud in  varchar2,
+  p_perfil     in  number,     -- perfil del analista (P5)
+  p_usuario    in  varchar2,
+  o_y_cerradas out number,
+  o_z_cerradas out number,
+  o_no_cerradas out number);</pre>
+
+<h2>6. Cambios en el exe VB6</h2>
+<table>
+  <tr><th>Archivo</th><th>Cambio</th></tr>
+  <tr><td><code>FTEPROD/Form133.frm</code> (<code>CargarArchivo</code>, <code>:1671</code>)</td><td>Tras la llamada de T1, llamar <code>pr_cierre_auto_carga</code> con el mismo id de ejecución, <code>PERFILUSER</code> y <code>LOGINUSER</code>. Solo <code>Flg_Pais$="FACO"</code>.</td></tr>
+  <tr><td>Formulario de resumen (de T1, ej. <code>Form174</code>)</td><td>Mostrar también las filas <code>log_proceso='T2'</code>: cerradas Y/Z y no cerradas con regla y mensaje.</td></tr>
+  <tr><td><code>Módulo1.bas</code></td><td>Misma subida de <code>Gversion</code> que T1 (se despliegan juntas).</td></tr>
+</table>
+<div class="nota">Las pantallas F8 (<code>Form3</code>, <code>Form3Y</code>, <code>Form43</code>) <b>no se modifican</b>: el cierre manual sigue igual. Si en el futuro se quiere que el cierre manual use el mismo PL/SQL (una sola fuente de verdad), sería otra historia.</div>
+
+<h2>7. Algoritmo</h2>
+<pre>si parámetro DIA_T2 &lt;&gt; 'S' -> log T2_INACTIVA ; terminar
+-- Fase Y
+para cada Y del universo (orden fecha, local, terminal, cierrey):
+    savepoint y
+    select ter_estado from vta_FACOtermstaty ... for update nowait   (si bloqueada -> log OCUPADA)
+    si ter_estado > 0                         -> log RY-02 ; continuar
+    si no hay libvta Y                        -> log SIN_LIBVTA ; continuar
+    regla := FN_F8_FACO_VALIDA_Y(...)         -- RY-01, RY-03, RY-05, (RY-06 según perfil)
+    si regla <> OK                            -> log NO_CERRADA (regla, mensaje) ; continuar
+    update termstaty -> estado 1, cerradopor
+    commit ; log CERRADA_Y
+
+-- Fase Z
+para cada terminal-día del universo:
+    savepoint z
+    select ter_estado from vta_FACOtermstat ... for update nowait
+    si alguna Y del terminal-día no está cerrada -> log RZ-07 ; continuar
+    regla := FN_F8_FACO_VALIDA_Z(...)         -- RZ-01, 03, 05, 06, (08, 09 según perfil)
+    si regla <> OK                            -> log NO_CERRADA ; continuar
+    update termstat -> estado 1, cerradopor (+ fechacierre si P4)
+    commit ; log CERRADA_Z</pre>
+
+<h2 class="salto">8. Casos de prueba</h2>
+<table>
+  <tr><th>#</th><th>Caso</th><th>Esperado</th></tr>
+  <tr><td>1</td><td>Y compensada por T1 (DR 0), sin pendientes (CA1)</td><td>Y cerrada con usuario de proceso; si es la única Y, Z también</td></tr>
+  <tr><td>2</td><td>Límites −1.000 / 20.000 compensados por T1 (CA2)</td><td>Se cierran</td></tr>
+  <tr><td>3</td><td>Y con SN sin regularizar (CA4)</td><td>No se cierra; log RY-03 "Falta regularizar el Sobres No Enviado…"</td></tr>
+  <tr><td>4</td><td>Y ya cuadrada antes de la carga (CA9)</td><td>Se valida y se cierra</td></tr>
+  <tr><td>5</td><td>Cheque a fecha gestión ≠ tesorería</td><td>Log RY-01</td></tr>
+  <tr><td>6</td><td>Y en estado 2 (Impreso)</td><td>No se cierra; log RY-02</td></tr>
+  <tr><td>7</td><td>Terminal con 3 Y, una fuera de rango</td><td>2 Y cerradas; Z no (RZ-07)</td></tr>
+  <tr><td>8</td><td>Todas las Y cerradas, Z ≠ ΣY en un campo</td><td>Z no; log RZ-06 con la glosa del campo</td></tr>
+  <tr><td>9</td><td>Todas las Y en 0 pero Z con DR ≠ 0</td><td>Z no; log RZ-05</td></tr>
+  <tr><td>10</td><td>Perfil con opción 109 y USD ≠ Prosegur</td><td>Z no; log RZ-09</td></tr>
+  <tr><td>11</td><td>Y cerrada previamente que recibe sobre (P12)</td><td>Según decisión; mínimo en el resumen</td></tr>
+  <tr><td>12</td><td>Analista con la Y abierta en Form3Y mientras corre el proceso</td><td>Sin bloqueo: proceso cierra; con <code>nowait</code>: log OCUPADA</td></tr>
+  <tr><td>13</td><td>Doble ejecución sobre la misma carga</td><td>No reprocesa cerradas; sin errores</td></tr>
+  <tr><td>14</td><td>Terminal Autopago (ter_tipo 2) en la carga</td><td>Mismo resultado que el cierre AUTOMATICO actual (no romperlo)</td></tr>
+  <tr><td>15</td><td>Comparación con cierre manual</td><td>Para 10 cajas, el proceso bloquea con la misma regla que mostraría <code>Form3Y</code>/<code>Form3</code></td></tr>
+</table>
+
+<h2>9. Decisiones pendientes y vacíos de información</h2>
+<table>
+  <tr><th>ID</th><th>Tema</th><th>Propuesta</th><th>¿Bloquea T2?</th></tr>
+  <tr><td>V1</td><td>Cuerpo de <code>PKG_F8_FACO_CIERRE_TER_PM_AP</code></td><td>Pedir al DBA</td><td class="bad">Sí</td></tr>
+  <tr><td>P14</td><td>Quién/cuándo ejecuta hoy el cierre AUTOMATICO</td><td>Averiguar con DBA/operaciones; integrar en lugar de duplicar</td><td class="bad">Sí</td></tr>
+  <tr><td>P3</td><td>Y primero, Z después; Z sin DI</td><td>Confirmar</td><td class="warn">Confirmar</td></tr>
+  <tr><td>P4</td><td>Fecha de cierre: columna nueva o nota</td><td>Fecha y hora en <code>ter_notas</code> + log (el diagrama pide "fecha y nota"); columna solo si Auditoría la exige</td><td class="warn">Sí si se elige DDL</td></tr>
+  <tr><td>P5</td><td>Perfil para validaciones 103/109 y exenciones RZ-01</td><td>Perfil del analista que ejecuta la carga</td><td class="bad">Sí</td></tr>
+  <tr><td>P12</td><td>Y cerradas que reciben sobres</td><td>No reabrir; informar en resumen</td><td class="warn">Confirmar</td></tr>
+  <tr><td>D1</td><td>ZZZ de la Y hoy no valida (bug del exe)</td><td>Replicar el comportamiento (no validar) y abrir incidencia aparte</td><td class="warn">Confirmar</td></tr>
+  <tr><td>D2</td><td>Z sin Y en libro de ventas</td><td>No cerrar automáticamente; dejar al analista</td><td class="warn">Confirmar</td></tr>
+  <tr><td>D7</td><td>Cheque a fecha del día completo al cerrar Y</td><td>Replicar</td><td>No</td></tr>
+  <tr><td>N1</td><td>Interruptor T2 activa</td><td>Parámetro 1502 'DIA_T2' (S/N)</td><td class="warn">Confirmar nombre</td></tr>
+  <tr><td>N3</td><td>"Reabrir las cajas que cambian": hoy la carga solo reabre la Z</td><td>Reabrir también la Y del sobre (cambio en <code>Form133.AbrirTerminal</code>, documentado en T1)</td><td class="warn">Confirmar</td></tr>
+  <tr><td>N4</td><td>Ramas que faltan en el proceso 2: error técnico, caja ocupada, Y sin libro de ventas</td><td>Agregarlas al diagrama (ya están en el algoritmo)</td><td>No</td></tr>
+  <tr><td>N5</td><td>El diagrama cierra la Z sin sus validaciones propias</td><td>Ejecutar RZ antes de cerrar la Z</td><td class="warn">Confirmar</td></tr>
+</table>
+
+<h2>10. Riesgos, despliegue y vuelta atrás</h2>
+<h3>Riesgos</h3>
+<ul>
+  <li><b>Romper el cierre AUTOMATICO actual</b> de Autopago si se modifica su paquete sin conocerlo → obtener el cuerpo y cubrir con el caso 14.</li>
+  <li><b>Divergencia con el cierre manual</b>: hay tres implementaciones en VB6 (<code>Form3</code>, <code>Form3Y</code>, <code>Form43</code>) que no comparten código; la nueva en PL/SQL sería la cuarta. Caso 15 obligatorio.</li>
+  <li><b>Z = ΣY dinámico</b>: depende de <code>vta_paint_z</code>; un cambio de configuración cambia el resultado.</li>
+  <li><b>Concurrencia</b> con analistas trabajando en la F8 durante la carga → <code>FOR UPDATE NOWAIT</code> y registro OCUPADA.</li>
+</ul>
+<h3>Orden de despliegue</h3>
+<ol>
+  <li>(Si P4) <code>alter table</code> de fecha de cierre.</li>
+  <li>Funciones de validación Y/Z y procedimiento; sinónimos y grants a <code>UINTRANETTS</code>.</li>
+  <li>Regresión del cierre AUTOMATICO existente (caso 14).</li>
+  <li>Comparación contra cierre manual (caso 15).</li>
+  <li>Exe junto con T1; piloto en un local.</li>
+</ol>
+<h3>Vuelta atrás</h3>
+<pre>-- reabrir lo cerrado por una corrida (si no hubo envío contable)
+update vta_FACOtermstaty y set ter_estado = 0, ter_cerradopor = null
+ where exists (select 1 from vta_FACOlog_proc_auto l
+               where l.log_ejecucion = :ejecucion and l.log_proceso = 'T2'
+                 and l.log_resultado = 'CERRADA_Y'
+                 and l.log_fecha_vta = y.ter_fecha and l.log_local = y.ter_local
+                 and l.log_terminal = y.ter_terminal and l.log_cierrey = y.ter_cierrey);
+-- ídem vta_FACOtermstat con log_resultado = 'CERRADA_Z' (log_cierrey null)
+-- reabrir manualmente un terminal también es posible desde Form20 (reapertura)</pre>
+
+<h2 class="salto">11. Diagramas del requerimiento (BPMN) y correspondencia con el sistema</h2>
+<h3>11.1 Flujo general de la historia</h3><p>Diagrama en la página siguiente (horizontal).</p>
+<div class="horizontal"><div class="titulo">Flujo general de la historia (FSCC-12901)</div><img src="img/flujo_general.png" alt="Flujo general"></div>
+<table>
+  <tr><th>Paso del diagrama</th><th>Hoy en el sistema</th><th>Qué implica para T2</th></tr>
+  <tr><td>¿Carga correcta? No → carga rechazada, no se ejecutan las tareas</td><td class="warn">Parcial (la carga puede quedar a medias)</td><td>T2 solo corre si la carga fue completa (N2, documentado en T1)</td></tr>
+  <tr><td>Recalcular la cuadratura y reabrir las cajas que cambian <i>(vigente)</i></td><td class="bad">Solo reabre la Z</td><td>Sin N3, una Y cerrada que recibe sobres impide cerrar la Z (P12)</td></tr>
+  <tr><td>¿T2 activa? → Seleccionar las cajas abiertas de la carga</td><td>Nuevo</td><td>Parámetro <code>DIA_T2</code>; universo de 5.2</td></tr>
+  <tr><td>T2: cerrar cada caja cuadrada</td><td>Existe un cierre automático parcial (<code>PKG_F8_FACO_CIERRE_TER_PM_AP</code>)</td><td>Extenderlo (sección 3)</td></tr>
+  <tr><td>Consolidar: compensadas, cerradas, pendientes y errores → mostrar resumen</td><td>Nuevo</td><td>Log compartido con T1, <code>log_proceso='T2'</code></td></tr>
+  <tr><td>Analista: gestionar a mano (reabrir, compensar, Cerrar Terminal)</td><td class="ok">Existe</td><td><code>Form20</code>, <code>Form4</code>→<code>Form38</code>, <code>Form3Y</code>/<code>Form3</code></td></tr>
+  <tr><td>Datos: "Estado de cajas", "Registro de ejecución (nuevo)"</td><td><code>vta_FACOtermstat[y]</code> · nuevo</td><td>UPDATE de estado/nota + log</td></tr>
+</table>
+
+<h3>11.2 Proceso 2 · Cierre de caja automático</h3>
+<img src="img/proceso2_T2.png" alt="Proceso 2 (versión 05-10; ver la versión actualizada en 12.6)" style="width:100%; border:1px solid #c9d1dc;">
+<table>
+  <tr><th>Elemento del diagrama</th><th>Diseño (este documento)</th></tr>
+  <tr><td>Inicio: "Terminal-día o cierre Y de la carga (incluye los que ya tenían DR 0)"</td><td>Universo 5.2: primero las Y, después la Z del terminal-día</td></tr>
+  <tr><td>Recalcular la DR (después del Proceso 1)</td><td><code>FN_F8_FACO_DIF_REAL_Y</code> (de T1); variante Z para la Z</td></tr>
+  <tr><td>¿DR = 0? No → "queda con diferencia" → Pendiente con diferencia</td><td>Log <code>NO_CERRADA</code>, regla RY-05 / RZ-05</td></tr>
+  <tr><td>Validaciones de Cerrar Terminal (conceptos, tarjetas, monto por compensar, suma Y = Z, Y abiertos)</td><td>Lista real de la sección 4: tarjetas no aplica; se agregan cheque a fecha, estado, ZZZ y dólares</td></tr>
+  <tr><td>¿Validaciones OK? No → "motivo del bloqueo" → Pendiente con motivo</td><td>Log con <code>log_regla</code> y mensaje exacto del sistema</td></tr>
+  <tr><td>Cerrar terminal o cierre Y: estado cerrado, cerrado por usuario de proceso, fecha y nota</td><td>UPDATE de 4.1 (<code>ter_estado</code>, <code>ter_cerradopor</code>, <code>ter_notas</code> con fecha)</td></tr>
+  <tr><td>¿Cierre Y y todas las Y cerradas? Sí → Cerrar el terminal-día (Z)</td><td>Ejecutar RZ antes de cerrar la Z (N5); si fallan, Z pendiente con motivo</td></tr>
+  <tr><td>Log: cerrado</td><td>Log <code>CERRADA_Y</code> / <code>CERRADA_Z</code></td></tr>
+  <tr><td><i>No está en el diagrama</i></td><td>Ramas agregadas: <code>OCUPADA</code> (bloqueo), <code>SIN_LIBVTA</code>, <code>ERROR</code>, <code>T2_INACTIVA</code> (N4)</td></tr>
+</table>
+
+<h2 class="salto">12. Enfoque aprobado: implementación en base de datos</h2>
+<p>El cierre automático se implementa completo en Oracle (compatible con 10.2; scripts sin prefijo de esquema). El proceso automático no depende del exe. Scripts en <code>docs/sql/FSCC-12958/</code>. <b>Ajuste 06-10-2026 (DF-SCC):</b> el exe sí cambia en un punto: <code>Form43</code> (Consultas de Cuadratura) delega en el mismo paquete el cálculo de sus columnas y el botón "Cerrar Terminal" para Colombia (sección 12.5).</p>
+<pre>Form133 / Form21 / Form124 ...  --INSERT-->  VTA_FACOPRD
+                                     | TRG_VTA_FACOPRD_CIERRE_AI (tiporec F8 y DOL)
+                                     v
+                           VTA_FACOPRD_CIERRE   (cola, estado P)
+                                     |
+   job externo --> PKG_F8_FACO_CIERRE_AUTO.PRC_CIERRE_AUTOMATICO
+                                     |  por cada cierre Y pendiente: estado -> DR = 0 -> validaciones -> cierra Y
+                                     |  por cada terminal-dia tocado: todas las Y cerradas -> DR Z = 0 -> validaciones -> cierra Z
+                                     v
+             VTA_FACOTERMSTATY / VTA_FACOTERMSTAT  +  VTA_FACOLOG_CIERRE_AUTO</pre>
+
+<h3>12.1 Decisiones (06-10-2026)</h3>
+<table>
+  <tr><th>Tema</th><th>Decisión</th></tr>
+  <tr><td>Validaciones que dependen del perfil (103 ZZZ, 109 dólares, exención del cheque a fecha)</td><td>Flags en <code>VTA_FACOPARAM</code> tipo 1502: <code>CA_VAL_CHEQ</code> (S), <code>CA_VAL_ZZZ</code> (N), <code>CA_VAL_USD</code> (N)</td></tr>
+  <tr><td>Usuario del cierre</td><td><code>ter_cerradopor = 'PROC_CIERRE_AUTO'</code> (distinto del <code>AUTOMATICO</code> de Autopago)</td></tr>
+  <tr><td>Cierre de la Z</td><td><s>Sí, cuando todas las Y del terminal-día están cerradas, con las validaciones de <code>Form3.CierraTerminal</code></s> <b>07-10-2026: no. FACO solo cierre Y; la Z no se toca</b></td></tr>
+  <tr><td>Fecha y nota</td><td><code>ter_notas</code> = 'CIERRE AUTOMATICO FSCC-12958 dd-mm-yyyy hh24:mi | nota anterior' (sin DDL)</td></tr>
+  <tr><td>Entregable</td><td>Solo scripts; los ejecuta el DBA</td></tr>
+</table>
+
+<h3>12.2 Objetos</h3>
+<table>
+  <tr><th>Script</th><th>Objeto</th><th>Descripción</th></tr>
+  <tr><td><code>01_tabla_homologa.sql</code></td><td><code>VTA_FACOPRD_CIERRE</code> + <code>SEQ_VTA_FACOPRD_CIERRE</code></td><td>Homóloga de <code>VTA_FACOPRD</code> (tipos heredados por CTAS) con columnas de control: <code>pcr_estado</code> P/C/O/V, ejecución, resultado, mensaje e intentos</td></tr>
+  <tr><td><code>02_log.sql</code></td><td><code>VTA_FACOLOG_CIERRE_AUTO</code> + secuencia</td><td>Registro de ejecución: nivel Y (y "-" para inicio/fin), DR, resultado, regla y mensaje</td></tr>
+  <tr><td><code>03_parametros.sql</code></td><td><code>VTA_FACOPARAM</code> 1502</td><td><code>CA_ACTIVO</code>, <code>CA_VAL_CHEQ</code>, <code>CA_VAL_ZZZ</code>, <code>CA_DECIMAL</code>, <code>CA_DIAS</code>, <code>CA_SIN_SOBRE</code> (<code>CA_VAL_USD</code> eliminado el 07-10: solo servía para RZ-09)</td></tr>
+  <tr><td><code>03b_vista_cajas.sql</code> <i>(DF-SCC)</i></td><td><code>VTA_FACOV_CAJAS_CIERRE</code></td><td>Universo común de T1 y T2: cierres Y de la cola (origen COLA) + cierres Y abiertos sin sobres del mismo local y fecha de venta de la carga, con libro de ventas (origen SIN_SOBRE, si <code>CA_SIN_SOBRE = S</code>)</td></tr>
+  <tr><td><code>03c_permiso_cc.sql</code> <i>(DF-SCC)</i></td><td><code>VTA_FACOMENU</code> / <code>VTA_FACORELPERMEN</code> 1515</td><td>Opción "Cerrar Terminal desde Consulta Cuadratura", que no existía en FACO. Se crea deshabilitada; se habilita por perfil</td></tr>
+  <tr><td><code>04_trigger.sql</code></td><td><code>TRG_VTA_FACOPRD_CIERRE_AI</code></td><td><code>AFTER INSERT</code> por fila: clona el sobre en la cola. No bloquea la carga si falla (decisión a revisar)</td></tr>
+  <tr><td><code>05/06_pkg_cierre_auto</code></td><td><code>PKG_F8_FACO_CIERRE_AUTO</code></td><td><code>PRC_CIERRE_AUTOMATICO</code> (job), <code>PRC_CIERRE_RANGO</code> (<code>Form43</code>), <code>FN_DIF_REAL</code>, <code>FN_DIF_CAJA</code>, <code>FN_COMPENSADO</code>, <code>PR_VALIDA_Y</code>, <code>FN_PARAM</code>. Desde el 07-10 sin <code>PR_VALIDA_Z</code> ni funciones de la Z</td></tr>
+  <tr><td><code>07_grants_sinonimos.sql</code></td><td>Grants y sinónimos</td><td>Para <code>UINTRANETTS</code> o el usuario del job</td></tr>
+  <tr><td><code>08_pruebas.sql</code></td><td>—</td><td>Compilación, comparación de la DR con la F8, validaciones sueltas, conciliación del trigger, ejecución y matriz de 17 casos</td></tr>
+  <tr><td><code>99_rollback.sql</code></td><td>—</td><td>Reapertura de una ejecución y desinstalación</td></tr>
+</table>
+
+<h3>12.3 Reglas implementadas (orden)</h3>
+<table>
+  <tr><th>Nivel</th><th>Secuencia</th></tr>
+  <tr><td>Y</td><td>Bloqueo NOWAIT (OCUPADA) → RY-02 estado (YA_CERRADA, no se reabre) → libro de ventas (SIN_LIBVTA) → RY-05 DR = 0 (CON_DIFERENCIA) → RY-01 cheque a fecha* → RY-03 conceptos SN, AF, ND, FN, NP, BF, CR, CT, CA, DP → RY-06 ZZZ* → cerrar Y</td></tr>
+  <tr><td>Z <i>(eliminado 07-10-2026)</i></td><td style="text-decoration:line-through">Bloqueo → RZ-02 estado → RZ-07 Y abiertas → RZ-05 DR de la Z → RZ-01 cheque* → RZ-03 conceptos del día → RZ-06 Z = ΣY (dinámico, <code>VTA_PAINT_Z</code>) → RZ-08 ZZZ* → RZ-09 dólares* → cerrar Z</td></tr>
+</table>
+<p>* Según flag. Las cajas con diferencia, bloqueadas, sin libro de ventas, ocupadas o con error quedan en estado <b>P</b> y se reevalúan en la siguiente ejecución (hasta <code>CA_DIAS</code>). Así, si el analista compensa o regulariza, el ciclo siguiente las cierra.</p>
+
+<h3>12.3b Integración con T1 (FSCC-12957) y carpeta de instalación</h3>
+<ul>
+  <li><code>PRC_CIERRE_AUTOMATICO</code> es el único punto de entrada: marca omitidas y vencidas en la cola → llama a <code>PKG_F8_FACO_COMPENSA_DI.PRC_COMPENSA_DI</code> (T1, si <code>CA_DI_ACTIVO = S</code>) → cierra Y y Z (T2, si <code>CA_ACTIVO = S</code>). Los interruptores son independientes y un error en T1 no detiene T2.</li>
+  <li>El log distingue cada proceso con <code>log_proceso</code> (T1 / T2 / CC = botón Cerrar Terminal de <code>Form43</code>).</li>
+  <li><b>Instalación:</b> carpeta consolidada <code>docs/sql/FSCC-12901_T1_T2/</code> con <code>INSTALAR.sql</code>. El orden es: especificaciones de T2 y T1 → cuerpo de T1 → cuerpo de T2 → trigger.</li>
+</ul>
+
+<h3>12.4 Diferencias deliberadas con el exe</h3>
+<ul>
+  <li>ZZZ de la Y con la Y real (el exe pasa el local: bug D1).</li>
+  <li>Z sin Y en el libro de ventas: no se cierra (el exe deja pasar, D2).</li>
+  <li>Validaciones de perfil → flags; tarjetas no se valida (no aplica a Colombia).</li>
+  <li>Errores de consulta → caja en ERROR y reintento (el exe a veces dejaba pasar).</li>
+</ul>
+
+<h2 class="salto">12.5 Ajuste por el DF-SCC y PRD 3 (06-10-2026): cajas sin movimiento y Consultas de Cuadratura</h2>
+<p><b>Origen.</b> El documento funcional <i>DF-SCC-vf Falabella CO (Mejoras F8 y compensaciones menores)</i>, hoja F8-LV-CMP-TES, fila 12, pide que la pantalla <b>Consultas de Cuadratura</b> de Colombia muestre las cajas sin movimiento (Dif. Real en 0), como en F8 Chile, y que esas cajas se puedan cerrar, considerando el cierre automático de terminales con Diferencia Real 0. El objetivo declarado es <b>evitar el archivo "dataload" de cierre de cajas</b>. La fila 57 (DI automática de −1.000 a 20.000) corresponde a T1 y no cambia el diseño. Las filas 34, 40, 46 y 52 quedan fuera de FSCC-12901.</p>
+<div class="horizontal"><div class="titulo">DF-SCC, fila 12: Consultas de Cuadratura hoy en F8 Colombia (solo filas con Dif. Real distinta de 0)</div><img src="img/DF-SCC_F8_Colombia_CC.png" alt="F8 Colombia"></div>
+<div class="horizontal"><div class="titulo">DF-SCC, fila 12: referencia F8 Chile (todas las cajas, incluidas las de Dif. Real 0)</div><img src="img/DF-SCC_F8_Chile_CC.png" alt="F8 Chile"></div>
+<p><b>PRD 3.xlsx</b> (archivo real de carga de <code>Form133</code>): 486 sobres, 27 locales, fecha de venta 20260828, todos con cierre Y = 1, 357 cajas; sin diferencias ni duplicados. Confirma el formato de 8 columnas y que el volumen de una carga es manejable. Las cajas que no reciben sobres no aparecen en la carga y, por lo tanto, nunca entraban a la cola del trigger.</p>
+
+<h3>Cambios en la base</h3>
+<table>
+  <tr><th>Objeto</th><th>Cambio</th></tr>
+  <tr><td><code>VTA_FACOV_CAJAS_CIERRE</code> (nueva vista)</td><td>Universo común de T1 y T2 (cola + cajas sin sobres del mismo local y día). T1 y T2 la recorren en lugar de la cola directa</td></tr>
+  <tr><td><code>CA_SIN_SOBRE</code> (parámetro 1502, S)</td><td>Interruptor de la rama SIN_SOBRE</td></tr>
+  <tr><td><code>PKG_F8_FACO_CIERRE_AUTO</code></td><td>Cálculo separado en <code>pr_cuadratura</code> (misma fórmula); nuevas <code>fn_dif_caja</code> y <code>fn_compensado</code> (columnas de <code>Form43</code>); nuevo <code>prc_cierre_rango</code> (botón Cerrar Terminal); <code>log_proceso</code> CC; nota "CIERRE CC FSCC-12901"</td></tr>
+  <tr><td><code>PKG_F8_FACO_COMPENSA_DI</code> (T1)</td><td>Recorre la vista: las cajas sin sobres también reciben la DI automática</td></tr>
+  <tr><td>Opción 1515 en <code>VTA_FACOMENU</code> / <code>VTA_FACORELPERMEN</code></td><td>Verificado en test: no existía en FACO. Sin ella el botón queda oculto</td></tr>
+</table>
+<p><code>prc_cierre_rango(p_fecha_ini, p_fecha_fin, p_local, p_terminal, p_usuario, o_ejecucion, o_cerradas, o_no_cerradas)</code>: fechas en texto <code>yyyymmdd</code>, terminal 0 = todos. Cierra los cierres Y abiertos con libro de ventas del rango, con las mismas reglas RY y flags del proceso automático (desde el 07-10 no cierra la Z). No ejecuta T1 ni depende de <code>CA_ACTIVO</code>, porque es una acción manual del analista. <code>ter_cerradopor</code> queda con el usuario del analista (<code>LOGINUSER</code>).</p>
+
+<h3>Cambios en el exe: <code>FTEPROD/Form43.frm</code> (solo <code>Flg_Pais$ = "FACO"</code>)</h3>
+<table>
+  <tr><th>#</th><th>Lugar</th><th>Cambio</th></tr>
+  <tr><td>B1</td><td><code>Form_Load</code></td><td>Como Chile: combo Terminal visible; "Cerrar Terminal" solo con el permiso 1515</td></tr>
+  <tr><td>B2</td><td><code>OptionInforme_Click</code>, <code>Case Else</code></td><td>En FACO el botón ya no aparece sin permiso (hallazgo B4, visible en la imagen de Colombia)</td></tr>
+  <tr><td>B3</td><td><code>Command2_Click</code></td><td>FACO + informe "Terminal" → <code>SubBuscarOpcionFACO</code></td></tr>
+  <tr><td>B4</td><td><code>SubBuscarOpcionFACO</code> (nuevo)</td><td>Cierres Y con libro de ventas del rango, local y terminal (desde el 07-10 sin filas Z); columnas con <code>fn_dif_caja</code>, <code>fn_compensado</code> y <code>fn_dif_real</code>; <b>muestra todas las filas, incluidas las de Dif. Real 0</b></td></tr>
+  <tr><td>B5</td><td><code>Command4_Click</code></td><td>FACO sale de la rama <code>ARG/SFCL/FACO/HTPE</code> (queda comentada) y llama a <code>CierreTerminalFACO</code></td></tr>
+  <tr><td>B6</td><td><code>CierreTerminalFACO</code> (nuevo)</td><td>Confirmación → <code>ADODB.Command</code> a <code>prc_cierre_rango</code> (patrón de <code>Form173</code>) → refresco → resumen "Cerrados / No cerrados / ejecución". Errores con <code>SystemMsg</code> + <code>frmLogOraError</code></td></tr>
+</table>
+<p>Respaldo previo: <code>FTEPROD/Form43.frm.bak_FSCC-12901</code>. Cambios marcados con <code>'CK: FSCC-12901</code>; el código anterior queda comentado. El archivo conserva Windows-1252 y CRLF. <b>No se compiló</b>: no hay VB6 en el equipo de análisis.</p>
+
+<h3>Despliegue del ajuste</h3>
+<ol>
+  <li>Base: instalar con <code>docs/sql/FSCC-12901_T1_T2/INSTALAR.sql</code> (incluye 03b y 03c) y otorgar permisos con el paso 09 al usuario de la conexión <code>[CONNECT]</code> del exe.</li>
+  <li>Habilitar la opción 1515 para los perfiles que defina negocio (<code>Form47</code> o el <code>UPDATE</code> de 03c).</li>
+  <li>Exe: compilar <code>f8a.exe</code> con el nuevo <code>Form43</code>, subir <code>Gversion</code> (<code>Módulo1.bas</code>) y <code>vta_parametros.vta_ultversion</code> de cada país al publicar. El cambio solo afecta a FACO, pero el exe es único.</li>
+  <li>Orden: primero la base (si no, la consulta de <code>Form43</code> en FACO falla con "Problemas de comunicación").</li>
+</ol>
+
+<h2 class="salto">12.6 Documentación actualizada (07-10-2026): FACO solo cierre Y</h2>
+<p><b>Fuente:</b> <code>docs/Requeriemintos-FSCC-12901/Doc-Actualizado/</code>. La HU <code>FSCC-12901.doc</code> (actualizada el 06-10) agrega:</p>
+<ul>
+  <li>"Este paso se debe ejecutar al momento de realizar la carga del archivo con la recaudación" ("es en esa pantalla": <code>Form133</code>).</li>
+  <li>"Colombia opera con cierre Y".</li>
+  <li>Un criterio nuevo, CA9: si la imputación automática deja la DR en 0, se ejecutan la validación de cierre y el cierre automático.</li>
+</ul>
+<p>Las subtareas FSCC-12957/12958 no cambian su texto; el DF-SCC y PRD 3 son idénticos a los ya analizados.</p>
+<img src="img/proceso2_T2_v2.png" alt="Proceso 2 actualizado" style="width:100%; border:1px solid #c9d1dc;">
+<p><b>Verificado en el código y en test:</b></p>
+<ul>
+  <li><code>Form3Y.CierraTerminal</code> solo actualiza <code>vta_FACOtermstaty</code>; ninguna rama FACO usa <code>Form3.CierraTerminal</code>.</li>
+  <li>En test, con fecha de venta desde el 24-08-2026, la Z de FACO tiene 10.894 filas en −1 y solo 6 cerradas.</li>
+</ul>
+<table>
+  <tr><th>Decisión (07-10-2026)</th><th>Efecto</th></tr>
+  <tr><td><b>Solo Y</b>: no se toca <code>vta_FACOtermstat</code></td><td>Se eliminan <code>pr_procesa_z</code>, <code>pr_valida_z</code>, <code>fn_msg_z_suma_y</code> (RZ-06), <code>fn_msg_y_abiertas</code> (RZ-07), <code>fn_dif_dolares</code> (RZ-09) y el parámetro <code>CA_VAL_USD</code>. <code>fn_dif_real</code>, <code>fn_dif_caja</code> y <code>fn_compensado</code> exigen el número de Y. <code>prc_cierre_rango</code> y <code>Form43</code> trabajan solo con Y. El rollback ya no reabre la Z</td></tr>
+  <tr><td>Disparo: <b>se mantiene el job externo</b> (cola + trigger)</td><td><code>Form133</code> no llama al SP. La HU pide ejecutar "al momento de la carga": el job debe agendarse inmediatamente después de la carga (punto abierto con negocio)</td></tr>
+  <tr><td><b>Sin resumen en pantalla</b></td><td>El resumen se consulta en <code>VTA_FACOLOG_CIERRE_AUTO</code> por SQL (punto abierto con negocio: la HU pide "emitir un resumen")</td></tr>
+  <tr><td><code>Form133.AbrirTerminal</code> <b>no se toca</b></td><td>La carga sigue reabriendo o creando la Z (nota 'CARGA MANUAL DE SOBRES'). Una Y ya cerrada que recibe un sobre queda <code>YA_CERRADA</code> para el analista (<code>Form20</code>)</td></tr>
+</table>
+<p><b>Revisión de <code>Form133</code></b> ("Interfaz de Carga Manual de Sobres", botón Cargar Archivo):</p>
+<ul>
+  <li>En FACO, <code>CargarArchivo</code> inserta cada fila del Excel en <code>vta_FACOprd</code> con <code>prv_tiporec 'F8'</code>, <code>prv_tiposobre 'EFE'</code> y <code>prv_cierrey</code> = columna 7. El trigger la encola.</li>
+  <li>Omite los sobres ya cargados (<code>existe</code>: sobre + fecha de venta).</li>
+  <li>No usa transacción: un error a mitad deja la carga parcial.</li>
+  <li><code>Form133.frx</code> solo contiene recursos gráficos (ícono y 4 metarchivos WMF de la cabecera); no tiene lógica ni listas.</li>
+</ul>
+<img src="img/form133_carga.png" alt="Form133" style="width:100%; border:1px solid #c9d1dc;">
+
+<div class="pie">Generado a partir del análisis del código VB6 de F8, de consultas de solo lectura a la base de test sgfnprds y de los diagramas BPMN del requerimiento (06-10-2026). Detalle de reglas y SQL en docs/CierreCaja_FACO_Reglas.md; contexto en docs/FSCC-12901_Analisis.md; scripts en docs/sql/FSCC-12958/.</div>
+</body>
+</html>

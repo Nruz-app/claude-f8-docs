@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>[#FSCC-12901] [SCCFIN][F8] Compensación automática de Diferencia No Imputable dentro de un rango — Falabella Colombia</title>
+    <meta http-equiv="Content-Type" Content="application/vnd.ms-word; charset=UTF-8">
+        <style type="text/css">
+
+.tableBorder, .grid
+{
+    background-color: #fff;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tableBorder td, .grid td
+{
+    vertical-align: top;
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+
+.noPadding
+{
+    padding: 0 !important;
+}
+
+h3 .subText
+{
+    font-size: 60%;
+    font-weight: normal;
+}
+
+.tabLabel
+{
+    font-weight: bold;
+    border: 1px solid #ccc;
+    border-bottom:none;
+    padding: 2px;
+    display: inline;
+}
+
+td.blank
+{
+    padding: 0;
+    margin: 0;
+}
+
+.blank td
+{
+    border: none;
+}
+
+#descriptionArea
+{
+    margin: 0;
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+
+hr
+{
+    border-top:1px solid #aaa;
+}
+
+hr.fullcontent
+{
+  height: 15px;
+  padding: 10px 0;
+  background: #fff url('https://falabella.atlassian.net/images/icons/hr.gif') no-repeat scroll center;
+}
+
+</style>
+
+</head>
+<body>
+
+<table class="tableBorder" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td bgcolor="#f0f0f0" width="100%" colspan="2" valign="top">
+                            <b><a id="parent_issue_summary" href="https://falabella.atlassian.net/browse/FSCC-12287">[SCCFIN] Evolutivos y mejoras funcionales Legados C2-2026</a></b>
+                <span style="font-size: 9px">(<a id="parent_issue_key" href="https://falabella.atlassian.net/browse/FSCC-12287">FSCC-12287</a>)</span>
+                <h3 class="formtitle"><img src="https://falabella.atlassian.net/images/icons/link_out_bot.gif" width="16" height="16" />
+                        [FSCC-12901]&nbsp;<a href="https://falabella.atlassian.net/browse/FSCC-12901">[SCCFIN][F8] Compensación automática de Diferencia No Imputable dentro de un rango — Falabella Colombia</a>
+            <span class="subText">
+               Creada: 02/oct/26                   &nbsp;Actualizada: 06/oct/26
+
+                                            </span>
+            </h3>
+        </td>
+    </tr>
+    <tr>
+        <td width="20%"><b>Estado:</b></td>
+        <td width="80%">Refining</td>
+    </tr>
+    <tr>
+        <td width="20%"><b>Proyecto:</b></td>
+        <td width="80%"><a href="https://falabella.atlassian.net/secure/BrowseProject.jspa?id=11724">Nuevo sistema de cuadraturas corporativas</a></td>
+    </tr>
+
+        <tr>
+            <td><b>Componentes:</b></td>
+            <td>
+                                        <a title="SCCFIN - Iniciativas SCC Finanzas"
+                href="https://falabella.atlassian.net/issues/?jql=project%3D11724%20AND%20%22component%22%3D18044%20ORDER%20BY%20priority%20ASC"
+            >SCCFIN</a>                        </td>
+    </tr>
+    
+
+        <tr>
+            <td><b>Versiones afectadas:</b></td>
+            <td>
+                            Ninguno
+                </td>
+    </tr>
+    
+
+        <tr>
+            <td><b>Versiones corregidas:</b></td>
+            <td>
+                            Ninguno
+                </td>
+    </tr>
+    
+    
+            <td width="20%"><b>Principal:</b></td>
+        <td width="80%"><a href="https://falabella.atlassian.net/browse/FSCC-12287">[SCCFIN] Evolutivos y mejoras funcionales Legados C2-2026</a></td>
+    </table>
+
+<br />
+<table class="grid" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td bgcolor="#f0f0f0" valign="top" width="20%">
+            <b>Tipo:</b>
+        </td>
+        <td bgcolor="#ffffff" valign="top"  width="30%" >
+            Historia
+        </td>
+
+                    <td bgcolor="#f0f0f0">
+                <b>Prioridad:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" nowrap>
+                Medium
+            </td>
+            </tr>
+    <tr>
+                        <td bgcolor="#f0f0f0" valign="top" width="20%">
+                <b>Informador:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top"  width="30%" >
+                                        
+                
+        
+            <a class="user-hover" rel="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                id="word_reporter_712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                href="https://falabella.atlassian.net/secure/ViewProfile.jspa?accountId=712020%3Ad846a4fa-bf70-4548-bf68-e037bfc6ab76">
+                    ext_lcalderonn
+                </a>
+
+                            </td>
+        
+                    <td bgcolor="#f0f0f0" width="20%">
+                <b>Persona asignada:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" nowrap  width="30%" >
+                                        
+                
+        
+            <a class="user-hover" rel="712020:905c47b9-eb83-41b9-80c2-05770e63d207"
+                id="word_assignee_712020:905c47b9-eb83-41b9-80c2-05770e63d207"
+                href="https://falabella.atlassian.net/secure/ViewProfile.jspa?accountId=712020%3A905c47b9-eb83-41b9-80c2-05770e63d207">
+                    ext_nruz
+                </a>
+
+                            </td>
+            </tr>
+    	<tr>
+		<td bgcolor="#f0f0f0" width="20%">
+			<b>Resolución:</b>
+		</td>
+		<td bgcolor="#ffffff" valign="top" width="30%" nowrap>
+            				Sin resolver
+                    </td>
+                    <td bgcolor="#f0f0f0" width="20%">
+                <b>Votos:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" width="30%" nowrap>
+                0
+            </td>
+        
+    </tr>
+    
+        <tr>
+        <td bgcolor="#f0f0f0" width="20%">
+            <b>Etiquetas:</b>
+        </td>
+        <td id="labels-2585187-value" class="value" bgcolor="#ffffff" valign="top" colspan="3" nowrap>
+                            ANTIGUO, LEGADO                    </td>
+    </tr>
+    
+    	<tr>
+                <td bgcolor="#f0f0f0" width="20%"><b>Σ Trabajo restante estimado:</b></td>
+        <td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+                    </td>
+        		<td bgcolor="#f0f0f0" width="20%"><b>Trabajo restante estimado:</b></td>
+        <td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+            		</td>
+    </tr>
+    <tr>
+                <td bgcolor="#f0f0f0" width="20%"><b>Σ Tiempo empleado:</b></td>
+        <td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+                    </td>
+                <td bgcolor="#f0f0f0" width="20%"><b>Tiempo Trabajado:</b></td>
+		<td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+            		</td>
+	</tr>
+    <tr>
+                <td bgcolor="#f0f0f0" width="20%"><b>Σ Estimación original:</b></td>
+        <td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+                    </td>
+                <td bgcolor="#f0f0f0" width="20%"><b>Estimación original:</b></td>
+		<td bgcolor="#ffffff" valign="top" nowrap>
+                            Desconocido
+            		</td>
+    </tr>
+    
+    </table>
+
+
+
+    <br />
+
+    	<table class="grid" cellpadding="0" cellspacing="0" border="0" width="100%">
+            
+
+                <tr>
+            <td bgcolor="#f0f0f0" width=20% valign=top>
+                <b>Adjuntos:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top">
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/excel.gif" height="16" width="16" border="0" alt="Microsoft Word">
+                    DF-SCC-vf_Falabella CO (MEJORAS F8 y COMPENSACIONES MENORES).xlsx &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/image.gif" height="16" width="16" border="0" alt="Archivo PNG">
+                    image-20261005-133731.png &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/image.gif" height="16" width="16" border="0" alt="Archivo PNG">
+                    image-20261005-133648.png &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/image.gif" height="16" width="16" border="0" alt="Archivo PNG">
+                    image-20261005-174850.png &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/excel.gif" height="16" width="16" border="0" alt="Microsoft Word">
+                    PRD 3.xlsx &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/image.gif" height="16" width="16" border="0" alt="Archivo PNG">
+                    image-20261006-203107.png &nbsp;&nbsp;&nbsp;
+                                    <img src="https://falabella.atlassian.net/images/icons/attach/image.gif" height="16" width="16" border="0" alt="Archivo PNG">
+                    image-20261006-203210.png &nbsp;&nbsp;&nbsp;
+                            </td>
+        </tr>
+        
+    
+
+
+            <tr><td bgcolor="#f0f0f0" width="20%" valign="top"><b>Subtareas:</b></td>
+    <td bgcolor="#ffffff" valign="top">
+        <table class="grid" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr bgcolor="#f0f0f0">
+                <td>
+                    <b>Clave</b><br/>
+                </td>
+                <td>
+                    <b>Resumen</b><br/>
+                </td>
+                <td>
+                    <b>Tipo</b><br/>
+                </td>
+                <td>
+                    <b>Estado</b><br/>
+                </td>
+                <td>
+                    <b>Persona asignada</b><br/>
+                </td>
+            </tr>
+                            <tr>
+                    <td>
+                        <a href="https://falabella.atlassian.net/browse/FSCC-12957">FSCC-12957</a>
+                    </td>
+                    <td valign="top" width="25%">
+                        <a href="https://falabella.atlassian.net/browse/FSCC-12957">HU-01-T1 · Compensación automática de...</a>
+                    </td>
+                    <td>
+                        Subtarea
+                    </td>
+                    <td>
+                        Tareas por hacer
+                    </td>
+                    <td>
+                                                     ext_nruz  &nbsp;
+                                            </td>
+                </tr>
+                            <tr>
+                    <td>
+                        <a href="https://falabella.atlassian.net/browse/FSCC-12958">FSCC-12958</a>
+                    </td>
+                    <td valign="top" width="25%">
+                        <a href="https://falabella.atlassian.net/browse/FSCC-12958">HU-01-T2 · Cierre de caja automático</a>
+                    </td>
+                    <td>
+                        Subtarea
+                    </td>
+                    <td>
+                        Tareas por hacer
+                    </td>
+                    <td>
+                                                     ext_nruz  &nbsp;
+                                            </td>
+                </tr>
+                    </table>
+    </td>
+</tr>
+    
+                        <tr>
+                <td bgcolor="#f0f0f0" width="20%" valign="top"><b>Sprint:</b></td>
+                <td id="customfield_10020-2585187-value" class="value" bgcolor="#ffffff" width="80%"></td>
+            </tr>
+            </table>
+
+    <br/>
+
+    <table cellpadding="2" cellspacing="0" border="0" width="100%" align="center">
+    <tr>
+        <td bgcolor="#bbbbbb" width="1%" nowrap align="center">
+            &nbsp;<font color="#ffffff"><b>Descripción</b></font>&nbsp;
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+    </table>
+
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td id="descriptionArea">
+            <!-- ADF macro (type = 'bodiedSyncBlock') -->
+
+<h4><a name="Soluci%C3%B3nesperada%28TOBE%29"></a>Solución esperada (TO-BE)</h4>
+
+<ul>
+	<li>Proceso automático posterior a la carga del día que recorre los terminal-día (y cierres Y) en estado Pendiente. Este paso se debe ejecutar al momento de realizar la carga del archivo con la recaudación.</li>
+</ul>
+
+
+<p><span class="image-wrap" style=""><img src="https://falabella.atlassian.net/rest/api/3/attachment/content/2132157" alt="image-20261006-203107.png" width="701" style="border: 0px solid black" /></span></p>
+<ul>
+	<li>Si la Diferencia Real está en el rango parametrizado (−1.000 ≤ DR ≤ 20.000, DR distinta de 0, límites inclusivos), registra la compensación DI por el monto de la diferencia, con observación «Compensación automática DI» y usuario de proceso.</li>
+	<li>Recalcula la cuadratura, ejecuta las mismas validaciones de Cerrar Terminal y, si se cumplen, cierra el terminal.</li>
+	<li>Emite un resumen del proceso: terminales compensados y cerrados, y terminales excluidos con su motivo.</li>
+</ul>
+
+
+<h4><a name="Flujopropuesto"></a>Flujo propuesto</h4>
+
+<h3><a name="Flujogeneraldelahistoria"></a>Flujo general de la historia</h3>
+
+<p><span class="image-wrap" style=""><img src="https://falabella.atlassian.net/rest/api/3/attachment/content/2093818" alt="image-20261005-174850.png" width="1387" style="border: 0px solid black" /></span></p>
+
+
+
+<h3><a name="Proceso1%C2%B7Compensaci%C3%B3nautom%C3%A1ticadeDiferenciaNoImputable"></a>Proceso 1 · Compensación automática de Diferencia No Imputable</h3>
+
+<p><span class="image-wrap" style=""><img src="https://falabella.atlassian.net/rest/api/3/attachment/content/2092298" alt="image-20261005-133648.png" width="1453" style="border: 0px solid black" /></span></p>
+
+<h3><a name="Proceso2%C2%B7Cierredecajaautom%C3%A1tico"></a>Proceso 2 · Cierre de caja automático</h3>
+
+<p><span class="image-wrap" style=""><img src="https://falabella.atlassian.net/rest/api/3/attachment/content/2092297" alt="image-20261005-133731.png" width="1453" style="border: 0px solid black" /></span></p>
+
+
+
+
+
+<h4><a name="Reglasdenegocio"></a>Reglas de negocio</h4>
+
+<ul>
+	<li>Diferencia Real = Diferencia de Caja − Compensación .</li>
+	<li>Rango de compensación automática parametrizable por negocio (nuevo parámetro en VTA_FACOPARAM)*validar.</li>
+	<li>El cierre automático respeta todas las validaciones de Cerrar Terminal.</li>
+	<li>Colombia opera con cierre Y: la evaluación se hace por cierre Y y por Z.</li>
+	<li>Los límites del rango son inclusivos: −1.000 y 20.000 se compensan.</li>
+	<li>Aplica también a terminales sin sobres de retiro; en ese caso la diferencia suele quedar fuera del rango y el terminal sigue Pendiente.</li>
+	<li>La compensación DI automática se registra con fecha contable igual a la fecha de venta del terminal-día.</li>
+</ul>
+
+
+<h4><a name="Criteriosdeaceptaci%C3%B3n"></a>Criterios de aceptación</h4>
+
+<div class='table-wrap'>
+<table class='confluenceTable'><tbody>
+<tr>
+<th class='confluenceTh'>#</th>
+<th class='confluenceTh'>Dado</th>
+<th class='confluenceTh'>Cuando</th>
+<th class='confluenceTh'>Entonces</th>
+</tr>
+<tr>
+<td class='confluenceTd'>1</td>
+<td class='confluenceTd'>un terminal-día Pendiente con Diferencia Real de −800</td>
+<td class='confluenceTd'>se ejecuta el proceso automático</td>
+<td class='confluenceTd'>se registra una compensación DI por 800, la Diferencia Real queda en 0 y el terminal pasa a Cerrado con usuario de proceso y fecha de cierre</td>
+</tr>
+<tr>
+<td class='confluenceTd'>2</td>
+<td class='confluenceTd'>un terminal-día Pendiente con Diferencia Real de 20.000 o de −1.000 (límites)</td>
+<td class='confluenceTd'>se ejecuta el proceso</td>
+<td class='confluenceTd'>se compensa como DI y se cierra (rango inclusivo)</td>
+</tr>
+<tr>
+<td class='confluenceTd'>3</td>
+<td class='confluenceTd'>un terminal-día con Diferencia Real de −1.001 o de 20.001</td>
+<td class='confluenceTd'>se ejecuta el proceso</td>
+<td class='confluenceTd'>no se registra compensación, queda Pendiente y aparece en el resumen como excluido por rango</td>
+</tr>
+<tr>
+<td class='confluenceTd'>4</td>
+<td class='confluenceTd'>un terminal con conceptos declarados pendientes de regularizar</td>
+<td class='confluenceTd'>se ejecuta el proceso</td>
+<td class='confluenceTd'>no se cierra y el resumen indica el concepto pendiente</td>
+</tr>
+<tr>
+<td class='confluenceTd'>5</td>
+<td class='confluenceTd'>una compensación DI generada automáticamente</td>
+<td class='confluenceTd'>se consulta el Informe de Diferencias de Compensaciones o el Envío Contable (operación Diferencia no Imputable)</td>
+<td class='confluenceTd'>la compensación aparece identificada como automática</td>
+</tr>
+<tr>
+<td class='confluenceTd'>6</td>
+<td class='confluenceTd'>un cambio en los límites del rango</td>
+<td class='confluenceTd'>el administrador actualiza el parámetro</td>
+<td class='confluenceTd'>el siguiente proceso aplica los nuevos límites sin cambio de código</td>
+</tr>
+<tr>
+<td class='confluenceTd'>7</td>
+<td class='confluenceTd'>una compensación DI automática del terminal-día con venta del 28-09</td>
+<td class='confluenceTd'>se consulta su registro</td>
+<td class='confluenceTd'>la fecha contable de la compensación es 28-09 (fecha de venta)</td>
+</tr>
+<tr>
+<td class='confluenceTd'>8</td>
+<td class='confluenceTd'>un terminal sin sobres de retiro con Diferencia Real dentro del rango</td>
+<td class='confluenceTd'>se ejecuta el proceso</td>
+<td class='confluenceTd'>se compensa como DI igual que un terminal con sobres</td>
+</tr>
+<tr>
+<td class='confluenceTd'>9</td>
+<td class='confluenceTd'>Se registra  DR = 0 (se ingresa diferencia imputable) por proceso de imputación automatica)</td>
+<td class='confluenceTd'>ya se imputo por el proceso automatico</td>
+<td class='confluenceTd'>Ejecutar Validación de cierre de caja y cierre de caja automático.</td>
+</tr>
+</tbody></table>
+</div>
+
+
+<h4><a name=""></a></h4>
+
+<h4><a name="Preguntasabiertas"></a>Preguntas abiertas</h4>
+
+<ul>
+	<li><del>¿Los límites del rango son inclusivos?</del> Sí (01-10). / Roxana Paola Paredes Jimenez</li>
+	<li><del>¿Aplica también a terminales sin sobres?</del> Sí; sin sobre de retiro la diferencia suele superar el rango (01-10). / Roxana Paola Paredes Jimenez /01-10-2026</li>
+	<li><del>¿Con qué fecha contable se registra la compensación automática?</del> Con la fecha de la venta (01-10). / Roxana Paola Paredes Jimenez /01-10-2026</li>
+</ul>
+
+
+<p>Nota: * Se dejo adjunto PRD 3 archivo para carga de falabella ejemplo.</p>
+            <br/>
+        </td>
+    </tr>
+    </table>
+
+    <br/>
+
+    <table cellpadding="2" cellspacing="0" border="0" width="100%" align="center">
+    <tr>
+        <td bgcolor="#bbbbbb" width="1%" nowrap align="center">
+            &nbsp;<font color="#ffffff"><b>Comentarios</b></font>&nbsp;
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+    </table>
+
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" class="grid" style="margin: 0;">
+                <tr id="comment-header-3124954"><td bgcolor="#f0f0f0">
+              Comentado por
+                                                    
+                
+        
+            <a class="user-hover" rel="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                id="word_commented_712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                href="https://falabella.atlassian.net/secure/ViewProfile.jspa?accountId=712020%3Ad846a4fa-bf70-4548-bf68-e037bfc6ab76">
+                    ext_lcalderonn
+                </a>
+
+                                        <font size="-2">
+            [
+                <font color="#336699">06/oct/26</font>
+
+                            ]
+            </font>
+
+        </td></tr>
+        <tr id="comment-body-3124954"><td bgcolor="#ffffff">
+            <p>Consultar con el negocio, en que parte cargan ese archivo.</p>
+        </td></tr>
+                <tr id="comment-header-3126606"><td bgcolor="#f0f0f0">
+              Comentado por
+                                                    
+                
+        
+            <a class="user-hover" rel="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                id="word_commented_712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76"
+                href="https://falabella.atlassian.net/secure/ViewProfile.jspa?accountId=712020%3Ad846a4fa-bf70-4548-bf68-e037bfc6ab76">
+                    ext_lcalderonn
+                </a>
+
+                                        <font size="-2">
+            [
+                <font color="#336699">06/oct/26</font>
+
+                            ]
+            </font>
+
+        </td></tr>
+        <tr id="comment-body-3126606"><td bgcolor="#ffffff">
+            <p><a href="https://falabella.atlassian.net/secure/ViewProfile.jspa?accountId=712020%3Ad846a4fa-bf70-4548-bf68-e037bfc6ab76" class="user-hover" rel="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76" data-account-id="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76" accountid="712020:d846a4fa-bf70-4548-bf68-e037bfc6ab76" rel="noreferrer">ext_lcalderonn</a> resuelto en la misma reu</p>
+
+<p><span class="image-wrap" style=""><img src="https://falabella.atlassian.net/rest/api/3/attachment/content/2132164" alt="image-20261006-203210.png" width="633" style="border: 0px solid black" /></span></p>
+
+<p>es en esa pantalla</p>
+        </td></tr>
+            </table>
+Generado a las Wed Oct 07 12:24:07 UTC 2026 por ext_nruz usando JIRA 1001.0.0-SNAPSHOT#100294-rev:3d4a1b865cb047362aac40693402c0e91f357c9e.
+
+</body>
+</html>
