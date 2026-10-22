@@ -42,6 +42,8 @@ select z.ter_local, count(*) terminales
 -- 3. Ejecucion del 15-10 (CIERRA las Y del dia y las Z sin venta de TODOS
 --    los locales). ESPERADO: la fila FIN del log con "Sin venta evaluados: N
 --    | cerrados: M ...".
+--    Equivale a pulsar Salir en Form174 (desde el 22-10 usa vFechaPrueba =
+--    "20261015"): hacer UNA de las dos cosas, no ambas.
 declare
   v_ej number; v_c number; v_nc number;
 begin

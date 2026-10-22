@@ -1,0 +1,356 @@
+--- PROD/Form43.frm
++++ NUEVO/Form43.frm
+@@ -185,7 +185,7 @@
+          CalendarTitleBackColor=   12632256
+          CalendarTitleForeColor=   128
+          CalendarTrailingForeColor=   8421504
+-         Format          =   139395073
++         Format          =   137822209
+          CurrentDate     =   37707
+       End
+       Begin MSComCtl2.DTPicker DTPicker2 
+@@ -202,7 +202,7 @@
+          CalendarTitleBackColor=   12632256
+          CalendarTitleForeColor=   128
+          CalendarTrailingForeColor=   8421504
+-         Format          =   139395073
++         Format          =   137625601
+          CurrentDate     =   37707
+       End
+       Begin VB.Label Labelterminal 
+@@ -996,7 +996,7 @@
+ Screen.MousePointer = 0
+ 
+ End Sub
+-Private Sub SubBuscarOpcion(ByVal index As Integer)
++Private Sub SubBuscarOpcion(ByVal Index As Integer)
+ Dim DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
+ Dim nFILA
+@@ -1007,7 +1007,7 @@
+     DTPicker2.Value = DTPicker1.Value
+ End If
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -1126,7 +1126,10 @@
+ 
+       Else
+         'CK: 160531 Modificaciones F8 ARG
+-        If DiferenciaReal <> 0 Or Flg_Pais$ = "ARG" Then
++        '---INI---- xintec-nruz 16-10-2026 FSCC-12901: FACO muestra tambien las cajas con Diferencia Real 0 (como Chile) ----
++        'If DiferenciaReal <> 0 Or Flg_Pais$ = "ARG" Then
++        If DiferenciaReal <> 0 Or Flg_Pais$ = "ARG" Or Flg_Pais$ = "FACO" Then
++        '---FIN---- xintec-nruz 16-10-2026 ----
+             Grid1.AddItem ""
+             Grid1.TextMatrix(nFILA, 0) = Format(xFecha, VgFormatoFechaLectura)
+             Grid1.TextMatrix(nFILA, 1) = xlocal
+@@ -1190,7 +1193,7 @@
+ End Sub
+ 
+ 
+-Private Sub SubBuscarOpcionSOAR_SOUY(ByVal index As Integer)
++Private Sub SubBuscarOpcionSOAR_SOUY(ByVal Index As Integer)
+ Dim xFecha, xlocal, Xterminal, XEstado, Xcierrey, XFechaCierre '----Xintec sep 2025---
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr, BReales, BPesoArg
+ Dim nFILA
+@@ -1203,7 +1206,7 @@
+     DTPicker2.Value = DTPicker1.Value
+ End If
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -1359,14 +1362,14 @@
+     Exit Sub
+ End Sub
+ 
+-Private Sub SubBuscarOpcion2(ByVal index As Integer)
++Private Sub SubBuscarOpcion2(ByVal Index As Integer)
+ Dim Diferencia, DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
+ Dim nFILA
+ Dim VLocal As String
+ Grid1.Visible = False
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -1500,14 +1503,14 @@
+     Exit Sub
+ End Sub
+ 
+-Private Sub SubBuscarOpcion2SOAR_SOUY(ByVal index As Integer)
++Private Sub SubBuscarOpcion2SOAR_SOUY(ByVal Index As Integer)
+ Dim Diferencia, DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
+ Dim nFILA
+ Dim VLocal As String
+ Grid1.Visible = False
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -2119,6 +2122,11 @@
+ If ((Flg_Pais$ = "SFCL" Or Flg_Pais$ = "ARG") And Trim(Combo3.Text) <> "0") Then
+     sq = sq & " and    l.vta_terminal  = " & Trim(Combo3.Text)
+ End If
++'---INI---- xintec-nruz 22-10-2026 FCDVT-56: FACO filtra por Terminal cuando es distinto de 0 (opcion Terminal) ----
++If Flg_Pais$ = "FACO" And VF_NumInforme = 0 And Val(Trim(Combo3.Text)) <> 0 Then
++    sq = sq & " and    l.vta_terminal  = " & Val(Trim(Combo3.Text))
++End If
++'---FIN---- xintec-nruz 22-10-2026 ----
+ 
+ If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
+    sq = sq & " and    l.vta_secuencia   = t.ter_cierrey "
+@@ -2201,6 +2209,28 @@
+    End If
+ End If
+ 
++'---INI---- xintec-nruz 22-10-2026 FCDVT-56: FACO muestra los terminales vigentes sin movimiento (Z sin libro de ventas Y), como Chile ----
++'Solo informe Terminal (VF_NumInforme = 0) y con un local elegido (no 0-TODOS). Cerrar Terminal los cierra con CierraTerminal (Z).
++If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
++   sq = sq & " Union"
++   sq = sq & " select t.ter_fecha, t.ter_local, t.ter_terminal, 0 as ter_cierrey, t.ter_estado"
++   sq = sq & " from vta_" & Flg_Pais$ & "termstat t, vta_" & Flg_Pais$ & "terminales s"
++   sq = sq & " where t.ter_local = " & VLocal
++   sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
++   sq = sq & " and (s.ter_fechabaja is null or s.ter_fechabaja >= t.ter_fecha)"
++   sq = sq & " and (t.ter_fecha >= to_date('" & Format(DTPicker1.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "')"
++   sq = sq & " and t.ter_fecha <= to_date('" & Format(DTPicker2.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "'))"
++   sq = sq & " and not exists (select 1 from vta_" & Flg_Pais$ & "libvta v"
++   sq = sq & "                  where v.vta_tiporeg = 'Y' and v.vta_estado = 'A'"
++   sq = sq & "                    and v.vta_fecha_venta = t.ter_fecha"
++   sq = sq & "                    and v.vta_local = t.ter_local"
++   sq = sq & "                    and v.vta_terminal = t.ter_terminal)"
++   If Val(Trim(Combo3.Text)) <> 0 Then
++      sq = sq & " and t.ter_terminal = " & Val(Trim(Combo3.Text))
++   End If
++End If
++'---FIN---- xintec-nruz 22-10-2026 ----
++
+ sq = sq & "  Order by 1,2,3 "
+ sq = sq & "  "
+ 
+@@ -2517,7 +2547,7 @@
+ End Function
+ 
+ 
+-Private Sub SubBuscarOpcion1(ByVal index As Integer)
++Private Sub SubBuscarOpcion1(ByVal Index As Integer)
+ Dim DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
+ Dim nFILA, XSumEstado, XContador
+@@ -2525,7 +2555,7 @@
+ Dim DifZconY As Boolean
+ Grid1.Visible = False
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -2710,7 +2740,7 @@
+ End Sub
+ 
+ 
+-Private Sub SubBuscarOpcion1SOAR_SOUY(ByVal index As Integer)
++Private Sub SubBuscarOpcion1SOAR_SOUY(ByVal Index As Integer)
+ Dim DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
+ Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
+ Dim nFILA, XSumEstado, XContador
+@@ -2719,7 +2749,7 @@
+ Grid1.Visible = False
+ Dim XFechaCierre As Date
+ 
+-Call definegrid(index)
++Call definegrid(Index)
+ Combo1.ListIndex = Combo2.ListIndex
+ VLocal = Combo2.Text
+ If VLocal = 0 Then
+@@ -2942,6 +2972,42 @@
+     'End
+      If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
+            
++        '---INI---- xintec-nruz 20-10-2026 FSCC-12901: confirmacion al cerrar con TODOS LOS LOCALES (FACO) ----
++        If Flg_Pais$ = "FACO" And Trim(Combo2.Text) = "0" Then
++            Dim nCajasTodos As Long, nLocalesTodos As Long, vLocalesTodos As String, respTodos As Integer
++            nCajasTodos = 0
++            nLocalesTodos = 0
++            vLocalesTodos = ""
++            For i = 1 To Grid1.Rows - 1
++                If (Trim(Grid1.TextMatrix(i, 7)) <> "Cerrado" And Trim(Grid1.TextMatrix(i, 7)) <> "Pendiente MP") And CDbl(Grid1.TextMatrix(i, 6)) = 0 Then
++                    nCajasTodos = nCajasTodos + 1
++                    If InStr(vLocalesTodos, "|" & Trim(Grid1.TextMatrix(i, 1)) & "|") = 0 Then
++                        vLocalesTodos = vLocalesTodos & "|" & Trim(Grid1.TextMatrix(i, 1)) & "|"
++                        nLocalesTodos = nLocalesTodos + 1
++                    End If
++                End If
++            Next i
++            If nCajasTodos > 0 Then
++                Screen.MousePointer = 0
++                respTodos = MsgBox("Se cerraran " & nCajasTodos & " caja(s) con Dif. Real 0 de " & nLocalesTodos & " local(es), entre el " & _
++                                   Format(DTPicker1.Value, "dd-mm-yyyy") & " y el " & Format(DTPicker2.Value, "dd-mm-yyyy") & "." & vbCrLf & vbCrLf & _
++                                   "Desea continuar?", vbYesNo + vbQuestion + vbDefaultButton2, "Cerrar Terminal - Todos los locales")
++                If respTodos <> vbYes Then
++                    Exit Sub
++                End If
++                Screen.MousePointer = 11
++            End If
++        End If
++        '---FIN---- xintec-nruz 20-10-2026 ----
++        '---INI---- xintec-nruz 20-10-2026 FSCC-12901: mensaje final de cierre en FACO (cuenta cajas cerradas) ----
++        Dim nCerradosAntes As Long, nCerradosDespues As Long
++        nCerradosAntes = 0
++        If Flg_Pais$ = "FACO" Then
++            For i = 1 To Grid1.Rows - 1
++                If Trim(Grid1.TextMatrix(i, 7)) = "Cerrado" Then nCerradosAntes = nCerradosAntes + 1
++            Next i
++        End If
++        '---FIN---- xintec-nruz 20-10-2026 ----
+         For i = 1 To Grid1.Rows - 1
+             If (Trim(Grid1.TextMatrix(i, 7)) <> "Cerrado" And Trim(Grid1.TextMatrix(i, 7)) <> "Pendiente MP") And CDbl(Grid1.TextMatrix(i, 3)) <> 0 And CDbl(Grid1.TextMatrix(i, 6)) = 0 Then
+                 Call CierraTerminalYYY(Grid1.TextMatrix(i, 0), Grid1.TextMatrix(i, 1), Grid1.TextMatrix(i, 2), Grid1.TextMatrix(i, 3))
+@@ -2959,6 +3025,15 @@
+         Next i
+         Call Command2_Click
+         Screen.MousePointer = 11
++        '---INI---- xintec-nruz 20-10-2026 FSCC-12901: mensaje final de cierre en FACO (cuenta cajas cerradas) ----
++        If Flg_Pais$ = "FACO" Then
++            nCerradosDespues = 0
++            For i = 1 To Grid1.Rows - 1
++                If Trim(Grid1.TextMatrix(i, 7)) = "Cerrado" Then nCerradosDespues = nCerradosDespues + 1
++            Next i
++            If nCerradosDespues > nCerradosAntes Then X = nCerradosDespues - nCerradosAntes
++        End If
++        '---FIN---- xintec-nruz 20-10-2026 ----
+      ElseIf Flg_Pais$ = "ARG" Then
+         Valida_Cierre_Arg = False
+         For i = 1 To Grid1.Rows - 1
+@@ -3624,7 +3699,7 @@
+     frmLogOraError.Show 1
+     Exit Function
+ End Function
+-Private Sub GeneraExcel(ByVal index As Integer)
++Private Sub GeneraExcel(ByVal Index As Integer)
+ Dim fec As String
+ Dim fecha As String
+ Dim NombreLocal As String
+@@ -3634,10 +3709,10 @@
+     Set apexcel = CreateObject("Excel.application")
+     apexcel.Workbooks.Add
+     Set newSheet = apexcel.Worksheets.Add
+-    newSheet.Name = "INFORME POR " & UCase(Trim(OptionInforme(index).Caption))
++    newSheet.Name = "INFORME POR " & UCase(Trim(OptionInforme(Index).Caption))
+     '
+     '
+-    apexcel.Cells(1, 1).Value = "INFORME POR " & UCase(Trim(OptionInforme(index).Caption))
++    apexcel.Cells(1, 1).Value = "INFORME POR " & UCase(Trim(OptionInforme(Index).Caption))
+  
+    If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
+       N_Columna = 0
+@@ -3645,7 +3720,7 @@
+       N_Columna = 1
+    End If
+       
+- Select Case index
++ Select Case Index
+  Case 0
+       apexcel.Cells(3, 1).Value = "Fecha"
+       apexcel.Cells(3, 2).Value = "Local"
+@@ -3701,7 +3776,7 @@
+    d = 3
+    For i = 1 To Grid1.Rows - 1
+        d = d + i
+- Select Case index
++ Select Case Index
+  Case 0
+        
+     apexcel.Cells(i + 3, 1).Value = " " & (Format(Trim(Grid1.TextMatrix(i, 0)), VgFormatoFechaLectura))
+@@ -3754,7 +3829,7 @@
+    Next i
+    
+ 
+-   Select Case index
++   Select Case Index
+     Case 0
+          If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then letraH = "H" Else letraH = "H" 'G
+          If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then letraE = "E" Else letraE = "D"
+@@ -3882,6 +3957,17 @@
+    
+    Call Consulta.Open(sq)
+    
++   
++   '---INI---- xintec-nruz 20-10-2026 FSCC-12901: TODOS (al comienzo del combo) en FACO para perfiles 9 y 10 ----
++   If Flg_Pais$ = "FACO" And (Val(PERFILUSER) = PERFIL_USER_ADM Or Val(PERFILUSER) = PERFIL_USER_DIEZ) Then
++      cod = 0
++      nombre = "TODOS"
++      Combo1.AddItem Right("     " & cod, 5) & "-" & nombre
++      Combo2.AddItem cod
++   End If
++   '---FIN---- xintec-nruz 20-10-2026 ----
++   
++   
+    For i = 1 To Consulta.RecordCount
+       cod = Consulta.Fields(0).Value
+       nombre = Consulta.Fields(1).Value
+@@ -3904,6 +3990,7 @@
+    End If
+    
+    End If
++   
+   
+    Combo1.ListIndex = Combo2.ListIndex
+    
+@@ -4813,7 +4900,7 @@
+ End Function
+ 
+ 
+-Private Sub definegrid(index As Integer)
++Private Sub definegrid(Index As Integer)
+ Grid1.Clear
+ Dim suma As Integer
+ 
+@@ -4822,7 +4909,7 @@
+ Else
+    suma = 400
+ End If
+-Select Case index
++Select Case Index
+ Case 0
+    
+    Grid1.Cols = 9 '8 '----Xintec Sep 2025----
+@@ -4991,12 +5078,12 @@
+ End Select
+ End Sub
+ 
+-Private Sub OptionInforme_Click(index As Integer)
+-VF_NumInforme = index
++Private Sub OptionInforme_Click(Index As Integer)
++VF_NumInforme = Index
+ If Frame1.Enabled = False Then
+     Frame1.Enabled = True
+ End If
+-Select Case index
++Select Case Index
+ Case (1)
+    Combo2.ListIndex = 0
+    Combo1.ListIndex = Combo2.ListIndex
+@@ -5024,7 +5111,7 @@
+    End If
+ 
+ End Select
+-Call definegrid(index)
++Call definegrid(Index)
+ End Sub
+ 
+ 

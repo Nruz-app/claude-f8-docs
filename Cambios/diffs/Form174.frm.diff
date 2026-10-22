@@ -1,0 +1,460 @@
+--- PROD/Form174.frm
++++ NUEVO/Form174.frm
+@@ -0,0 +1,457 @@
++VERSION 5.00
++Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
++Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
++Begin VB.Form Form174 
++   BackColor       =   &H00E0E0E0&
++   Caption         =   " Ingreso de Cierres de Terminal Y Masivo"
++   ClientHeight    =   7200
++   ClientLeft      =   2055
++   ClientTop       =   1410
++   ClientWidth     =   10410
++   LinkTopic       =   "Form71"
++   MaxButton       =   0   'False
++   ScaleHeight     =   7200
++   ScaleWidth      =   10410
++   StartUpPosition =   2  'CenterScreen
++   Visible         =   0   'False
++   Begin VB.CommandButton Command4 
++      BackColor       =   &H00A4E8CB&
++      Caption         =   "&Cargar"
++      Height          =   375
++      Left            =   6480
++      MaskColor       =   &H00000080&
++      Style           =   1  'Graphical
++      TabIndex        =   10
++      Top             =   2040
++      Width           =   1695
++   End
++   Begin VB.CommandButton Command2 
++      BackColor       =   &H00A4E8CB&
++      Caption         =   "&Exportar Excel"
++      Height          =   375
++      Left            =   480
++      MaskColor       =   &H00000080&
++      Style           =   1  'Graphical
++      TabIndex        =   8
++      Top             =   5640
++      Width           =   1695
++   End
++   Begin VB.CommandButton Command3 
++      BackColor       =   &H00A4E8CB&
++      Caption         =   "&Salir"
++      Height          =   375
++      Left            =   8160
++      MaskColor       =   &H00000080&
++      Style           =   1  'Graphical
++      TabIndex        =   5
++      Top             =   5640
++      Width           =   1500
++   End
++   Begin VB.PictureBox Picture1 
++      Appearance      =   0  'Flat
++      BackColor       =   &H00C0C0C0&
++      BorderStyle     =   0  'None
++      ForeColor       =   &H80000008&
++      Height          =   570
++      Left            =   10200
++      Picture         =   "Form174.frx":0000
++      ScaleHeight     =   570
++      ScaleWidth      =   3135
++      TabIndex        =   1
++      Top             =   0
++      Width           =   3135
++   End
++   Begin VB.CommandButton Command1 
++      BackColor       =   &H00A4E8CB&
++      Caption         =   "&Buscar"
++      Height          =   375
++      Left            =   6480
++      MaskColor       =   &H00000080&
++      Style           =   1  'Graphical
++      TabIndex        =   0
++      Top             =   1440
++      Width           =   1695
++   End
++   Begin VB.Frame Frame1 
++      BackColor       =   &H00E0E0E0&
++      Height          =   2055
++      Left            =   480
++      TabIndex        =   4
++      Top             =   960
++      Width           =   9135
++      Begin VB.TextBox NombreArchivo 
++         Height          =   285
++         Left            =   1920
++         TabIndex        =   9
++         Top             =   480
++         Width           =   3135
++      End
++      Begin VB.Label Label3 
++         BackColor       =   &H00E0E0E0&
++         Caption         =   "Archivo"
++         BeginProperty Font 
++            Name            =   "MS Sans Serif"
++            Size            =   8.25
++            Charset         =   0
++            Weight          =   700
++            Underline       =   0   'False
++            Italic          =   0   'False
++            Strikethrough   =   0   'False
++         EndProperty
++         ForeColor       =   &H00000080&
++         Height          =   255
++         Index           =   2
++         Left            =   720
++         TabIndex        =   7
++         Top             =   480
++         Width           =   1095
++      End
++      Begin VB.Label lblLoad 
++         Alignment       =   2  'Center
++         BackColor       =   &H80000018&
++         BorderStyle     =   1  'Fixed Single
++         Caption         =   "Cargando Espere por Favor ..."
++         BeginProperty Font 
++            Name            =   "MS Sans Serif"
++            Size            =   8.25
++            Charset         =   0
++            Weight          =   700
++            Underline       =   0   'False
++            Italic          =   0   'False
++            Strikethrough   =   0   'False
++         EndProperty
++         ForeColor       =   &H00000080&
++         Height          =   255
++         Left            =   600
++         TabIndex        =   6
++         Top             =   1080
++         Visible         =   0   'False
++         Width           =   4455
++      End
++   End
++   Begin MSFlexGridLib.MSFlexGrid Grid1
++      Height          =   2295
++      Left            =   480
++      TabIndex        =   11
++      Top             =   3120
++      Width           =   9135
++      _ExtentX        =   16113
++      _ExtentY        =   4048
++      _Version        =   393216
++      Cols            =   4
++      FixedCols       =   0
++      BackColor       =   16119285
++      ForeColor       =   128
++      BackColorFixed  =   10807499
++      ForeColorFixed  =   3560496
++      BackColorSel    =   13692411
++      ForeColorSel    =   128
++      BackColorBkg    =   15132904
++      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851}
++         Name            =   "MS Sans Serif"
++         Size            =   8.25
++         Charset         =   0
++         Weight          =   700
++         Underline       =   0   'False
++         Italic          =   0   'False
++         Strikethrough   =   0   'False
++      EndProperty
++   End
++   Begin MSComDlg.CommonDialog CmDlog 
++      Left            =   9600
++      Top             =   6240
++      _ExtentX        =   847
++      _ExtentY        =   847
++      _Version        =   393216
++   End
++   Begin VB.Label Label10 
++      BackColor       =   &H00C0C0C0&
++      Height          =   1245
++      Left            =   13320
++      TabIndex        =   3
++      Top             =   -240
++      Width           =   1065
++   End
++   Begin VB.Label Label11 
++      BackColor       =   &H00C0C0C0&
++      Height          =   9585
++      Left            =   13920
++      TabIndex        =   2
++      Top             =   0
++      Width           =   615
++   End
++   Begin VB.Image Image1 
++      Height          =   810
++      Left            =   1620
++      Picture         =   "Form174.frx":1644
++      Top             =   -210
++      Width           =   13590
++   End
++   Begin VB.Image Image2 
++      Height          =   1830
++      Left            =   -150
++      Picture         =   "Form174.frx":171C
++      Top             =   -1230
++      Width           =   4665
++   End
++End
++Attribute VB_Name = "Form174"
++Attribute VB_GlobalNameSpace = False
++Attribute VB_Creatable = False
++Attribute VB_PredeclaredId = True
++Attribute VB_Exposed = False
++'---INI---- xintec-nruz 20-10-2026 FCDVT-14: carga masiva de cierres Y (FACO) ----
++Private mArchivoCsv As String   'ruta del CSV elegido; la usara el boton de carga
++
++Private Sub Form_Load()
++    NombreArchivo.Text = ""
++    NombreArchivo.Locked = True          'solo se llena con Buscar
++    lblLoad.Visible = False
++    mArchivoCsv = ""
++    Call LimpiaGrilla      'xintec-nruz 22-10-2026 FCDVT-14: encabezados de la grilla del CSV
++End Sub
++
++'Boton Buscar: selecciona el archivo CSV y muestra la ruta en NombreArchivo
++Private Sub Command1_Click()
++    Dim nomFile As String
++    On Error GoTo cancelado
++    CmDlog.CancelError = True
++    CmDlog.DialogTitle = "Seleccione el archivo CSV de cierres Y"
++    CmDlog.Filter = "Archivos CSV (*.csv)|*.csv"
++    CmDlog.FilterIndex = 1
++    CmDlog.Flags = cdlOFNFileMustExist Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
++    CmDlog.filename = ""
++    CmDlog.ShowOpen
++    nomFile = Trim(CmDlog.filename)
++    On Error GoTo 0
++
++    If nomFile = "" Then
++        MsgBox "Debe seleccionar un archivo", vbCritical + vbDefaultButton1, Me.Caption
++        Exit Sub
++    End If
++    If LCase(Right(nomFile, 4)) <> ".csv" Then
++        MsgBox "El archivo debe tener extensión .csv", vbExclamation, Me.Caption
++        Exit Sub
++    End If
++
++    mArchivoCsv = nomFile
++    NombreArchivo.Text = nomFile
++    NombreArchivo.ToolTipText = nomFile
++    '---INI---- xintec-nruz 22-10-2026 FCDVT-14: muestra en la grilla los registros del archivo ----
++    Call LimpiaGrilla
++    Call CargaGrillaCsv(nomFile)
++    '---FIN----
++    Exit Sub
++cancelado:
++    'Cancelar en el dialogo (cdlCancel = 32755): se mantiene la seleccion anterior
++    If Err.Number <> cdlCancel Then
++        MsgBox "Error al seleccionar el archivo: " & Err.Description, vbCritical, Me.Caption
++    End If
++End Sub
++
++'Encabezado del CSV de carga masiva de Y FACO (54 columnas, docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3).
++'Lo usa Exportar Excel y lo usara Cargar para validar el archivo.
++Private Function EncabezadoCsvY() As String
++    Dim s As String
++    s = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION"
++    s = s & ";VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;REC_MEFECTIVO;REC_MRECAUDAEFEC;REC_MCHKDIA"
++    s = s & ";REC_MCHKFECHA;REC_MTARJ;REC_MSODIMAC;REC_MCMR;REC_MTREGALO;REC_MTOTCONVENIO"
++    s = s & ";REC_MTRASPASOTDE;REC_MRENUEVA;REC_MTOTFACXCOB;REC_MDOTACIONES;REC_MRETIROS;REC_MABONOCMR"
++    s = s & ";REC_MAVANCECMR;REC_MTOTPREPRENUEVA;REC_MTRANSFERENCIA;REC_MREVERSATRANS;REC_MRETIROTRANS;REC_MATRFEFEC"
++    s = s & ";REC_MATRFCHK;REC_MATRFCMR;REC_MATRFDEB;REC_MATRFCRE;REC_MREVATOTTRF;REC_MREVATRFEFEC"
++    s = s & ";REC_MREVATRFCMR;REC_MABONOTDE;REC_MTDE;REC_MSELLOSVRD;REC_MTOTRECAUDA;REC_MTOTREVRECAUDA"
++    s = s & ";REC_MCANJEPUNTOS;REC_MREVCANJEPUNTOS;REC_MTOTSIF;REC_MRECTERCERO;REC_MDEVTERCERO;REC_MQUICKPAYCMR"
++    s = s & ";REC_MQUICKPAYBCO;REC_ECOMPAY;REC_MPAGOPUNTOS"
++    EncabezadoCsvY = s
++End Function
++
++'Boton Exportar Excel: guarda una plantilla CSV (;) lista para completar
++Private Sub Command2_Click()
++    Dim ruta As String, fila As String, i As Integer, nArch As Integer
++    On Error GoTo cancelado
++    CmDlog.CancelError = True
++    CmDlog.DialogTitle = "Guardar plantilla de carga masiva de Y"
++    CmDlog.Filter = "Archivos CSV (*.csv)|*.csv"
++    CmDlog.FilterIndex = 1
++    CmDlog.DefaultExt = "csv"
++    CmDlog.Flags = cdlOFNOverwritePrompt Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
++    CmDlog.filename = "plantilla_carga_Y_FACO.csv"
++    CmDlog.ShowSave
++    ruta = Trim(CmDlog.filename)
++    On Error GoTo errArchivo
++    If ruta = "" Then Exit Sub
++    If LCase(Right(ruta, 4)) <> ".csv" Then ruta = ruta & ".csv"
++
++    'Fila de ejemplo: FECHA = dia anterior al servidor; identificacion vacia; 45 montos en 0
++    fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;"
++    For i = 1 To 45
++        fila = fila & ";0"
++    Next i
++
++    nArch = FreeFile
++    Open ruta For Output As #nArch
++    Print #nArch, EncabezadoCsvY()
++    Print #nArch, fila
++    Close #nArch
++
++    If MsgBox("Plantilla guardada en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
++              "¿Desea abrirla en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
++        Shell "explorer.exe """ & ruta & """", vbNormalFocus
++    End If
++    Exit Sub
++cancelado:
++    'Cancelar en el dialogo (cdlCancel): no se hace nada
++    If Err.Number <> cdlCancel Then MsgBox "Error al elegir el archivo: " & Err.Description, vbCritical, Me.Caption
++    Exit Sub
++errArchivo:
++    Close
++    MsgBox "No se pudo guardar la plantilla: " & Err.Description, vbCritical, Me.Caption
++End Sub
++'---FIN----
++
++'---INI---- xintec-nruz 22-10-2026 FCDVT-14: grilla con los registros del CSV (Buscar) ----
++'Grid1 muestra una fila por cada fila (Y) del CSV elegido: local, terminal, fecha de venta y
++'monto total = TOTALES de la Y (BOLETAS + N.CREDITO + FACTURA, columnas 10 a 12 del CSV), el
++'mismo vta_totalvta que calcula Form19Y. Solo muestra; no valida ni graba (eso lo hara Cargar).
++Private Sub LimpiaGrilla()
++    Dim i As Integer
++    Grid1.Clear
++    Grid1.Rows = 1
++    Grid1.Cols = 4
++    Grid1.TextMatrix(0, 0) = "Local"
++    Grid1.TextMatrix(0, 1) = "Terminal"
++    Grid1.TextMatrix(0, 2) = "Fecha Venta"
++    Grid1.TextMatrix(0, 3) = "Monto Total"
++    Grid1.ColWidth(0) = 1500
++    Grid1.ColWidth(1) = 1500
++    Grid1.ColWidth(2) = 2000
++    Grid1.ColWidth(3) = 2500
++    For i = 0 To 3
++        Grid1.FixedAlignment(i) = 4      'encabezado centrado
++    Next i
++    Grid1.ColAlignment(0) = 4
++    Grid1.ColAlignment(1) = 4
++    Grid1.ColAlignment(2) = 4
++    Grid1.ColAlignment(3) = 7            'monto a la derecha
++End Sub
++
++Private Sub CargaGrillaCsv(ByVal ruta As String)
++    Dim nArch As Integer, linea As String, vEncab As String
++    Dim c() As String
++    Dim nSaltadas As Long
++
++    On Error GoTo errArchivo
++    lblLoad.Visible = True
++    Screen.MousePointer = vbHourglass
++    DoEvents
++
++    nArch = FreeFile
++    Open ruta For Input As #nArch
++    If EOF(nArch) Then
++        Close #nArch
++        Screen.MousePointer = vbDefault
++        lblLoad.Visible = False
++        MsgBox "El archivo esta vacio", vbExclamation, Me.Caption
++        Exit Sub
++    End If
++
++    'Linea 1: encabezado de la plantilla (sin distinguir mayusculas; se tolera un ; final)
++    Line Input #nArch, vEncab
++    vEncab = UCase(Trim(vEncab))
++    If Right(vEncab, 1) = ";" Then vEncab = Left(vEncab, Len(vEncab) - 1)
++    If vEncab <> UCase(EncabezadoCsvY()) Then
++        Close #nArch
++        Screen.MousePointer = vbDefault
++        lblLoad.Visible = False
++        MsgBox "El archivo no tiene el encabezado de la plantilla de carga masiva de Y." & vbCrLf & _
++               "Use la plantilla que genera Exportar Excel.", vbExclamation, Me.Caption
++        Exit Sub
++    End If
++
++    'Una fila de la grilla por linea con datos; las vacias (o solo ;) se ignoran
++    nSaltadas = 0
++    Do While Not EOF(nArch)
++        Line Input #nArch, linea
++        If Trim(Replace(linea, ";", "")) <> "" Then
++            c = Split(linea, ";")
++            If UBound(c) < 11 Then
++                nSaltadas = nSaltadas + 1
++            Else
++                Grid1.AddItem Trim(c(1)) & vbTab & Trim(c(2)) & vbTab & Trim(c(0)) & vbTab & _
++                              Format(Val(c(9)) + Val(c(10)) + Val(c(11)), gFormat)
++            End If
++        End If
++    Loop
++    Close #nArch
++
++    Screen.MousePointer = vbDefault
++    lblLoad.Visible = False
++    If nSaltadas > 0 Then
++        MsgBox nSaltadas & " fila(s) del archivo tienen menos de 12 columnas y no se muestran.", vbExclamation, Me.Caption
++    End If
++    Exit Sub
++errArchivo:
++    Close
++    Screen.MousePointer = vbDefault
++    lblLoad.Visible = False
++    MsgBox "No se pudo leer el archivo: " & Err.Description, vbCritical, Me.Caption
++End Sub
++'---FIN----
++
++'---INI---- xintec-nruz 20-10-2026 FSCC-12901: PRUEBA cierre diario desde Salir (temporal) ----
++'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
++'de prueba fija (vFechaPrueba = 15-10-2026 desde el 22-10, FCDVT-56 etapa sin venta: local 5 T2; antes 17-09-2026, prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
++Private Sub Command3_Click()
++    'xintec-nruz 22-10-2026 FCDVT-14: version prod, Salir solo cierra (la prueba del cierre diario queda sin uso)
++    'Call EjecutaCierreDiario
++    Unload Me
++End Sub
++
++Private Sub EjecutaCierreDiario()
++    Dim cmd As ADODB.Command
++    Dim vEjecucion As String, vCerradas As String, vNoCerradas As String
++    Dim vFechaPrueba As String
++
++    'vFechaPrueba = "20260831"   'fecha de venta fija para la prueba en test (yyyymmdd)
++    'xintec-nruz 20-10-2026 FSCC-12901: fecha de prueba 10-09-2026 (antes 31-08-2026, prueba_test2)
++    'vFechaPrueba = "20260910"   'fecha de venta fija para la prueba en test (yyyymmdd)
++    'xintec-nruz 20-10-2026 FSCC-12901: fecha de prueba 17-09-2026 (antes 10-09-2026, prueba_test3 para la demostracion)
++    'vFechaPrueba = "20260917"   'fecha de venta fija para la prueba en test (yyyymmdd)
++    'xintec-nruz 22-10-2026 FCDVT-56: fecha de prueba 15-10-2026 (antes 17-09-2026; etapa sin venta, local 5 T2)
++    vFechaPrueba = "20261015"   'fecha de venta fija para la prueba en test (yyyymmdd)
++
++    On Error GoTo oraerror
++    Screen.MousePointer = vbHourglass
++    Set cmd = New ADODB.Command
++    Set cmd.ActiveConnection = Ado_Conn
++    With cmd
++        .CommandType = adCmdText
++        .CommandText = "BEGIN PKG_F8_CIERRE_DIARIO.prc_cierre_diario(?, to_date(?, 'yyyymmdd'), ?, ?, ?, ?); END;"
++        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, "FACO")
++        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 8, vFechaPrueba)
++        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, "PROC_CIERRE_DIARIO")
++        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
++        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
++        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
++        .Execute
++    End With
++    vEjecucion = IIf(IsNull(cmd.Parameters(3).Value), "", cmd.Parameters(3).Value)
++    vCerradas = IIf(IsNull(cmd.Parameters(4).Value), "0", cmd.Parameters(4).Value)
++    vNoCerradas = IIf(IsNull(cmd.Parameters(5).Value), "0", cmd.Parameters(5).Value)
++    Set cmd.ActiveConnection = Nothing
++    Set cmd = Nothing
++    Screen.MousePointer = vbDefault
++
++    MsgBox "Cierre diario FACO del " & Right(vFechaPrueba, 2) & "-" & Mid(vFechaPrueba, 5, 2) & "-" & Left(vFechaPrueba, 4) & " ejecutado." & vbCrLf & vbCrLf & _
++           "Ejecución: " & vEjecucion & vbCrLf & _
++           "Cajas cerradas: " & vCerradas & vbCrLf & _
++           "Cajas no cerradas: " & vNoCerradas & vbCrLf & vbCrLf & _
++           "Detalle en VTA_FACOLOG_CIERRE_DIARIO.", vbInformation, Me.Caption
++    Exit Sub
++oraerror:
++    Screen.MousePointer = vbDefault
++    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
++    SystemMsg = "Problemas al ejecutar PKG_F8_CIERRE_DIARIO (cierre diario FACO)"
++    frmLogOraError.Show 1
++End Sub
++'---FIN----

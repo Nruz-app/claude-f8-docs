@@ -328,7 +328,21 @@ El usuario agregó desde el IDE, en `Button15`, dos ButtonMenus (`INGY` "Ingreso
   - escribe con `Open … For Output` y `Print #` (CRLF). Primero el encabezado; después una fila con FECHA = día anterior a `LeeFechaServidor` en formato `dd-mm-yyyy`, identificación vacía y los 45 montos en 0 (54 campos, separados por `;`);
   - pregunta si se abre en Excel (`Shell explorer.exe`). No depende de que Excel esté instalado para generarla.
 
-**Pendiente:** Cargar (`Command4`: leer el CSV, validar e insertar según `docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md`) y Salir.
+**22-10-2026: grilla con los registros del CSV** (pedido del usuario). Respaldo `Form174.frm.bak_FCDVT-14_Grilla`; marcas `xintec-nruz 22-10-2026 FCDVT-14`.
+- **Diseño:**
+  - el formulario crece de 5205 a 7200 de alto;
+  - Exportar Excel y Salir bajan a `Top` 5640;
+  - entre `Frame1` y los botones va la grilla nueva `Grid1` (MSFlexGrid, OCX `MSFLXGRD.OCX`, con los colores y la fuente de `Form133.Grid2`), del mismo ancho que `Frame1`.
+- **Columnas:** Local, Terminal, Fecha Venta y Monto Total. Una fila por cada fila (Y) del CSV. **Monto Total = TOTALES de la Y** = BOLETAS + N.CREDITO + FACTURA (columnas 10 a 12): es el `vta_totalvta` de Form19Y, por decisión del usuario.
+- **Cuándo se llena:** al elegir el archivo con Buscar (`CargaGrillaCsv`).
+  - Si la línea 1 no es el encabezado de la plantilla (`EncabezadoCsvY()`, sin distinguir mayúsculas y con un `;` final tolerado), avisa y deja la grilla vacía.
+  - Ignora las líneas vacías.
+  - Las filas con menos de 12 campos no se muestran; al final se informa cuántas fueron.
+- **Alcance:** solo muestra; no valida ni graba. Cancelar en el diálogo no cambia la grilla.
+- **Esperado con la plantilla:** 3 filas, todas del 16-10-2026 en el local 5: T1 con 1.450.000, T1 con 842.000 y T2 con 300.000.
+- Sin compilar.
+
+**Pendiente:** Cargar (`Command4`: leer el CSV, validar e insertar según `docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md`; puede recorrer la misma lectura de `CargaGrillaCsv`). Salir sigue con la prueba temporal del cierre diario (FSCC-12901 / FCDVT-56).
 
 ### 5.4 Diseño propuesto del botón Cargar de Form174 (sin programar)
 
@@ -415,3 +429,6 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 20-10-2026 | Validación del CSV contra Form19Y y la base de test: **sirve para la carga masiva**. Se confirman las columnas 50 a 54 y que `REC_MREVATOTTRF` se informa. La plantilla queda con 54 campos (antes tenía un `;` final, 55) y con filas de ejemplo válidas en test (16-10-2026, local 5, terminales 1 y 2). `FORMATO` §6.1 nueva con las diferencias respecto de Form19Y (fecha de `Oklt`, hora, N° Y, −1). |
 | 20-10-2026 | Form174: el usuario agrega el botón Cargar. Se programa **Exportar Excel** (§5.3): guarda una plantilla CSV con el encabezado de 54 columnas y una fila con la fecha de ayer y los montos en 0. Se verificó que el encabezado es idéntico a la plantilla. Respaldo `Form174.frm.bak_FCDVT-14_Exportar`. Sin compilar. |
 | 20-10-2026 | **Estado congelado** ("graba todo"): §2 Estado, §5.4 diseño de Cargar, §8 guía para retomar, `CLAUDE.md` (§5 Form174 y §9 FCDVT-14), memoria. Manifiesto `docs/MANIFIESTO_FCDVT-14.md5` y respaldo `docs/respaldos/FCDVT-14_2026-10-20_form174-buscar-exportar.zip`. |
+| 22-10-2026 | Form174: **grilla con los registros del CSV** (§5.3). Al elegir el archivo con Buscar muestra Local, Terminal, Fecha Venta y Monto Total (TOTALES = BOLETAS + N.CREDITO + FACTURA). El formulario crece a 7200 de alto y los botones de abajo bajan. Respaldo `Form174.frm.bak_FCDVT-14_Grilla`. Sin compilar. Entretanto, por FCDVT-56, Salir pasó a la fecha de prueba 15-10-2026 (respaldo `.bak_FCDVT-56`). Se regeneró el manifiesto. |
+| 22-10-2026 | CSV de prueba de la grilla: `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv`. Tiene el formato de la plantilla y 20 Y del 16-10-2026 en el local 5 (T1 ×7, T2 ×7, T3 ×6), con las formas de pago cuadradas contra los TOTALES; la suma es 26.325.000. La plantilla no cambia. Se regeneró el manifiesto. |
+| 22-10-2026 | **Paquete de paso a producción** en `docs/Cambios/`: `MDIForm1.frm`, `Form174.frm` (versión prod, con Salir solo `Unload Me`) + `.frx` y la línea `Form=Form174.frm` del `.vbp`. El permiso 460 va junto con el exe, o se posterga mientras Cargar no esté programado |

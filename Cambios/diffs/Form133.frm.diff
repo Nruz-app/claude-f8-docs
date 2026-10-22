@@ -1,0 +1,206 @@
+--- PROD/Form133.frm
++++ NUEVO/Form133.frm
+@@ -724,16 +724,16 @@
+     .LockType = adLockReadOnly
+ End With
+ 
+-Sql = " select * from vta_" & Flg_Pais$ & "termstat t"
++sql = " select * from vta_" & Flg_Pais$ & "termstat t"
+ If Flg_Pais$ = "PER" Or Flg_Pais$ = "FAOR" Or Flg_Pais$ = "HTPE" Or Flg_Pais$ = "MAPE" Or Flg_Pais$ = "MPAM" Or Flg_Pais$ = "SPOR" Then   'rh 13-05-2020
+-Sql = Sql & " where t.ter_fecha = to_date('" & xFecha & "','dd-mm-yyyy')"
++sql = sql & " where t.ter_fecha = to_date('" & xFecha & "','dd-mm-yyyy')"
+ Else
+-Sql = Sql & " where t.ter_fecha = to_date('" & xFecha & "','yyyymmdd')"
++sql = sql & " where t.ter_fecha = to_date('" & xFecha & "','yyyymmdd')"
+ End If
+-Sql = Sql & " and t.ter_local =" & xlocal
+-Sql = Sql & " and t.ter_terminal =" & Xterminal
++sql = sql & " and t.ter_local =" & xlocal
++sql = sql & " and t.ter_terminal =" & Xterminal
+ 
+-Call cConsulta.Open(Sql)
++Call cConsulta.Open(sql)
+ z = cConsulta.RecordCount
+ 
+ If z <> 0 Then
+@@ -1683,6 +1683,10 @@
+ Dim vRecaudador As String
+ Dim X As Integer
+ Dim clocal As String
++'---INI---- xintec-nruz 19-10-2026 FSCC-12901: cajas de la carga para la compensacion automatica de DI (solo FACO) ----
++Dim vCajasDI As String
++Dim vClaveDI As String
++'---FIN---- xintec-nruz 19-10-2026 ----
+ 
+ X = 0
+ 
+@@ -1852,6 +1856,14 @@
+     
+         Call cQuery.Open(sq)
+         X = X + 1
++        '---INI---- xintec-nruz 19-10-2026 FSCC-12901: cajas de la carga para la compensacion automatica de DI (solo FACO) ----
++        If Flg_Pais$ = "FACO" And Val(Grid2.TextMatrix(i, 7)) > 0 Then
++            vClaveDI = "|" & Trim(Grid2.TextMatrix(i, 0)) & ";" & Trim(Grid2.TextMatrix(i, 1)) & ";" & Trim(Grid2.TextMatrix(i, 6)) & ";" & Trim(Grid2.TextMatrix(i, 7)) & "|"
++            If InStr(1, vCajasDI, vClaveDI) = 0 Then
++                vCajasDI = vCajasDI & vClaveDI
++            End If
++        End If
++        '---FIN---- xintec-nruz 19-10-2026 ----
+         
+         Call AbrirTerminal(Grid2.TextMatrix(i, 0), Grid2.TextMatrix(i, 1), Grid2.TextMatrix(i, 6))
+     
+@@ -1877,6 +1889,11 @@
+     Else
+         MsgBox "Se Cargaron " & X & " Registros"
+     End If
++    '---INI---- xintec-nruz 19-10-2026 FSCC-12901: la carga ya no cierra la Y; solo compensa la DI por caja (solo FACO) ----
++    If Flg_Pais$ = "FACO" And vCajasDI <> "" Then
++        Call EjecutaCompensaDIFACO(vCajasDI)
++    End If
++    '---FIN---- xintec-nruz 19-10-2026 ----
+ 
+ Set cQuery.ActiveConnection = Nothing
+    Exit Sub
+@@ -1886,6 +1903,122 @@
+    frmLogOraError.Show 1
+ End Sub
+ 
++'---INI---- xintec-nruz 19-10-2026 FSCC-12901: compensacion automatica de DI al cargar (solo FACO) ----
++'Por cada caja (local, terminal, fecha de venta, Y) con sobres insertados en esta carga llama a
++'PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja: si la diferencia real esta en el rango (parametros
++'1502 CA_DI_MIN / CA_DI_MAX) registra una DI por el valor exacto y con el mismo signo.
++'NO cierra la Y: la caja queda Pendiente (el cierre lo hara el cron diario).
++'Los sobres ya quedaron grabados: un error en una caja no deshace la carga ni corta las demas.
++'vCajas: "|local;terminal;yyyymmdd;Y|" por caja (armado en CargarArchivo).
++Private Sub EjecutaCompensaDIFACO(ByVal vCajas As String)
++Dim cmdDI As Object
++Dim vLista() As String
++Dim vDato() As String
++Dim k As Integer
++Dim nCajas As Integer
++Dim nConDI As Integer
++Dim nSinDI As Integer
++Dim nDetalle As Integer
++Dim vRes As String
++Dim vMonto As String
++Dim vMsgCaja As String
++Dim vDetalle As String
++Dim vLinea As String
++
++Screen.MousePointer = 11
++nCajas = 0
++nConDI = 0
++nSinDI = 0
++nDetalle = 0
++vDetalle = ""
++
++vLista = Split(vCajas, "|")
++For k = LBound(vLista) To UBound(vLista)
++    If Trim(vLista(k)) <> "" Then
++        vDato = Split(vLista(k), ";")
++        nCajas = nCajas + 1
++        vRes = ""
++        vMonto = ""
++        vMsgCaja = ""
++
++        On Error Resume Next
++        Err.Clear
++        Set cmdDI = CreateObject("ADODB.Command")
++        With cmdDI
++            Set .ActiveConnection = Ado_Conn
++            .CommandType = adCmdText
++            '---INI---- xintec-nruz 20-10-2026 FSCC-12901: paquete multipais, se envia el pais (Flg_Pais$) como primer parametro ----
++            '.CommandText = "BEGIN PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(to_date(?, 'yyyymmdd'), ?, ?, ?, ?, ?, ?, ?); END;"
++            '.Parameters.Append .CreateParameter("p_fecha", adVarChar, adParamInput, 8, vDato(2))
++            '.Parameters.Append .CreateParameter("p_local", adInteger, adParamInput, , CLng(vDato(0)))
++            '.Parameters.Append .CreateParameter("p_terminal", adInteger, adParamInput, , CLng(vDato(1)))
++            '.Parameters.Append .CreateParameter("p_cierrey", adInteger, adParamInput, , CLng(vDato(3)))
++            '.Parameters.Append .CreateParameter("p_usuario", adVarChar, adParamInput, 50, Left(LOGINUSER & "", 50))
++            '.Parameters.Append .CreateParameter("o_resultado", adVarChar, adParamOutput, 30)
++            '.Parameters.Append .CreateParameter("o_monto_di", adVarChar, adParamOutput, 40)
++            '.Parameters.Append .CreateParameter("o_mensaje", adVarChar, adParamOutput, 1000)
++            .CommandText = "BEGIN PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(?, to_date(?, 'yyyymmdd'), ?, ?, ?, ?, ?, ?, ?); END;"
++            .Parameters.Append .CreateParameter("p_flg_pais", adVarChar, adParamInput, 10, Left(Flg_Pais$ & "", 10))
++            .Parameters.Append .CreateParameter("p_fecha", adVarChar, adParamInput, 8, vDato(2))
++            .Parameters.Append .CreateParameter("p_local", adInteger, adParamInput, , CLng(vDato(0)))
++            .Parameters.Append .CreateParameter("p_terminal", adInteger, adParamInput, , CLng(vDato(1)))
++            .Parameters.Append .CreateParameter("p_cierrey", adInteger, adParamInput, , CLng(vDato(3)))
++            .Parameters.Append .CreateParameter("p_usuario", adVarChar, adParamInput, 50, Left(LOGINUSER & "", 50))
++            .Parameters.Append .CreateParameter("o_resultado", adVarChar, adParamOutput, 30)
++            .Parameters.Append .CreateParameter("o_monto_di", adVarChar, adParamOutput, 40)
++            .Parameters.Append .CreateParameter("o_mensaje", adVarChar, adParamOutput, 1000)
++            '---FIN---- xintec-nruz 20-10-2026 ----
++            .Execute
++            If Err.Number = 0 Then
++                '---INI---- xintec-nruz 20-10-2026 FSCC-12901: salidas corridas en 1 por el parametro del pais ----
++                'vRes = "" & .Parameters(5).Value
++                'vMonto = "" & .Parameters(6).Value
++                'vMsgCaja = "" & .Parameters(7).Value
++                vRes = "" & .Parameters(6).Value
++                vMonto = "" & .Parameters(7).Value
++                vMsgCaja = "" & .Parameters(8).Value
++                '---FIN---- xintec-nruz 20-10-2026 ----
++            Else
++                vRes = "ERROR ADO"
++                vMsgCaja = Err.Description
++            End If
++        End With
++        Err.Clear
++        On Error GoTo 0
++        Set cmdDI = Nothing
++
++        If vRes = "DI_REGISTRADA" Then
++            nConDI = nConDI + 1
++        Else
++            nSinDI = nSinDI + 1
++        End If
++
++        'Detalle por caja (maximo 20 lineas en el mensaje; el resto en el log)
++        If nDetalle < 20 Then
++            vLinea = "Local " & vDato(0) & " Terminal " & vDato(1) & " Y " & vDato(3) & ": " & vRes
++            If vMonto <> "" Then
++                vLinea = vLinea & " por " & vMonto
++            End If
++            If vRes = "ERROR" Or vRes = "ERROR ADO" Then
++                vLinea = vLinea & " - " & Left(vMsgCaja, 100)
++            End If
++            vDetalle = vDetalle & vLinea & Chr(13)
++            nDetalle = nDetalle + 1
++        End If
++    End If
++Next k
++
++Screen.MousePointer = 0
++If nCajas > nDetalle Then
++    vDetalle = vDetalle & "... (" & (nCajas - nDetalle) & " cajas mas: ver VTA_FACOLOG_COMPENSA_DI)" & Chr(13)
++End If
++MsgBox "Compensacion automatica de DI (la Y no se cierra, queda Pendiente)" & Chr(13) & Chr(13) & _
++       "Cajas evaluadas: " & nCajas & Chr(13) & _
++       "Con DI registrada: " & nConDI & Chr(13) & _
++       "Sin DI: " & nSinDI & Chr(13) & Chr(13) & vDetalle, vbInformation, "Compensacion Automatica DI FACO"
++End Sub
++'---FIN---- xintec-nruz 19-10-2026 ----
++
+ Private Sub Form_Load()
+ 'Command3.Visible = False
+ 'Command4.Visible = False
+@@ -2013,15 +2146,15 @@
+                 .col = n
+                 ' -- Asignar a la celda del Flex el contenido de la celda del excel
+                 If Flg_Pais$ = "SOAR" Then
+-                    .Text = obj_Worksheet.cells(i + 3, n + 1).Value
++                    .Text = obj_Worksheet.Cells(i + 3, n + 1).Value
+                 Else
+-                    .Text = obj_Worksheet.cells(i + 1, n + 1).Value
++                    .Text = obj_Worksheet.Cells(i + 1, n + 1).Value
+                 End If
+             Next n
+             
+                     If Flg_Pais$ = "PER" Or Flg_Pais = "FAOR" Or Flg_Pais$ = "HTPE" Or Flg_Pais$ = "MAPE" Or Flg_Pais$ = "MPAM" Or Flg_Pais$ = "SPOR" Then 'rh 14-05-2020
+-                        Tsobre = obj_Worksheet.cells(i + 1, 4).Value
+-                        Banco = obj_Worksheet.cells(i + 1, 11).Value
++                        Tsobre = obj_Worksheet.Cells(i + 1, 4).Value
++                        Banco = obj_Worksheet.Cells(i + 1, 11).Value
+                             If Grid2.TextMatrix(i, 3) <> "CHE" Then
+                                 exCta = ExisteCta(Tsobre, Banco)
+                                 If exCta = "0-0" And Grid2.TextMatrix(i, 1) <> "" Or Grid2.TextMatrix(i, 1) = "" Then

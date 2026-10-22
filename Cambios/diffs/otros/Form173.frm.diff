@@ -1,0 +1,624 @@
+--- PROD/Form173.frm
++++ NUEVO/Form173.frm
+@@ -243,6 +243,26 @@
+          Strikethrough   =   0   'False
+       EndProperty
+    End
++   Begin VB.Label Label2 
++      BackColor       =   &H00E0E0E0&
++      Caption         =   "V 0.2"
++      BeginProperty Font 
++         Name            =   "MS Sans Serif"
++         Size            =   8.25
++         Charset         =   0
++         Weight          =   700
++         Underline       =   0   'False
++         Italic          =   0   'False
++         Strikethrough   =   0   'False
++      EndProperty
++      ForeColor       =   &H00000080&
++      Height          =   255
++      Index           =   0
++      Left            =   120
++      TabIndex        =   14
++      Top             =   8640
++      Width           =   585
++   End
+    Begin VB.Image Image3 
+       Height          =   1500
+       Left            =   11160
+@@ -683,9 +703,10 @@
+     Dim dia As Integer
+     Dim mes As Integer
+     Dim anio As Integer
+-
++    
++    mEjecutando = False
+     codigoBarra = Trim(txtEdit.Text)
+-
++   
+     If Len(codigoBarra) <> 30 Then
+         MsgBox "El código de barra debe tener EXACTAMENTE 30 caracteres. Largo actual: " & Len(codigoBarra), vbExclamation
+         Exit Sub
+@@ -755,6 +776,14 @@
+         VMensaje = ExisteVtaTempEsc(vtaId, vtaLocal, vtaTerminal, vtaFecha, codigoBarra)
+ 
+         If InStr(1, VMensaje, "PKG OK", vbTextCompare) > 0 Then
++            
++            MsgBox "La transacción fue procesada correctamente." & vbCrLf & vbCrLf & _
++               "Código de barra: " & codigoBarra & vbCrLf & _
++               "Local: " & vtaLocal & vbCrLf & _
++               "Terminal: " & vtaTerminal & vbCrLf & _
++               "Fecha: " & Format(vtaFecha, "dd-mm-yyyy"), _
++               vbInformation, "Proceso exitoso"
++            
+             Call definegrid
+         ElseIf InStr(1, VMensaje, "ORA-00001", vbTextCompare) > 0 Then
+             MsgBox "El registro ya existe (PK duplicada)." & vbCrLf & VMensaje, vbExclamation
+@@ -762,6 +791,7 @@
+             MsgBox "No existe asociación para el código " & codigoBarra & vbCrLf & VMensaje, vbExclamation
+             Call definegrid
+         End If
++        
+     End If
+ 
+ End Sub
+@@ -818,6 +848,7 @@
+         VMensaje = CStr(cmd.Parameters(6).Value)
+     End If
+ 
++    mEjecutando = False
+     ExisteVtaTempEsc = VMensaje
+ 
+     Set cmd = Nothing
+@@ -830,196 +861,426 @@
+ End Function
+ Private Sub GeneraExcel()
+ 
+-    On Error GoTo ErrHandler
++On Error GoTo ErrHandler
+ 
+-    Dim xlApp As Object
+-    Dim xlBook As Object
+-    Dim xlSheet As Object
+-    Dim i As Long
+-    Dim j As Long
+-    Dim filaExcel As Long
+-
+-    Dim TotalValidas As Currency
+-    Dim TotalNoValidas As Currency
+-
+-    ' CREAR EXCEL
+-    Set xlApp = CreateObject("Excel.Application")
+-    Set xlBook = xlApp.Workbooks.Add
+-    Set xlSheet = xlBook.Sheets(1)
+-
+-    xlSheet.Name = "Reporte"
+-
+-    ' TITULO
+-    With xlSheet.Range("A1:H1")
+-        .Merge
+-        .Value = "REPORTE PROSEGUR"
+-        .Font.Bold = True
+-        .Font.Size = 14
+-        .HorizontalAlignment = -4108 ' xlCenter
+-    End With
++Dim xlApp As Object
++Dim xlBook As Object
++Dim xlSheet As Object
+ 
+-    filaExcel = 3
++Dim i As Long
++Dim j As Long
++Dim filaExcel As Long
+ 
+-    ' DEPOSITADOS
+-    xlSheet.Cells(filaExcel, 1).Value = "DEPOSITADOS"
+-    xlSheet.Cells(filaExcel, 1).Font.Bold = True
+-    xlSheet.Cells(filaExcel, 1).Font.Size = 12
++Dim TotalValidas As Currency
++Dim TotalNoValidas As Currency
+ 
+-    filaExcel = filaExcel + 1
++Dim valor As String
++Dim Paso As String
+ 
+-    ' Encabezados
+-    For j = 0 To Grid1(0).Cols - 1
++Paso = "Crear Excel"
+ 
+-        xlSheet.Cells(filaExcel, j + 1).Value = Grid1(0).TextMatrix(0, j)
++Set xlApp = CreateObject("Excel.Application")
+ 
+-        With xlSheet.Cells(filaExcel, j + 1)
+-            .Font.Bold = True
+-            .Interior.Color = RGB(220, 220, 220)
+-        End With
++Paso = "Crear Workbook"
++
++Set xlBook = xlApp.Workbooks.Add
++
++Paso = "Obtener hoja"
++
++Set xlSheet = xlBook.Sheets(1)
++
++Paso = "Nombrar hoja"
++
++xlSheet.Name = "Reporte"
++
++Paso = "Crear título"
++
++With xlSheet.Range("A1:H1")
++    .Merge
++    .Value = "REPORTE PROSEGUR"
++    .Font.Bold = True
++    .Font.Size = 14
++    .HorizontalAlignment = -4108
++End With
+ 
+-    Next j
++filaExcel = 3
+ 
+-    filaExcel = filaExcel + 1
++Paso = "Título Depositados"
++
++xlSheet.Cells(filaExcel, 1).Value = "DEPOSITADOS"
++xlSheet.Cells(filaExcel, 1).Font.Bold = True
++xlSheet.Cells(filaExcel, 1).Font.Size = 12
++
++filaExcel = filaExcel + 1
++
++Paso = "Encabezados Depositados"
++
++For j = 0 To Grid1(0).Cols - 1
++
++    xlSheet.Cells(filaExcel, j + 1).Value = _
++        Grid1(0).TextMatrix(0, j)
++
++    With xlSheet.Cells(filaExcel, j + 1)
++        .Font.Bold = True
++        .Interior.Color = RGB(220, 220, 220)
++    End With
++
++Next j
++
++filaExcel = filaExcel + 1
++
++Paso = "Datos Depositados"
++
++If Grid1(0).Rows > 1 Then
+ 
+-    ' Datos
+     For i = 1 To Grid1(0).Rows - 1
+ 
+         For j = 0 To Grid1(0).Cols - 1
+ 
+-            If j = 2 Then
+-                xlSheet.Cells(filaExcel, j + 1).Value = _
+-                    CLng(Replace(Grid1(0).TextMatrix(i, j), ".", ""))
+-                xlSheet.Cells(filaExcel, j + 1).NumberFormat = "#,##0"
++            valor = Trim$(Grid1(0).TextMatrix(i, j))
++
++            If j = 0 Then
++
++                ' FECHA CONTABLE
++                If valor <> "" Then
++
++                    xlSheet.Cells(filaExcel, j + 1).Value = _
++                        ConvertirFechaExcel(valor)
++
++                    If IsDate(xlSheet.Cells(filaExcel, j + 1).Value) Then
++                        xlSheet.Cells(filaExcel, j + 1).NumberFormat = "dd-mm-yyyy"
++                    End If
++
++                Else
++
++                    xlSheet.Cells(filaExcel, j + 1).Value = ""
++
++                End If
++
++            ElseIf j = 2 Then
++
++                ' MONTO
++                If valor <> "" Then
++
++                    valor = Replace(valor, ".", "")
++
++                    If IsNumeric(valor) Then
++
++                        xlSheet.Cells(filaExcel, j + 1).Value = _
++                            CLng(valor)
++
++                        xlSheet.Cells(filaExcel, j + 1).NumberFormat = "#,##0"
++
++                    Else
++
++                        xlSheet.Cells(filaExcel, j + 1).Value = valor
++
++                    End If
++
++                Else
++
++                    xlSheet.Cells(filaExcel, j + 1).Value = ""
++
++                End If
++
+             Else
+-                xlSheet.Cells(filaExcel, j + 1).Value = _
+-                    Grid1(0).TextMatrix(i, j)
++
++                xlSheet.Cells(filaExcel, j + 1).Value = valor
++
+             End If
++
+         Next j
+ 
+-        If Trim(Grid1(0).TextMatrix(i, 2)) <> "" Then
+-            TotalValidas = TotalValidas + CLng(Replace(Grid1(0).TextMatrix(i, 2), ".", ""))
++        ' CALCULAR TOTAL DEPOSITADOS
++        valor = Trim$(Grid1(0).TextMatrix(i, 2))
++
++        If valor <> "" Then
++
++            valor = Replace(valor, ".", "")
++
++            If IsNumeric(valor) Then
++                TotalValidas = TotalValidas + CCur(valor)
++            End If
++
+         End If
+ 
+         filaExcel = filaExcel + 1
+ 
+     Next i
+ 
+-    ' TOTAL DEPOSITADOS
+-    With xlSheet.Range("A" & filaExcel & ":B" & filaExcel)
+-        .Merge
+-        .Value = "TOTAL DEPOSITADOS"
+-        .Font.Bold = True
+-        .HorizontalAlignment = -4152 ' xlRight
+-        .Interior.Color = RGB(255, 255, 153)
+-    End With
++End If
+ 
+-    With xlSheet.Cells(filaExcel, 3)
+-        .Value = TotalValidas
+-        .Font.Bold = True
+-        .NumberFormat = "#,##0"
+-        .Interior.Color = RGB(255, 255, 153)
+-    End With
++Paso = "Total Depositados"
+ 
+-    filaExcel = filaExcel + 3
++With xlSheet.Range("A" & filaExcel & ":B" & filaExcel)
++    .Merge
++    .Value = "TOTAL DEPOSITADOS"
++    .Font.Bold = True
++    .HorizontalAlignment = -4152
++    .Interior.Color = RGB(255, 255, 153)
++End With
+ 
+-    ' NO DEPOSITADOS
+-    xlSheet.Cells(filaExcel, 1).Value = "NO DEPOSITADOS"
+-    xlSheet.Cells(filaExcel, 1).Font.Bold = True
+-    xlSheet.Cells(filaExcel, 1).Font.Size = 12
++With xlSheet.Cells(filaExcel, 3)
++    .Value = TotalValidas
++    .Font.Bold = True
++    .NumberFormat = "#,##0"
++    .Interior.Color = RGB(255, 255, 153)
++End With
+ 
+-    filaExcel = filaExcel + 1
++filaExcel = filaExcel + 3
+ 
+-    ' Encabezados
+-    For j = 0 To Grid1(1).Cols - 1
++Paso = "Título No Depositados"
+ 
+-        If Grid1(1).ColWidth(j) > 0 Then
++xlSheet.Cells(filaExcel, 1).Value = "NO DEPOSITADOS"
++xlSheet.Cells(filaExcel, 1).Font.Bold = True
++xlSheet.Cells(filaExcel, 1).Font.Size = 12
+ 
+-            xlSheet.Cells(filaExcel, j + 1).Value = Grid1(1).TextMatrix(0, j)
++filaExcel = filaExcel + 1
+ 
+-            With xlSheet.Cells(filaExcel, j + 1)
+-                .Font.Bold = True
+-                .Interior.Color = RGB(220, 220, 220)
+-            End With
++Paso = "Encabezados No Depositados"
+ 
+-        End If
++For j = 0 To Grid1(1).Cols - 1
++
++    If Grid1(1).ColWidth(j) > 0 Then
++
++        xlSheet.Cells(filaExcel, j + 1).Value = _
++            Grid1(1).TextMatrix(0, j)
++
++        With xlSheet.Cells(filaExcel, j + 1)
++            .Font.Bold = True
++            .Interior.Color = RGB(220, 220, 220)
++        End With
++
++    End If
++
++Next j
+ 
+-    Next j
++filaExcel = filaExcel + 1
+ 
+-    filaExcel = filaExcel + 1
++Paso = "Datos No Depositados"
++
++If Grid1(1).Rows > 1 Then
+ 
+-    ' Datos
+     For i = 1 To Grid1(1).Rows - 1
++
+         For j = 0 To Grid1(1).Cols - 1
++
+             If Grid1(1).ColWidth(j) > 0 Then
++
++                valor = Trim$(Grid1(1).TextMatrix(i, j))
++
+                 If j = 5 Then
+ 
+-                    xlSheet.Cells(filaExcel, j + 1).Value = _
+-                        CLng(Replace(Grid1(1).TextMatrix(i, j), ".", ""))
+-                    xlSheet.Cells(filaExcel, j + 1).NumberFormat = "#,##0"
+-                
++                    ' MONTO
++                    If valor <> "" Then
++
++                        valor = Replace(valor, ".", "")
++
++                        If IsNumeric(valor) Then
++
++                            xlSheet.Cells(filaExcel, j + 1).Value = _
++                                CLng(valor)
++
++                            xlSheet.Cells(filaExcel, j + 1).NumberFormat = "#,##0"
++
++                        Else
++
++                            xlSheet.Cells(filaExcel, j + 1).Value = valor
++
++                        End If
++
++                    Else
++
++                        xlSheet.Cells(filaExcel, j + 1).Value = ""
++
++                    End If
++
+                 ElseIf j = 6 Then
++
++                    ' CÓDIGO DE BARRAS COMO TEXTO
+                     xlSheet.Cells(filaExcel, j + 1).NumberFormat = "@"
+-                    xlSheet.Cells(filaExcel, j + 1).Value = "'" & Grid1(1).TextMatrix(i, j)
++
++                    xlSheet.Cells(filaExcel, j + 1).Value = _
++                        "'" & valor
++
++                ElseIf j = 0 Or j = 1 Then
++
++                    ' FECHA VENTA Y FECHA CONTABLE
++                    If valor <> "" Then
++
++                        xlSheet.Cells(filaExcel, j + 1).Value = _
++                            ConvertirFechaExcel(valor)
++
++                        If IsDate(xlSheet.Cells(filaExcel, j + 1).Value) Then
++                            xlSheet.Cells(filaExcel, j + 1).NumberFormat = "dd-mm-yyyy"
++                        End If
++
++                    Else
++
++                        xlSheet.Cells(filaExcel, j + 1).Value = ""
++
++                    End If
++
+                 Else
+-                    xlSheet.Cells(filaExcel, j + 1).Value = Grid1(1).TextMatrix(i, j)
++
++                    xlSheet.Cells(filaExcel, j + 1).Value = valor
++
+                 End If
++
+             End If
++
+         Next j
+ 
+-       If Trim(Grid1(1).TextMatrix(i, 5)) <> "" Then
+-            TotalNoValidas = TotalNoValidas + CLng(Replace(Grid1(1).TextMatrix(i, 5), ".", ""))
+-       End If
++        ' CALCULAR TOTAL NO DEPOSITADOS
++        valor = Trim$(Grid1(1).TextMatrix(i, 5))
++
++        If valor <> "" Then
++
++            valor = Replace(valor, ".", "")
++
++            If IsNumeric(valor) Then
++                TotalNoValidas = TotalNoValidas + CCur(valor)
++            End If
++
++        End If
+ 
+         filaExcel = filaExcel + 1
+ 
+     Next i
+ 
+-    ' TOTAL NO DEPOSITADOS
+-    With xlSheet.Range("A" & filaExcel & ":E" & filaExcel)
+-        .Merge
+-        .Value = "TOTAL NO DEPOSITADOS"
+-        .Font.Bold = True
+-        .HorizontalAlignment = -4152 ' xlRight
+-        .Interior.Color = RGB(255, 255, 153)
+-    End With
++End If
+ 
+-    With xlSheet.Cells(filaExcel, 6)
+-        .Value = TotalNoValidas
+-        .Font.Bold = True
+-        .NumberFormat = "#,##0"
+-        .Interior.Color = RGB(255, 255, 153)
+-    End With
++Paso = "Total No Depositados"
++
++With xlSheet.Range("A" & filaExcel & ":E" & filaExcel)
++    .Merge
++    .Value = "TOTAL NO DEPOSITADOS"
++    .Font.Bold = True
++    .HorizontalAlignment = -4152
++    .Interior.Color = RGB(255, 255, 153)
++End With
++
++With xlSheet.Cells(filaExcel, 6)
++    .Value = TotalNoValidas
++    .Font.Bold = True
++    .NumberFormat = "#,##0"
++    .Interior.Color = RGB(255, 255, 153)
++End With
++
++Paso = "AutoFit columnas"
+ 
+-    ' FORMATO GENERAL
+-    xlSheet.Columns.AutoFit
++xlSheet.Columns.AutoFit
++
++Paso = "Aplicar bordes"
++
++If xlSheet.UsedRange.Rows.Count > 0 Then
+ 
+     With xlSheet.UsedRange.Borders
+         .LineStyle = 1
+     End With
+ 
+-    xlApp.Visible = True
++End If
+ 
+-    Set xlSheet = Nothing
+-    Set xlBook = Nothing
+-    Set xlApp = Nothing
++Paso = "Mostrar Excel"
+ 
+-    Exit Sub
++xlApp.Visible = True
++
++Set xlSheet = Nothing
++Set xlBook = Nothing
++Set xlApp = Nothing
++
++Exit Sub
+ 
+ ErrHandler:
+ 
+-    MsgBox "Error al generar Excel: " & Err.Description, vbCritical
+-    On Error Resume Next
++MsgBox "Error al generar Excel" & vbCrLf & vbCrLf & _
++       "Número: " & Err.Number & vbCrLf & _
++       "Descripción: " & Err.Description & vbCrLf & _
++       "Paso: " & Paso, _
++       vbCritical, _
++       "F8.Automatico"
++
++On Error Resume Next
++
++If Not xlBook Is Nothing Then
++    xlBook.Close False
++End If
++
++If Not xlApp Is Nothing Then
++    xlApp.Quit
++End If
++
++Set xlSheet = Nothing
++Set xlBook = Nothing
++Set xlApp = Nothing
+ 
+-    If Not xlBook Is Nothing Then
+-        xlBook.Close False
+-    End If
++End Sub
+ 
+-    If Not xlApp Is Nothing Then
+-        xlApp.Quit
+-    End If
+ 
+-    Set xlSheet = Nothing
+-    Set xlBook = Nothing
+-    Set xlApp = Nothing
++Private Function ConvertirFechaExcel(ByVal fechaTexto As String) As Variant
++
++Dim partes() As String
++Dim dia As Integer
++Dim mes As Integer
++Dim anio As Integer
++Dim fecha As Date
++
++On Error GoTo FechaInvalida
++
++fechaTexto = Trim$(fechaTexto)
++
++If fechaTexto = "" Then
++    ConvertirFechaExcel = ""
++    Exit Function
++End If
++
++partes = Split(fechaTexto, "-")
++
++If UBound(partes) <> 2 Then
++    ConvertirFechaExcel = fechaTexto
++    Exit Function
++End If
++
++If Not IsNumeric(partes(0)) Or _
++   Not IsNumeric(partes(1)) Or _
++   Not IsNumeric(partes(2)) Then
++
++    ConvertirFechaExcel = fechaTexto
++    Exit Function
++
++End If
++
++dia = CInt(partes(0))
++mes = CInt(partes(1))
++anio = CInt(partes(2))
++
++If Len(Trim$(partes(2))) = 2 Then
++    anio = 2000 + anio
++End If
++
++If anio < 1900 Or anio > 9999 Then GoTo FechaInvalida
++If mes < 1 Or mes > 12 Then GoTo FechaInvalida
++If dia < 1 Or dia > 31 Then GoTo FechaInvalida
++
++fecha = DateSerial(anio, mes, dia)
++
++' Evitar que DateSerial normalice fechas inexistentes
++If Day(fecha) <> dia Or _
++   Month(fecha) <> mes Or _
++   Year(fecha) <> anio Then
++
++    GoTo FechaInvalida
++
++End If
++
++ConvertirFechaExcel = fecha
++Exit Function
++
++
++FechaInvalida:
++
++ConvertirFechaExcel = fechaTexto
++
++End Function
++
+ 
+-End Sub

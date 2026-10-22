@@ -1,0 +1,22 @@
+# MANIFIESTO docs/Cambios - paso a produccion FSCC-12901 / FCDVT-14 / FCDVT-56 (22-10-2026). Verificar desde esta carpeta: grep -v '^#' MANIFIESTO.md5 | md5sum -c
+26eeeb01e993eece2440ed9739a94562 *PROD/Form133.frm
+0e1bfd0ce9c86e18f8913dbf2876c35d *PROD/Form43.frm
+ee06d78d2d8afd28fa67a146643563e3 *PROD/MDIForm1.frm
+1f17838b52350b69ec28715cb3f267f5 *PROD/otros/Form172.frm
+2218417ba4b2ea3b8565a6158322004d *PROD/otros/Form173.frm
+d986352ffb4d9d10a509a8b6c0d83ed8 *PROD/recaudacion.vbp
+03c81b1e258e14d43334d7fce71f74f0 *README.md
+00abac131ef669946bfd9be12b8fe38f *archivos/Form133.frm
+e6313075581566960250792f555a7247 *archivos/Form174.frm
+cc816b30965b9897e284bdf47ef0e79c *archivos/Form174.frx
+2f634df1f52a301a54f44764979d3087 *archivos/Form43.frm
+9d032f555cb47a4fca38b6284919fe69 *archivos/MDIForm1.frm
+27b61539585f68206cd8f42c3bbe9f67 *archivos/otros/Form172.frm
+ba54fb8660f25dede87d49e53eee00e7 *archivos/otros/Form173.frm
+a21c98b86a9400e041ff0b1b5d8e3027 *diffs/Form133.frm.diff
+25e46bcf1674619a74af4fc3773a2b8b *diffs/Form174.frm.diff
+e93913458f7e9385b065a6c981fcfc6c *diffs/Form43.frm.diff
+1073b6f32c781a2c74664c2c9401f93a *diffs/MDIForm1.frm.diff
+31245db39f26275f44e5385276ee30c4 *diffs/otros/Form172.frm.diff
+8b3b12eb6d477767c8cf5c2a1a86ae5d *diffs/otros/Form173.frm.diff
+04dcbceea21ec7314df58d5e1e7f3e1f *diffs/recaudacion.vbp.diff

@@ -1,0 +1,348 @@
+--- PROD/Form172.frm
++++ NUEVO/Form172.frm
+@@ -89,8 +89,8 @@
+       Left            =   480
+       TabIndex        =   0
+       Top             =   3240
+-      Width           =   10575
+-      _ExtentX        =   18653
++      Width           =   10695
++      _ExtentX        =   18865
+       _ExtentY        =   7858
+       _Version        =   393216
+       Rows            =   1
+@@ -123,7 +123,7 @@
+       _ExtentX        =   2566
+       _ExtentY        =   661
+       _Version        =   393216
+-      Format          =   155910145
++      Format          =   226099201
+       CurrentDate     =   45877
+    End
+    Begin VB.Frame Frame1 
+@@ -132,7 +132,7 @@
+       Left            =   480
+       TabIndex        =   8
+       Top             =   960
+-      Width           =   10575
++      Width           =   10695
+       Begin MSComCtl2.DTPicker DTPicker1 
+          Height          =   375
+          Left            =   4320
+@@ -142,7 +142,7 @@
+          _ExtentX        =   2566
+          _ExtentY        =   661
+          _Version        =   393216
+-         Format          =   155910145
++         Format          =   226099201
+          CurrentDate     =   45894
+       End
+       Begin VB.Label Label3 
+@@ -253,8 +253,8 @@
+       Left            =   480
+       TabIndex        =   18
+       Top             =   7680
+-      Width           =   10575
+-      _ExtentX        =   18653
++      Width           =   10695
++      _ExtentX        =   18865
+       _ExtentY        =   661
+       _Version        =   393216
+       Rows            =   1
+@@ -632,8 +632,21 @@
+     fechaFormateada = Format(CDate(ConsultaCua.Fields(0).Value), "yyyymmdd")
+     idProTraSum = CCur(fechaFormateada & CStr(ConsultaCua.Fields(2).Value))
+     
++    
+     efeBanco = BuscarProsegurTransSum(idProTraSum, 1)
+-    vtaDif = BuscarProsegurTransSum(idProTraSum, 2)
++    efeDepositaria = ConsultaCua.Fields(1).Value
++    vtaDif = efeDepositaria - efeBanco
++    
++    Call GrabarProsegurTransSum( _
++            idProTraSum, _
++            ConsultaCua.Fields(2).Value, _
++            ConsultaCua.Fields(0).Value, _
++            efeDepositaria, _
++            efeBanco, _
++            vtaDif)
++       
++    'efeBanco = BuscarProsegurTransSum(idProTraSum, 1)
++    'vtaDif = BuscarProsegurTransSum(idProTraSum, 2)
+     efeBancoTotal = efeBancoTotal + efeBanco
+     diferenciaTotal = diferenciaTotal + vtaDif
+     Grid1(0).TextMatrix(row, 3) = Format(efeBanco, "#,##0")
+@@ -758,70 +771,78 @@
+ 
+     Dim i As Integer
+     Dim valor As String
+-    Dim valorBan As String
+-    Dim valordif As String
++
+     Dim efeBanco As Double
+-    Dim idx As Integer
+-    Dim vtaEfecDespitaria As Double
++    Dim vtaEfecDepositaria As Double
++    Dim vtaDif As Double
++
+     Dim vtaFecha As String
+     Dim idProTraSum As Currency
+-    Dim vtaLocal As Integer
+-    Dim vtaDif As Currency
+-    
+-    If Not IsNumeric(txtEdit.Text) Then Exit Sub
+-       efeBanco = CLng(txtEdit.Text)
++    Dim vtaLocal As Long
++
++    If Not IsNumeric(txtEdit.Text) Then
++        MsgBox "Ingrese un monto válido.", vbExclamation, "PROSEGUR"
++        Exit Sub
++    End If
++
++    efeBanco = CDbl(Replace(Replace(Trim(txtEdit.Text), ".", ""), ",", "."))
+ 
+     With Grid1(0)
+ 
+-        ' Tomar valor
+         valor = Trim(.TextMatrix(.row, 2))
+-    
+-        ' Limpiar separadores
++
++        ' Eliminar separador de miles
+         valor = Replace(valor, ".", "")
+         valor = Replace(valor, ",", "")
+-    
++
+         If IsNumeric(valor) Then
+-            vtaEfecDespitaria = CDbl(valor)
++            vtaEfecDepositaria = CDbl(valor)
+         Else
+-            vtaEfecDespitaria = 0
++            vtaEfecDepositaria = 0
+         End If
+-    
+-        ' Calcular
++
++        vtaDif = vtaEfecDepositaria - efeBanco
++
+         .TextMatrix(.row, 3) = Format(efeBanco, "#,##0")
+-        .TextMatrix(.row, 4) = Format(vtaEfecDespitaria - efeBanco, "#,##0")
+-        
+-        vtaFecha = Trim(Grid1(0).TextMatrix(.row, 0))
+-        vtaLocal = Trim(Grid1(0).TextMatrix(.row, 5))
++        .TextMatrix(.row, 4) = Format(vtaDif, "#,##0")
++
++        vtaFecha = Trim(.TextMatrix(.row, 0))
++
++        vtaLocal = CLng(.TextMatrix(.row, 5))
++
+         fechaFormateada = Format(CDate(vtaFecha), "yyyymmdd")
+-        idProTraSum = CCur(fechaFormateada & CStr(vtaLocal))
+-        vtaDif = CDbl(Trim(Grid1(0).TextMatrix(.row, 4)))
+-    
+-        'Registra Suma Transacion
+-        Call GrabarProsegurTransSum(idProTraSum, vtaFecha, vtaLocal, vtaEfecDespitaria, efeBanco, vtaDif)
+-    
++
++        idProTraSum = CCur( _
++            fechaFormateada & CStr(vtaLocal) _
++        )
++
++        Call GrabarProsegurTransSum( _
++                idProTraSum, _
++                vtaFecha, _
++                vtaLocal, _
++                vtaEfecDepositaria, _
++                efeBanco, _
++                vtaDif)
++
+     End With
++
+     efeBancoTotal = 0
+     diferenciaTotal = 0
++
+     For i = 1 To Grid1(0).Rows - 1
+ 
+-        valorBan = Trim(Grid1(0).TextMatrix(i, 3))
+-        valordif = Trim(Grid1(0).TextMatrix(i, 4))
+-    
+-        ' limpiar formato
+-        valorBan = Replace(valorBan, ".", "")
+-        valorBan = Replace(valorBan, ",", "")
+-        valordif = Replace(valordif, ".", "")
+-        valordif = Replace(valordif, ",", "")
+-    
+-        If IsNumeric(valorBan) Then
+-            efeBancoTotal = efeBancoTotal + CCur(valorBan)
++        If IsNumeric(Replace(Replace(Grid1(0).TextMatrix(i, 3), ".", ""), ",", "")) Then
++            efeBancoTotal = efeBancoTotal + _
++                CDbl(Replace(Replace(Grid1(0).TextMatrix(i, 3), ".", ""), ",", ""))
+         End If
+-        If IsNumeric(valordif) Then
+-            diferenciaTotal = diferenciaTotal + CCur(valordif)
++
++        If IsNumeric(Replace(Replace(Grid1(0).TextMatrix(i, 4), ".", ""), ",", "")) Then
++            diferenciaTotal = diferenciaTotal + _
++                CDbl(Replace(Replace(Grid1(0).TextMatrix(i, 4), ".", ""), ",", ""))
+         End If
+ 
+     Next i
+-    
++
+     Grid1(1).TextMatrix(0, 2) = Format(efeBancoTotal, "#,##0")
+     Grid1(1).TextMatrix(0, 3) = Format(diferenciaTotal, "#,##0")
+     
+@@ -860,6 +881,11 @@
+     Dim i As Integer
+     Dim filaFin As Integer
+     Dim filaTotal As Integer
++    '
++    Dim fechaTexto As String
++    Dim partesFecha() As String
++    Dim fechaExcel As Date
++    
+     
+     ' Crear Excel
+     Set xlApp = CreateObject("Excel.Application")
+@@ -895,15 +921,41 @@
+     
+     ' DATOS DESDE GRID(0)
+     For i = 1 To Grid1(0).Rows - 1
++
++        'xlSheet.Cells(i + 3, 1).Value = Grid1(0).TextMatrix(i, 0)
+         
+-        xlSheet.Cells(i + 3, 1).Value = Grid1(0).TextMatrix(i, 0)
+-        xlSheet.Cells(i + 3, 2).Value = Grid1(0).TextMatrix(i, 1)
+-        xlSheet.Cells(i + 3, 3).Value = Grid1(0).TextMatrix(i, 2)
+-        xlSheet.Cells(i + 3, 4).Value = Grid1(0).TextMatrix(i, 3)
+-        xlSheet.Cells(i + 3, 5).Value = Grid1(0).TextMatrix(i, 4)
++        fechaTexto = Trim$(Grid1(0).TextMatrix(i, 0))
++
++        If fechaTexto <> "" Then
++        
++            partesFecha = Split(fechaTexto, "-")
+         
++            If UBound(partesFecha) = 2 Then
++        
++                fechaExcel = DateSerial( _
++                    CInt(partesFecha(2)), _
++                    CInt(partesFecha(1)), _
++                    CInt(partesFecha(0)))
++        
++                xlSheet.Cells(i + 3, 1).Value = fechaExcel
++        
++            Else
++                xlSheet.Cells(i + 3, 1).Value = fechaTexto
++            End If
++        
++        End If
++        
++        xlSheet.Cells(i + 3, 2).Value = Grid1(0).TextMatrix(i, 1)
++    
++        ' Montos: convertir texto de la grilla a número
++        xlSheet.Cells(i + 3, 3).Value = CDbl(Replace(Grid1(0).TextMatrix(i, 2), ".", ""))
++        xlSheet.Cells(i + 3, 4).Value = CDbl(Replace(Grid1(0).TextMatrix(i, 3), ".", ""))
++        xlSheet.Cells(i + 3, 5).Value = CDbl(Replace(Grid1(0).TextMatrix(i, 4), ".", ""))
++    
+     Next i
+     
++    
++    
+     filaFin = Grid1(0).Rows + 3
+     filaTotal = filaFin + 1
+     
+@@ -971,36 +1023,42 @@
+                                    ByVal vtaDiferencia As Double)
+ 
+     Dim sq As String
+-    Dim Deposito As String
++    Dim DEPOSITO As String
+     Dim Banco As String
+     Dim Diferencia As String
++    Dim fechaOracle As String
+ 
+     On Error GoTo ErrHandler
+ 
+-    Deposito = Replace$(Format$(vtaEfectivoDepositaria, "0.00"), ",", ".")
++    DEPOSITO = Replace$(Format$(vtaEfectivoDepositaria, "0.00"), ",", ".")
+     Banco = Replace$(Format$(vtaEfectivoBancario, "0.00"), ",", ".")
+     Diferencia = Replace$(Format$(vtaDiferencia, "0.00"), ",", ".")
+ 
+-    sq = ""
++    fechaOracle = Format$(CDate(vtaFechaContable), "yyyymmdd")
+ 
++    sq = ""
+     sq = sq & "MERGE INTO PROSEGUR_TRANS_SUM T "
++    
+     sq = sq & "USING ( "
+     sq = sq & "SELECT "
+-    sq = sq & vtaServicePointCode & " SERVICE_POINT_CODE, "
+-    sq = sq & "TO_TIMESTAMP('" & vtaFechaContable & "','DD-MM-YYYY') ACCOUNTING_DATE "
++    sq = sq & vtaIdProTransSum & " AS ID_PRO_TRANS_SUM, "
++    sq = sq & vtaServicePointCode & " AS SERVICE_POINT_CODE, "
++    sq = sq & "TO_DATE('" & fechaOracle & "','YYYYMMDD') AS ACCOUNTING_DATE, "
++    sq = sq & DEPOSITO & " AS DEPOSITORY_CASH_AMOUNT, "
++    sq = sq & Banco & " AS BANK_CASH_AMOUNT, "
++    sq = sq & Diferencia & " AS DIFFERENCE_AMOUNT "
+     sq = sq & "FROM DUAL "
+     sq = sq & ") S "
+-
+-    sq = sq & "ON ( "
+-    sq = sq & "T.SERVICE_POINT_CODE = S.SERVICE_POINT_CODE "
+-    sq = sq & "AND T.ACCOUNTING_DATE = S.ACCOUNTING_DATE "
+-    sq = sq & ") "
+-
++    
++    sq = sq & "ON (T.ID_PRO_TRANS_SUM = S.ID_PRO_TRANS_SUM) "
++    
+     sq = sq & "WHEN MATCHED THEN UPDATE SET "
+-    sq = sq & "T.DEPOSITORY_CASH_AMOUNT = " & Deposito & ", "
+-    sq = sq & "T.BANK_CASH_AMOUNT = " & Banco & ", "
+-    sq = sq & "T.DIFFERENCE_AMOUNT = " & Diferencia & " "
+-
++    sq = sq & "T.SERVICE_POINT_CODE = S.SERVICE_POINT_CODE, "
++    sq = sq & "T.ACCOUNTING_DATE = S.ACCOUNTING_DATE, "
++    sq = sq & "T.DEPOSITORY_CASH_AMOUNT = S.DEPOSITORY_CASH_AMOUNT, "
++    sq = sq & "T.BANK_CASH_AMOUNT = S.BANK_CASH_AMOUNT, "
++    sq = sq & "T.DIFFERENCE_AMOUNT = S.DIFFERENCE_AMOUNT "
++    
+     sq = sq & "WHEN NOT MATCHED THEN INSERT ("
+     sq = sq & "ID_PRO_TRANS_SUM, "
+     sq = sq & "SERVICE_POINT_CODE, "
+@@ -1009,12 +1067,12 @@
+     sq = sq & "BANK_CASH_AMOUNT, "
+     sq = sq & "DIFFERENCE_AMOUNT"
+     sq = sq & ") VALUES ("
+-    sq = sq & vtaIdProTransSum & ", "
+-    sq = sq & vtaServicePointCode & ", "
+-    sq = sq & "TO_TIMESTAMP('" & vtaFechaContable & "','DD-MM-YYYY'), "
+-    sq = sq & Deposito & ", "
+-    sq = sq & Banco & ", "
+-    sq = sq & Diferencia
++    sq = sq & "S.ID_PRO_TRANS_SUM, "
++    sq = sq & "S.SERVICE_POINT_CODE, "
++    sq = sq & "S.ACCOUNTING_DATE, "
++    sq = sq & "S.DEPOSITORY_CASH_AMOUNT, "
++    sq = sq & "S.BANK_CASH_AMOUNT, "
++    sq = sq & "S.DIFFERENCE_AMOUNT"
+     sq = sq & ")"
+ 
+     Ado_Conn.Execute sq
+@@ -1022,10 +1080,16 @@
+     Exit Sub
+ 
+ ErrHandler:
+-    MsgBox "Error al grabar Prosegur: " & Err.Number & vbCrLf & Err.Description, vbCritical, "PROSEGUR"
++    MsgBox "Error al grabar Prosegur:" & vbCrLf & _
++           "Error: " & Err.Number & vbCrLf & _
++           Err.Description & vbCrLf & vbCrLf & _
++           "SQL:" & vbCrLf & sq, _
++           vbCritical, _
++           "PROSEGUR"
+ 
+ End Sub
+ 
++
+ Private Function BuscarProsegurTransSum(ByVal vtaIdProsegur As String, _
+                                         ByVal Tipo As Integer) As Long
+ 
