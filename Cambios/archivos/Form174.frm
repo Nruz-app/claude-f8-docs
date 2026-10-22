@@ -400,7 +400,7 @@ End Sub
 
 '---INI---- xintec-nruz 20-10-2026 FSCC-12901: PRUEBA cierre diario desde Salir (temporal) ----
 'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
-'de prueba fija (vFechaPrueba = 15-10-2026 desde el 22-10, FCDVT-56 etapa sin venta: local 5 T2; antes 17-09-2026, prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
+'de prueba fija (vFechaPrueba = 20-08-2026 desde el 22-10, COMPENSA_DI prueba_test4; antes 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
 Private Sub Command3_Click()
     'xintec-nruz 22-10-2026 FCDVT-14: version prod, Salir solo cierra (la prueba del cierre diario queda sin uso)
     'Call EjecutaCierreDiario
@@ -418,7 +418,9 @@ Private Sub EjecutaCierreDiario()
     'xintec-nruz 20-10-2026 FSCC-12901: fecha de prueba 17-09-2026 (antes 10-09-2026, prueba_test3 para la demostracion)
     'vFechaPrueba = "20260917"   'fecha de venta fija para la prueba en test (yyyymmdd)
     'xintec-nruz 22-10-2026 FCDVT-56: fecha de prueba 15-10-2026 (antes 17-09-2026; etapa sin venta, local 5 T2)
-    vFechaPrueba = "20261015"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'vFechaPrueba = "20261015"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'xintec-nruz 22-10-2026 FSCC-12901: fecha de prueba 20-08-2026 (antes 15-10-2026; prueba_test4 COMPENSA_DI)
+    vFechaPrueba = "20260820"   'fecha de venta fija para la prueba en test (yyyymmdd)
 
     On Error GoTo oraerror
     Screen.MousePointer = vbHourglass

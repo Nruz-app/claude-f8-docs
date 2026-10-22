@@ -2,16 +2,16 @@
 # Fecha: 2026-10-22. Base: nada ejecutado (solo lecturas). Form174.frm incluye ademas la grilla de FCDVT-14 (22-10). Version anterior del cierre diario en docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/. Retomar por docs/README_FCDVT-56.md S7 y S10.
 # Verificar desde la raiz del repositorio (C:\Repositorio-f8\F8; en esta copia D:\Fala\F8), Git Bash:  grep -v '^#' docs/MANIFIESTO_FCDVT-56.md5 | md5sum -c
 05a55ea9e2913ac446cd4e05e1facacd *CLAUDE.md
-1e30fa31e14fb74885cbd08985f2d3ff *docs/README_FCDVT-56.md
+76c00b920e59e0c3246f5542c90a56c6 *docs/README_FCDVT-56.md
 20ad54ebdeea5186c9cb075e2552f9d2 *docs/sql/CLAUDE.md
 219f35b5e03aedca14fd1ad42e61b6a7 *docs/sql/FCDVT-56/FCDVT-56.doc
 2f634df1f52a301a54f44764979d3087 *FTEPROD/Form43.frm
 add8ab0140aa8606387519d64024515e *FTEPROD/Form43.frx
 ef03a18643b1b5b185af1bd173184a60 *FTEPROD/Form43.frm.bak_FCDVT-56
-6d7dcbfdc9a04c072cb0f3f7ecf8d925 *FTEPROD/Form174.frm
+a61757cabee1b43228a39ef118003dfc *FTEPROD/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 b37d07bc4753e7a0cb3c6351afdf88a6 *FTEPROD/Form174.frm.bak_FCDVT-56
-7d51719c54f60c92651da560208abded *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
+2b9abcc1781e479d2f69b8a87a41314e *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
 b9d7c4388223a2000219566828af80a2 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_prechecks.sql
 c7646e4a6a47a52678acd90d2135ae54 *docs/sql/FSCC-12901_CIERRE_DIARIO/01_log_cierre_diario.sql
 cb78cd924c8b301dfa7b7e89be6f1ea2 *docs/sql/FSCC-12901_CIERRE_DIARIO/02_parametros.sql
@@ -36,10 +36,11 @@ a6950013451a1a18871f83fd1ada1f02 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_202
 5b39959a617b68a4c92d0efc114f727a *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P2_resultados.sql
 902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P9_reabrir.sql
-721fcb1188d11b1ca2237cf70732cc46 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
+082d6c1f73d6871d6cfd41757eaacb1d *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
 742687e1c05a699804ce2981abd020d4 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P0_simulacion.sql
 265286265ee34036a6724125ae82ee79 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P2_resultados.sql
-c601d7d8359f587bbf4feda44ca77595 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P3_sin_venta.sql
+2b24c2462b8632a26866531d693061b7 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P3_sin_venta.sql
 902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P9_reabrir.sql
 5a66e210bf9dac154f87b78bf4db8b59 *FTEPROD/Form174.frm.bak_FCDVT-14_Grilla
+6d7dcbfdc9a04c072cb0f3f7ecf8d925 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_2008

@@ -19,7 +19,7 @@ Contenido de esta carpeta:
 | 1 | `Form133.frm` | FSCC-12901 | Modificado | +136 / −10 | `26eeeb01…` | `00abac13…` |
 | 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `2f634df1…` |
 | 3 | `MDIForm1.frm` | FCDVT-14 | Modificado | +52 / −0 | `ee06d78d…` | `9d032f55…` |
-| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +436 | — | `e6313075…` / `cc816b30…` |
+| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +438 | — | `958dd200…` / `cc816b30…` |
 | 5 | `recaudacion.vbp` | FCDVT-14 | Agregar una línea | +1 útil | `d986352f…` | (no se copia, §2.5) |
 | — | `Módulo1.bas` | Versión | **Falta hacerlo** | — | — | Subir `Gversion` (§3) |
 
@@ -97,7 +97,7 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 | Buscar (`Command1`) | Programado | Elige el CSV y muestra la ruta. **Carga la grilla** `Grid1` (22-10) con Local, Terminal, Fecha Venta y Monto Total (BOLETAS + N.CREDITO + FACTURA). Si el encabezado no es el de la plantilla, avisa |
 | Exportar Excel (`Command2`) | Programado | Guarda una plantilla CSV con las 54 columnas |
 | Cargar (`Command4`) | **Sin código** | El botón existe, pero todavía no hace nada (diseño en `docs/README_FCDVT-14.md` §5.4) |
-| Salir (`Command3`) | **Versión prod** | En LOCAL, Salir ejecuta la **prueba temporal** del cierre diario (`EjecutaCierreDiario`, que llama a `PKG_F8_CIERRE_DIARIO` con una fecha fija). La copia de `archivos/` lo deja **solo con `Unload Me`**: la llamada queda comentada con la marca `xintec-nruz 22-10-2026 FCDVT-14: version prod`. Esa es la única diferencia con `FTEPROD/Form174.frm` (MD5 `6d7dcbfd…`) |
+| Salir (`Command3`) | **Versión prod** | En LOCAL, Salir ejecuta la **prueba temporal** del cierre diario (`EjecutaCierreDiario`, que llama a `PKG_F8_CIERRE_DIARIO` con una fecha fija). La copia de `archivos/` lo deja **solo con `Unload Me`**: la llamada queda comentada con la marca `xintec-nruz 22-10-2026 FCDVT-14: version prod`. Esa es la única diferencia con `FTEPROD/Form174.frm` (MD5 `a61757ca…`, con la fecha de prueba 20-08-2026 desde el 22-10) |
 
 - **OCX:** `COMDLG32.OCX` y `MSFLXGRD.OCX`. Los dos ya están en el `.vbp` de producción.
 - **Prerrequisitos en la base:** ninguno para Buscar y Exportar. `EjecutaCierreDiario` queda en el código, pero no se llama.
