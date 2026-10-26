@@ -43,7 +43,7 @@ Requisitos:
 **Con `CD_SIN_VENTA = S`**, las pruebas A, B y C de P1 también cierran las Z sin venta del 31-08 y del 28-08, y suman esos terminales a "cerradas" y "no cerradas". Para obtener exactamente los números de arriba, ponga antes `CD_SIN_VENTA = N`; si no, compare solo la parte de las Y en la fila `FIN` del log.
 
 **Sin nhal1 ni DBeaver:** el botón **Salir** de `Form174` (cambio temporal del 20-10) ejecuta el proceso para FACO con una fecha fija y el usuario `PROC_CIERRE_DIARIO`, y muestra la ejecución, las cerradas y las no cerradas.
-- **La fecha fue el 15-10-2026** (equivalía al bloque 3 de **P3**) y **desde el 22-10 es el 20-08-2026**, para `../../FSCC-12901_COMPENSA_DI/prueba_test4/`. Para probar la etapa sin venta con Salir, vuelva a poner `vFechaPrueba = "20261015"` y recompile, o use el bloque 3 de P3.
+- **La fecha fue el 15-10-2026** (equivalía al bloque 3 de **P3**) , el 22-10 pasó al 20-08-2026 (`../../FSCC-12901_COMPENSA_DI/prueba_test4/`) y **desde el 26-10 es el 15-09-2026**, para `../../FSCC-12901_COMPENSA_DI/prueba_test5/`. Para probar la etapa sin venta con Salir, vuelva a poner `vFechaPrueba = "20261015"` y recompile, o use el bloque 3 de P3.
 - Para repetir la prueba **A** (31-08) hay que volver a poner `vFechaPrueba = "20260831"` y recompilar.
 
 ## Si algo falla

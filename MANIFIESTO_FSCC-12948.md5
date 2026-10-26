@@ -1,7 +1,10 @@
 # MANIFIESTO FSCC-12948 - estado congelado: 1 trigger + 1 package PKG_TRANSACC_DEPO_QUEUE (validacion comun FN_VALIDA_MATCH), SIN ejecutar en la base (19-10)
 # Fecha: 2026-10-19. 01 = package (PROC_TRANSACC_DEPO_QUEUE + FN_VALIDA_MATCH), 02 = trigger que llama a la funcion, 03 = drop del SP suelto. Version 15-10 en anterior_2026-10-15/. F8_TRANSACC_DEPO_PKG y Form173 sin cambios.
 # Verificar desde C:\Repositorio-f8\F8 (Git Bash):  grep -v '^#' docs/MANIFIESTO_FSCC-12948.md5 | md5sum -c
-ab9906384fe71f85e90ab232f1657f47 *CLAUDE.md
+# 2026-10-26: CLAUDE.md revisado con /init (sin cambios en FTEPROD ni en la base); actualizados solo los MD5 de CLAUDE.md y del indice del requerimiento. Respaldo docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip
+# 2026-10-26 (3): estado congelado; respaldo docs/respaldos/FSCC-12901_2026-10-26_cierre-diario-test.zip
+# 2026-10-26 (2): CLAUDE.md con el clon offline del esquema (docs/ddl/, manifiesto propio MANIFIESTO_DDL.md5); actualizado solo el MD5 de CLAUDE.md (y de README_FSCC-12901.md donde aplica)
+8e1f94a28aafbfde649c99b74252bcb3 *CLAUDE.md
 ee3fe0bd15b2b54f78310c42b4fe69f5 *docs/README_FSCC-12948.md
 785de206015926187f95bbc990803c4c *docs/sql/FSCC-12948/00_prechecks.sql
 640fbc7912fe8cb2d832ecb5fd657bc4 *docs/sql/FSCC-12948/01_pkg_transacc_depo_queue.sql

@@ -2,7 +2,7 @@
 
 > **Estado (22-10-2026):**
 > - **CC manual hecho** (§4b): `Form43` muestra en FACO los terminales vigentes sin movimiento y "Cerrar Terminal" cierra su Z, como en Chile. Está aplicado **sin compilar**.
-> - **Cierre automático (cron) programado sin ejecutar (§7):** es la etapa "sin venta" de `PKG_F8_CIERRE_DIARIO`, que cierra la Z como CC. Se programó el 22-10 con las respuestas a P1, P3 y P4. Siguen abiertas P2 y P7.
+> - **Cierre automático (cron) instalado en test (§7):** es la etapa "sin venta" de `PKG_F8_CIERRE_DIARIO`, que cierra la Z como CC. Se programó el 22-10 con las respuestas a P1, P3 y P4, y **el usuario la instaló en test el 22-10**: `CIERRE_DIARIO/03` y `04`, y los parámetros `CD_SIN_VENTA` y `CD_VAL_DOL` de `02`. La spec de test tiene `last_ddl_time` 22-10 17:52 según el clon `docs/ddl/`. Falta programar el cron en nhal1. Siguen abiertas P2 y P7.
 > Fuente: `docs/sql/FCDVT-56/FCDVT-56.doc` (export de Jira). Historia padre: **FCDVT-54**, "HU-14 · Cierre automático de terminales con DR 0", que es el trabajo de FSCC-12901 (`docs/README_FSCC-12901.md`).
 
 ## 1. Qué pide
@@ -110,7 +110,7 @@
 | P6 | ¿Va como segunda etapa de `PKG_F8_CIERRE_DIARIO` (mismo cron de nhal1) o como proceso aparte? | Diseño y prueba |
 | P7 | "Fecha de proceso − 1": ¿es el mismo día que ya toma el cron (`fecha` nula = día anterior)? | Alinear con `prc_cierre_diario` |
 
-## 7. Etapa sin venta en `PKG_F8_CIERRE_DIARIO` (22-10-2026, implementada sin ejecutar)
+## 7. Etapa sin venta en `PKG_F8_CIERRE_DIARIO` (22-10-2026; instalada en test por el usuario el 22-10)
 
 Detalle en `docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md`, sección "Etapa sin venta". Respaldo de la versión anterior en `anterior_2026-10-22/`.
 - **Qué hace:** después de las Y, simula el segundo recorrido de "Cerrar Terminal" de CC (`Command4_Click` → `CierraTerminal`) para todos los locales de la fecha.
@@ -204,3 +204,6 @@ La consulta 3 ayuda a responder P2 (qué deja el dataload).
 | 7 | 22-10-2026 | El botón **Salir** de `Form174` (prueba temporal del cierre diario, §5h de FSCC-12901) ahora usa la fecha **15-10-2026** (`vFechaPrueba = "20261015"`, antes 17-09-2026), para probar la etapa sin venta con el caso local 5, T2. Respaldo `FTEPROD/Form174.frm.bak_FCDVT-56` (MD5 `b37d07bc…`); MD5 nuevo `5a66e210bf9dac154f87b78bf4db8b59`; se cambió el comentario del encabezado y una línea queda comentada; CP1252 + CRLF. **Sin compilar.** Se regeneró el manifiesto |
 | 8 | 22-10-2026 | **Paquete de paso a producción** en `docs/Cambios/`: `Form43.frm` (UNION de terminales sin venta y filtro de Terminal) junto con los cambios de FSCC-12901. El cron (`CIERRE_DIARIO`) va aparte; no depende del exe |
 | 9 | 22-10-2026 | Salir de `Form174` pasa del 15-10-2026 al **20-08-2026** para la prueba 4 de COMPENSA_DI (respaldo `.bak_FSCC-12901_CD_2008`). Para volver a probar la etapa sin venta con Salir hay que reponer `"20261015"`, o usar el bloque 3 de `P3_sin_venta.sql` |
+| 10 | 26-10-2026 | `CLAUDE.md` al día (`/init`): avisa que el Salir del `Form174` local (prueba del cierre diario) no va a producción, y documenta el paquete `docs/Cambios/`. En `docs/MANIFIESTO_FCDVT-56.md5` solo cambian los MD5 de `CLAUDE.md` y de este índice. Respaldo `docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip` |
+| 11 | 26-10-2026 | El usuario confirma que el 22-10 **instaló en test** la etapa sin venta: `CIERRE_DIARIO/03` y `04`, y los parámetros `CD_SIN_VENTA` y `CD_VAL_DOL`. Coincide con el clon `docs/ddl/test_2026-10-26/`: la spec se recompiló el 22-10 a las 17:52 y es igual a la de desa. Se actualizan el encabezado y §7. Pendiente: el cron en nhal1 |
+| 12 | 26-10-2026 | **Estado congelado:** manifiesto `docs/MANIFIESTO_FCDVT-56.md5` al día. Respaldo `docs/respaldos/FSCC-12901_2026-10-26_cierre-diario-test.zip` (incluye `docs/ddl/`) |

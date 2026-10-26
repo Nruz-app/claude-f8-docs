@@ -31,7 +31,7 @@ Complementa `../../CLAUDE.md` (sobre todo §9, que se aplica completo). Aquí so
 | `FSCC-12957/`, `FSCC-12958/` | v1 FACO, T1 (DI) y T2 (cierre) por separado | Histórico, no tocar |
 | `FSCC-12901_T1_T2/` | v1 FACO consolidada (`PKG_F8_FACO_*`) | Histórico, no tocar |
 | `FSCC-12901_COMPENSA_DI/` | Modelo 19-10: DI automática al cargar sobres, sin cierre (`PKG_F8_COMPENSA_DI_CARGA`, multipaís desde el 20-10 con marcas `{P}` como PROC_Y), y borrado de la v2 | **Vigente**, probado en test (versión solo FACO); la multipaís, sin ejecutar |
-| `FSCC-12901_CIERRE_DIARIO/` | Cron de cierre diario (`PKG_F8_CIERRE_DIARIO`, lo llama nhal1; simula "Cerrar Terminal" de CC), multipaís (FACO) | **Vigente**, sin ejecutar; requiere COMPENSA_DI multipaís |
+| `FSCC-12901_CIERRE_DIARIO/` | Cron de cierre diario (`PKG_F8_CIERRE_DIARIO`, lo llama nhal1; simula "Cerrar Terminal" de CC), multipaís (FACO) | **Vigente**, instalado en test por el usuario el 20-10 (spec recompilada el 22-10); cron en nhal1 pendiente; requiere COMPENSA_DI multipaís |
 | `FSCC-12901_PROC_Y/` | v2 multipaís, solo cierre Y (en test desde el 14-10) | Reemplazada por COMPENSA_DI |
 | `FSCC-12901_PROC_YZ/` | Copia de PROC_Y con la Z apagada | Reemplazada |
 | `FSCC-12901_POC/` | POC con datos reales en INTRANETDE | Referencia |

@@ -1,13 +1,18 @@
 # MANIFIESTO FSCC-12901 - estado congelado: 22-10 (CIERRE_DIARIO con etapa sin venta FCDVT-56, sin compilar; COMPENSA_DI prueba_test4 20-08-2026; Form43 con FCDVT-56; Form174 Salir vFechaPrueba = 20260820; paso a prod en docs/Cambios). Todo sin compilar ni ejecutar
 # Fecha: 2026-10-22. Base: nada ejecutado por Xintec (solo lecturas). Los 2 DF-SCC-vf_Falabella CO (...).xlsx de docs/Requeriemintos-FSCC-12901 se restauraron el 22-10 desde FSCC-12901_2026-10-20_prueba-test3.zip.
 # Verificar desde C:\Repositorio-f8\F8 (Git Bash):  grep -v '^#' docs/MANIFIESTO_FSCC-12901.md5 | md5sum -c
-05a55ea9e2913ac446cd4e05e1facacd *CLAUDE.md
+# 2026-10-26: CLAUDE.md revisado con /init (sin cambios en FTEPROD ni en la base); actualizados solo los MD5 de CLAUDE.md y del indice del requerimiento. Respaldo docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip
+# 2026-10-26 (3): estado congelado; respaldo docs/respaldos/FSCC-12901_2026-10-26_cierre-diario-test.zip
+# 2026-10-26 (2): CLAUDE.md con el clon offline del esquema (docs/ddl/, manifiesto propio MANIFIESTO_DDL.md5); actualizado solo el MD5 de CLAUDE.md (y de README_FSCC-12901.md donde aplica)
+# 2026-10-26 (4): COMPENSA_DI prueba_test5 (15-09-2026) y Form174 Salir vFechaPrueba = 20260915 (respaldo .bak_FSCC-12901_CD_1509), sin compilar; respaldo docs/respaldos/FSCC-12901_2026-10-26_prueba-test5.zip
+8e1f94a28aafbfde649c99b74252bcb3 *CLAUDE.md
 00abac131ef669946bfd9be12b8fe38f *FTEPROD/Form133.frm
 26eeeb01e993eece2440ed9739a94562 *FTEPROD/Form133.frm.bak_FSCC-12901
 7f868d39c0a4b0363db7780dd1b6b418 *FTEPROD/Form133.frm.bak_FSCC-12901_DIPAIS
 891ca81a9808741d53bff66ab6f848ba *FTEPROD/Form133.frx
-a61757cabee1b43228a39ef118003dfc *FTEPROD/Form174.frm
+88ac8ebe3a4401df80cd7f479b3ff10b *FTEPROD/Form174.frm
 6f98d7f845baa6ca6612456824feba53 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_1009
+a61757cabee1b43228a39ef118003dfc *FTEPROD/Form174.frm.bak_FSCC-12901_CD_1509
 1d02d4d7298b54695321797c7fd13b76 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_1709
 6d7dcbfdc9a04c072cb0f3f7ecf8d925 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_2008
 d94c2819638703e1d94ae4b0e4523e6f *FTEPROD/Form174.frm.bak_FSCC-12901_CIERRE_DIARIO
@@ -29,7 +34,7 @@ e31cf3c14fb471a01766a0243eeed037 *docs/GUIA_FSCC-12901_Flujo_y_cambios.pdf
 bcf0652ed91186b0b58443487f0de9ee *docs/MANUAL_Prueba_FSCC-12901_por_pantallas.pdf
 f587226c6c57f19d10acef60bf41e4cd *docs/PRUEBA_Cierre_Diario_FSCC-12901.pdf
 0ec67b18c4f554dd2bc6c2b651a2a640 *docs/PRUEBA_Manual_Y_FSCC-12901_2026-10-15.pdf
-71ea0fe9f392f4a27be749175dc2f423 *docs/README_FSCC-12901.md
+b1c5f6d63eb4fe6cc483e020eaf12ef1 *docs/README_FSCC-12901.md
 5b9fc1f9ba3964913f498f2f17e3a1cb *docs/Requeriemintos-FSCC-12901/DF-SCC-vf_Falabella CO (MEJORAS F8 y COMPENSACIONES MENORES).xlsx
 5b9fc1f9ba3964913f498f2f17e3a1cb *docs/Requeriemintos-FSCC-12901/Doc-Actualizado/DF-SCC-vf_Falabella CO (MEJORAS F8 y COMPENSACIONES MENORES) (1).xlsx
 1bc61d88213e27a986745a5e56d8f78e *docs/Requeriemintos-FSCC-12901/Doc-Actualizado/FSCC-12901.doc
@@ -72,8 +77,8 @@ fdf63613016bb225a5e0ee4f84e6ba34 *docs/pdf/img/flujo_general.png
 ef36dc1b587482a326faccad2990fbc1 *docs/pdf/img/proceso1_T1_v2.png
 1d6e2dfbe8188668ac908c2e7f6393b5 *docs/pdf/img/proceso2_T2.png
 77c59eb981194d1e569d12f5607c6a06 *docs/pdf/img/proceso2_T2_v2.png
-20ad54ebdeea5186c9cb075e2552f9d2 *docs/sql/CLAUDE.md
-2b9abcc1781e479d2f69b8a87a41314e *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
+520bbb62508144903986d340c51f68fc *docs/sql/CLAUDE.md
+22527e76a8143671446c036ea9ae1f41 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
 b9d7c4388223a2000219566828af80a2 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_prechecks.sql
 c7646e4a6a47a52678acd90d2135ae54 *docs/sql/FSCC-12901_CIERRE_DIARIO/01_log_cierre_diario.sql
 cb78cd924c8b301dfa7b7e89be6f1ea2 *docs/sql/FSCC-12901_CIERRE_DIARIO/02_parametros.sql
@@ -98,13 +103,13 @@ a6950013451a1a18871f83fd1ada1f02 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_202
 5b39959a617b68a4c92d0efc114f727a *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P2_resultados.sql
 902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P9_reabrir.sql
-082d6c1f73d6871d6cfd41757eaacb1d *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
+54ffb21af80b7e1fa9e05727a1ee4cfe *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
 742687e1c05a699804ce2981abd020d4 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P0_simulacion.sql
 265286265ee34036a6724125ae82ee79 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P2_resultados.sql
 2b24c2462b8632a26866531d693061b7 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P3_sin_venta.sql
 902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P9_reabrir.sql
-a9eec6bf0339c432ee6aafeda77fc12b *docs/sql/FSCC-12901_COMPENSA_DI/00_LEEME.md
+cc1fe963793117f71504f05449b03120 *docs/sql/FSCC-12901_COMPENSA_DI/00_LEEME.md
 abd69c56cdd828bb542523e83b7ff448 *docs/sql/FSCC-12901_COMPENSA_DI/00_prechecks.sql
 93053457b5097626f993360badf80e70 *docs/sql/FSCC-12901_COMPENSA_DI/01_DESINSTALAR_v2.sql
 7cbe410862b2b8df6a741ad9f44fff87 *docs/sql/FSCC-12901_COMPENSA_DI/02_log_compensa_di.sql
@@ -157,6 +162,15 @@ dd69094bff3b8ea4fdc0ae5d14a2e7fd *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test4/P
 e6408257f5f7df6726667bf356ab5f0c *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test4/Prueba-3-NoOK-SinDI_L18T10.xlsx
 1bc4710cc28c4bb6dba62dae6b018b4b *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test4/Prueba-4-Normal-Cuadre_L19T5.xlsx
 68585174528476651ccc6c4f0ff039bf *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test4/Prueba-DI_Resumen.xlsx
+017cd37ceba4f17f365dc75e15194769 *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/LEEME.md
+4f77c24d25d44a614d7dc58910c7b4d5 *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/P0_prechecks.sql
+b7135671fe89de852bb725216944965b *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/P2_resultados.sql
+9b6f66779f8a07f05fda201b316e071e *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/P9_limpiar.sql
+a849a7c1fc915db35fce68bf67e85613 *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/Prueba-1-OK-DINegativa_L5T27.xlsx
+fdb6a565d9b85eb0b61d0520e458feb2 *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/Prueba-2-OK-DIPositiva_L25T12.xlsx
+080219df29ee849ee3b484af6c7c9dff *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/Prueba-3-NoOK-SinDI_L18T10.xlsx
+5a045adf515aad0440c612eb3bec16de *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/Prueba-4-Normal-Cuadre_L19T5.xlsx
+f12ae103e0613a8798233ba00b2329fb *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test5/Prueba-DI_Resumen.xlsx
 6e7dedb2739218e519f2b18044216e3c *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test_6locales/LEEME.md
 e7f2d913a0560f195f849385c16f06af *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test_6locales/P0_prechecks.sql
 894ae18e8e5a68eac9f6a254cb106fa2 *docs/sql/FSCC-12901_COMPENSA_DI/prueba_test_6locales/P2_resultados.sql
