@@ -5,8 +5,9 @@
 # 2026-10-26 (3): estado congelado; respaldo docs/respaldos/FSCC-12901_2026-10-26_cierre-diario-test.zip
 # 2026-10-26 (2): CLAUDE.md con el clon offline del esquema (docs/ddl/, manifiesto propio MANIFIESTO_DDL.md5); actualizado solo el MD5 de CLAUDE.md (y de README_FSCC-12901.md donde aplica)
 # 2026-10-26 (4): Form174 Salir vFechaPrueba = 20260915 (FSCC-12901 prueba_test5), sin compilar; actualizados solo los MD5 de los archivos cambiados. Respaldo docs/respaldos/FSCC-12901_2026-10-26_prueba-test5.zip
+# 2026-10-28: FSCC-12901 prueba_test6; actualizados solo los MD5 de Form174.frm (vFechaPrueba = 20261014) y de los indices cambiados
 8e1f94a28aafbfde649c99b74252bcb3 *CLAUDE.md
-88ac8ebe3a4401df80cd7f479b3ff10b *FTEPROD/Form174.frm
+28a3dbc29e7079739c56dfd8ac98ff7d *FTEPROD/Form174.frm
 5a66e210bf9dac154f87b78bf4db8b59 *FTEPROD/Form174.frm.bak_FCDVT-14_Grilla
 b37d07bc4753e7a0cb3c6351afdf88a6 *FTEPROD/Form174.frm.bak_FCDVT-56
 6d7dcbfdc9a04c072cb0f3f7ecf8d925 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_2008
@@ -17,7 +18,7 @@ add8ab0140aa8606387519d64024515e *FTEPROD/Form43.frx
 cda393c2d5f8c54ecd609c3a0d2d52f3 *docs/README_FCDVT-56.md
 520bbb62508144903986d340c51f68fc *docs/sql/CLAUDE.md
 219f35b5e03aedca14fd1ad42e61b6a7 *docs/sql/FCDVT-56/FCDVT-56.doc
-22527e76a8143671446c036ea9ae1f41 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
+efe92bc301c310f4ddf811896192d6c1 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_LEEME.md
 b9d7c4388223a2000219566828af80a2 *docs/sql/FSCC-12901_CIERRE_DIARIO/00_prechecks.sql
 c7646e4a6a47a52678acd90d2135ae54 *docs/sql/FSCC-12901_CIERRE_DIARIO/01_log_cierre_diario.sql
 cb78cd924c8b301dfa7b7e89be6f1ea2 *docs/sql/FSCC-12901_CIERRE_DIARIO/02_parametros.sql
@@ -42,7 +43,7 @@ a6950013451a1a18871f83fd1ada1f02 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_202
 5b39959a617b68a4c92d0efc114f727a *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P2_resultados.sql
 902ceb17b39a896ad2e3d09879df5a51 *docs/sql/FSCC-12901_CIERRE_DIARIO/anterior_2026-10-22/prueba_test/P9_reabrir.sql
-54ffb21af80b7e1fa9e05727a1ee4cfe *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
+392348dfa717634d2503984bcd2613b3 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/LEEME.md
 742687e1c05a699804ce2981abd020d4 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P0_simulacion.sql
 265286265ee34036a6724125ae82ee79 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P1_ejecutar.sql
 c3b429ba6a4f4f8eb0ecd0f58a6e9863 *docs/sql/FSCC-12901_CIERRE_DIARIO/prueba_test/P2_resultados.sql
