@@ -17,7 +17,7 @@ Contenido de esta carpeta:
 | # | Archivo | Requerimiento | Tipo | Líneas (+ / −) | MD5 PROD | MD5 nuevo |
 |---|---|---|---|---|---|---|
 | 1 | `Form133.frm` | FSCC-12901 | Modificado | +136 / −10 | `26eeeb01…` | `00abac13…` |
-| 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `2f634df1…` |
+| 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +119 / −27 | `0e1bfd0c…` | `48ad588f…` |
 | 3 | `MDIForm1.frm` | FCDVT-14 | Modificado | +52 / −0 | `ee06d78d…` | `9d032f55…` |
 | 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +438 | — | `958dd200…` / `cc816b30…` |
 | 5 | `recaudacion.vbp` | FCDVT-14 | Agregar una línea | +1 útil | `d986352f…` | (no se copia, §2.5) |
@@ -67,14 +67,14 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 | 20-10 · confirmación con TODOS | FSCC-12901 | `Command4_Click` (Cerrar Terminal) | Con `0-TODOS` pide confirmar el número de cajas con DR 0, los locales y el rango de fechas |
 | 20-10 · mensaje final | FSCC-12901 | `Command4_Click` | En FACO cuenta las filas "Cerrado" antes y después del cierre. Antes siempre decía "No hay Terminales que Cumplan…" |
 | 22-10 · filtro de Terminal | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal, el combo Terminal filtra cuando es distinto de 0 |
-| 22-10 · terminales sin movimiento | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal y un local elegido, agrega con un `UNION` los terminales vigentes que tienen la Z pero no libro de ventas Y. Salen con Cierre Y 0 y el estado de la Z. "Cerrar Terminal" ya los cerraba con `CierraTerminal`, que deja la Z en estado 1 |
+| 22-10 · terminales sin movimiento | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal (con un local elegido o, desde el 28-10, con `0-TODOS`), agrega con un `UNION` los terminales vigentes que tienen la Z pero no libro de ventas Y. Salen con Cierre Y 0 y el estado de la Z. "Cerrar Terminal" ya los cerraba con `CierraTerminal`, que deja la Z en estado 1 |
 
 - **Prerrequisitos en la base:** ninguno. Usa tablas existentes.
 - **Qué probar:**
   1. CC, FACO, local con un terminal sin venta (por ejemplo local 5, T2): se ve con Cierre Y 0 y "Pendiente"; "Cerrar Terminal" lo pasa a "Cerrado".
-  2. Con `0-TODOS` (perfil 9 o 10) aparece la confirmación.
+  2. Con `0-TODOS` (perfil 9 o 10) y Terminal 0 aparecen también los terminales sin venta de todos los locales, y al cerrar aparece la confirmación.
   3. Otro país: sin cambios.
-- **Riesgo:** con un local grande la consulta tarda más, porque cada fila hace unas 10 consultas. Por eso con `0-TODOS` no se agregan los terminales sin venta.
+- **Riesgo:** con un local grande la consulta tarda más, porque cada fila hace unas 10 consultas. Desde el 28-10, a pedido del usuario, con `0-TODOS` también se agregan los terminales sin venta: con un rango de varios días la consulta puede tardar bastante.
 
 ### 2.3 `MDIForm1.frm`: submenú del botón Y (FCDVT-14)
 

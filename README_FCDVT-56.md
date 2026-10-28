@@ -65,7 +65,9 @@
 
 **Cambio** (`FTEPROD/Form43.frm`, `FuncStrPivote`, antes del `Order by`, marca `xintec-nruz 22-10-2026 FCDVT-56`, respaldo `Form43.frm.bak_FCDVT-56`): `UNION` para FACO.
 - **Origen:** filas de `vta_FACOtermstat` de terminales vigentes en la fecha (`ter_fechabaja is null or >= ter_fecha`) **sin** libro de ventas Y `'A'`, con Y = 0 y el estado de la Z.
-- **Solo** con la opción "Terminal" (`VF_NumInforme = 0`) y con **un local elegido**: con `0-TODOS` todo queda igual, por volumen (decisión del usuario del 22-10). "Gral. Tesorería" no cambia.
+- **Solo** con la opción "Terminal" (`VF_NumInforme = 0`). "Gral. Tesorería" no cambia.
+  - Hasta el 27-10 era solo con **un local elegido**: con `0-TODOS` se omitía por volumen (decisión del usuario del 22-10).
+  - **Desde el 28-10 (pedido del usuario)** también con `0-TODOS` y Terminal 0: el `UNION` se agrega sin filtro de local y CC muestra lo mismo que consultando local por local. Con `0-TODOS`, "Cerrar Terminal" cierra también la Z de los terminales sin venta (Y 0 y Dif. Real 0) de todos los locales; la confirmación de FSCC-12901 ya los cuenta. Marca `xintec-nruz 28-10-2026 FCDVT-56`, respaldo `FTEPROD/Form43.frm.bak_FCDVT-56_todos`.
 - **No se tocó nada más.**
   - `SubBuscarOpcion` ya muestra en FACO todas las filas.
   - Con Y = 0, la Z da 0 y la recaudación suma **todos** los sobres del terminal-día. Si llegaron sobres, la Dif. Real queda ≠ 0 y el terminal no se cierra.
@@ -189,7 +191,7 @@ La consulta 3 ayuda a responder P2 (qué deja el dataload).
 | 1 | Responder P1–P7 | Negocio / usuario |
 | 2 | Ejecutar las consultas de §8 en test | Usuario (o Claude con la clave, solo lectura) |
 | 3 | Con P1–P7 respondidas: diseño y scripts en `docs/sql/FCDVT-56/` (etapa SIN_VENTA del paquete) | Claude |
-| 4 | Compilar `Form43` y probar en test (§4b): local 11 o 183, fecha ≤ 16-10, fila Y 0 en rojo; con `0-TODOS` igual que antes; "Cerrar Terminal" deja la Z en 1; un terminal con sobres no se cierra; Terminal ≠ 0 filtra (con Y y sin venta) y "Cerrar Terminal" cierra solo ese terminal | Usuario |
+| 4 | Compilar `Form43` y probar en test (§4b): local 11 o 183, fecha ≤ 16-10, fila Y 0 en rojo; con `0-TODOS` y Terminal 0 aparecen las filas Y 0 de todos los locales (igual a la suma local por local) y medir el tiempo con un rango de varios días; "Cerrar Terminal" deja la Z en 1; un terminal con sobres no se cierra; Terminal ≠ 0 filtra (con Y y sin venta) y "Cerrar Terminal" cierra solo ese terminal | Usuario |
 
 ## 10. Historial
 
@@ -207,3 +209,4 @@ La consulta 3 ayuda a responder P2 (qué deja el dataload).
 | 10 | 26-10-2026 | `CLAUDE.md` al día (`/init`): avisa que el Salir del `Form174` local (prueba del cierre diario) no va a producción, y documenta el paquete `docs/Cambios/`. En `docs/MANIFIESTO_FCDVT-56.md5` solo cambian los MD5 de `CLAUDE.md` y de este índice. Respaldo `docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip` |
 | 11 | 26-10-2026 | El usuario confirma que el 22-10 **instaló en test** la etapa sin venta: `CIERRE_DIARIO/03` y `04`, y los parámetros `CD_SIN_VENTA` y `CD_VAL_DOL`. Coincide con el clon `docs/ddl/test_2026-10-26/`: la spec se recompiló el 22-10 a las 17:52 y es igual a la de desa. Se actualizan el encabezado y §7. Pendiente: el cron en nhal1 |
 | 12 | 26-10-2026 | **Estado congelado:** manifiesto `docs/MANIFIESTO_FCDVT-56.md5` al día. Respaldo `docs/respaldos/FSCC-12901_2026-10-26_cierre-diario-test.zip` (incluye `docs/ddl/`) |
+| 13 | 28-10-2026 | A pedido del usuario, CC (`Form43.FuncStrPivote`) agrega los terminales sin venta también con `0-TODOS` y Terminal 0 (§4b): se quitó la condición `VLocal <> ""` y el filtro `t.ter_local` pasa a ser condicional. Respaldo `FTEPROD/Form43.frm.bak_FCDVT-56_todos`; CP1252 + CRLF. Actualizados `docs/Cambios/archivos/Form43.frm`, su diff, `MANIFIESTO.md5` y `README.md`. **Sin compilar.** **Estado congelado:** manifiesto `docs/MANIFIESTO_FCDVT-56.md5` regenerado (agrega el respaldo `.bak_FCDVT-56_todos` y los archivos de `docs/Cambios/` de `Form43`) y respaldo `docs/respaldos/FCDVT-56_2026-10-28_cc-todos.zip` |

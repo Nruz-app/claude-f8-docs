@@ -2210,13 +2210,19 @@ If Flg_Pais$ = "ARG" Then
 End If
 
 '---INI---- xintec-nruz 22-10-2026 FCDVT-56: FACO muestra los terminales vigentes sin movimiento (Z sin libro de ventas Y), como Chile ----
-'Solo informe Terminal (VF_NumInforme = 0) y con un local elegido (no 0-TODOS). Cerrar Terminal los cierra con CierraTerminal (Z).
-If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
+'Solo informe Terminal (VF_NumInforme = 0). Cerrar Terminal los cierra con CierraTerminal (Z).
+'xintec-nruz 28-10-2026 FCDVT-56: tambien con 0-TODOS (todos los locales), igual que local por local (antes solo con un local elegido)
+'If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
+If Flg_Pais$ = "FACO" And VF_NumInforme = 0 Then
    sq = sq & " Union"
    sq = sq & " select t.ter_fecha, t.ter_local, t.ter_terminal, 0 as ter_cierrey, t.ter_estado"
    sq = sq & " from vta_" & Flg_Pais$ & "termstat t, vta_" & Flg_Pais$ & "terminales s"
-   sq = sq & " where t.ter_local = " & VLocal
-   sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
+   'sq = sq & " where t.ter_local = " & VLocal
+   'sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
+   sq = sq & " where s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
+   If VLocal <> "" Then
+      sq = sq & " and t.ter_local = " & VLocal
+   End If
    sq = sq & " and (s.ter_fechabaja is null or s.ter_fechabaja >= t.ter_fecha)"
    sq = sq & " and (t.ter_fecha >= to_date('" & Format(DTPicker1.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "')"
    sq = sq & " and t.ter_fecha <= to_date('" & Format(DTPicker2.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "'))"

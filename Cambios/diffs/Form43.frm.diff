@@ -112,18 +112,24 @@
  
  If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
     sq = sq & " and    l.vta_secuencia   = t.ter_cierrey "
-@@ -2201,6 +2209,28 @@
+@@ -2201,6 +2209,34 @@
     End If
  End If
  
 +'---INI---- xintec-nruz 22-10-2026 FCDVT-56: FACO muestra los terminales vigentes sin movimiento (Z sin libro de ventas Y), como Chile ----
-+'Solo informe Terminal (VF_NumInforme = 0) y con un local elegido (no 0-TODOS). Cerrar Terminal los cierra con CierraTerminal (Z).
-+If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
++'Solo informe Terminal (VF_NumInforme = 0). Cerrar Terminal los cierra con CierraTerminal (Z).
++'xintec-nruz 28-10-2026 FCDVT-56: tambien con 0-TODOS (todos los locales), igual que local por local (antes solo con un local elegido)
++'If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
++If Flg_Pais$ = "FACO" And VF_NumInforme = 0 Then
 +   sq = sq & " Union"
 +   sq = sq & " select t.ter_fecha, t.ter_local, t.ter_terminal, 0 as ter_cierrey, t.ter_estado"
 +   sq = sq & " from vta_" & Flg_Pais$ & "termstat t, vta_" & Flg_Pais$ & "terminales s"
-+   sq = sq & " where t.ter_local = " & VLocal
-+   sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
++   'sq = sq & " where t.ter_local = " & VLocal
++   'sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
++   sq = sq & " where s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
++   If VLocal <> "" Then
++      sq = sq & " and t.ter_local = " & VLocal
++   End If
 +   sq = sq & " and (s.ter_fechabaja is null or s.ter_fechabaja >= t.ter_fecha)"
 +   sq = sq & " and (t.ter_fecha >= to_date('" & Format(DTPicker1.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "')"
 +   sq = sq & " and t.ter_fecha <= to_date('" & Format(DTPicker2.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "'))"
@@ -141,7 +147,7 @@
  sq = sq & "  Order by 1,2,3 "
  sq = sq & "  "
  
-@@ -2517,7 +2547,7 @@
+@@ -2517,7 +2553,7 @@
  End Function
  
  
@@ -150,7 +156,7 @@
  Dim DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
  Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
  Dim nFILA, XSumEstado, XContador
-@@ -2525,7 +2555,7 @@
+@@ -2525,7 +2561,7 @@
  Dim DifZconY As Boolean
  Grid1.Visible = False
  
@@ -159,7 +165,7 @@
  Combo1.ListIndex = Combo2.ListIndex
  VLocal = Combo2.Text
  If VLocal = 0 Then
-@@ -2710,7 +2740,7 @@
+@@ -2710,7 +2746,7 @@
  End Sub
  
  
@@ -168,7 +174,7 @@
  Dim DiferenciaCaja, DiferenciaReal, xFecha, xlocal, Xterminal, XEstado, Xcierrey, Vcompensado
  Dim BEfectivo, BChequeDia, BDolares, BEuros, Btarjeta, BTicker, Bcmr
  Dim nFILA, XSumEstado, XContador
-@@ -2719,7 +2749,7 @@
+@@ -2719,7 +2755,7 @@
  Grid1.Visible = False
  Dim XFechaCierre As Date
  
@@ -177,7 +183,7 @@
  Combo1.ListIndex = Combo2.ListIndex
  VLocal = Combo2.Text
  If VLocal = 0 Then
-@@ -2942,6 +2972,42 @@
+@@ -2942,6 +2978,42 @@
      'End
       If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
             
@@ -220,7 +226,7 @@
          For i = 1 To Grid1.Rows - 1
              If (Trim(Grid1.TextMatrix(i, 7)) <> "Cerrado" And Trim(Grid1.TextMatrix(i, 7)) <> "Pendiente MP") And CDbl(Grid1.TextMatrix(i, 3)) <> 0 And CDbl(Grid1.TextMatrix(i, 6)) = 0 Then
                  Call CierraTerminalYYY(Grid1.TextMatrix(i, 0), Grid1.TextMatrix(i, 1), Grid1.TextMatrix(i, 2), Grid1.TextMatrix(i, 3))
-@@ -2959,6 +3025,15 @@
+@@ -2959,6 +3031,15 @@
          Next i
          Call Command2_Click
          Screen.MousePointer = 11
@@ -236,7 +242,7 @@
       ElseIf Flg_Pais$ = "ARG" Then
          Valida_Cierre_Arg = False
          For i = 1 To Grid1.Rows - 1
-@@ -3624,7 +3699,7 @@
+@@ -3624,7 +3705,7 @@
      frmLogOraError.Show 1
      Exit Function
  End Function
@@ -245,7 +251,7 @@
  Dim fec As String
  Dim fecha As String
  Dim NombreLocal As String
-@@ -3634,10 +3709,10 @@
+@@ -3634,10 +3715,10 @@
      Set apexcel = CreateObject("Excel.application")
      apexcel.Workbooks.Add
      Set newSheet = apexcel.Worksheets.Add
@@ -258,7 +264,7 @@
   
     If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then
        N_Columna = 0
-@@ -3645,7 +3720,7 @@
+@@ -3645,7 +3726,7 @@
        N_Columna = 1
     End If
        
@@ -267,7 +273,7 @@
   Case 0
        apexcel.Cells(3, 1).Value = "Fecha"
        apexcel.Cells(3, 2).Value = "Local"
-@@ -3701,7 +3776,7 @@
+@@ -3701,7 +3782,7 @@
     d = 3
     For i = 1 To Grid1.Rows - 1
         d = d + i
@@ -276,7 +282,7 @@
   Case 0
         
      apexcel.Cells(i + 3, 1).Value = " " & (Format(Trim(Grid1.TextMatrix(i, 0)), VgFormatoFechaLectura))
-@@ -3754,7 +3829,7 @@
+@@ -3754,7 +3835,7 @@
     Next i
     
  
@@ -285,7 +291,7 @@
      Case 0
           If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then letraH = "H" Else letraH = "H" 'G
           If (Flg_Pais$ = "ARG" Or Flg_Pais$ = "SOAR" Or Flg_Pais$ = "SOUY" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE") Then letraE = "E" Else letraE = "D"
-@@ -3882,6 +3957,17 @@
+@@ -3882,6 +3963,17 @@
     
     Call Consulta.Open(sq)
     
@@ -303,7 +309,7 @@
     For i = 1 To Consulta.RecordCount
        cod = Consulta.Fields(0).Value
        nombre = Consulta.Fields(1).Value
-@@ -3904,6 +3990,7 @@
+@@ -3904,6 +3996,7 @@
     End If
     
     End If
@@ -311,7 +317,7 @@
    
     Combo1.ListIndex = Combo2.ListIndex
     
-@@ -4813,7 +4900,7 @@
+@@ -4813,7 +4906,7 @@
  End Function
  
  
@@ -320,7 +326,7 @@
  Grid1.Clear
  Dim suma As Integer
  
-@@ -4822,7 +4909,7 @@
+@@ -4822,7 +4915,7 @@
  Else
     suma = 400
  End If
@@ -329,7 +335,7 @@
  Case 0
     
     Grid1.Cols = 9 '8 '----Xintec Sep 2025----
-@@ -4991,12 +5078,12 @@
+@@ -4991,12 +5084,12 @@
  End Select
  End Sub
  
@@ -345,7 +351,7 @@
  Case (1)
     Combo2.ListIndex = 0
     Combo1.ListIndex = Combo2.ListIndex
-@@ -5024,7 +5111,7 @@
+@@ -5024,7 +5117,7 @@
     End If
  
  End Select
