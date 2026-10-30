@@ -91,3 +91,15 @@ select r.per_codigo, r.rel_estado from vta_facorelpermen r where r.mnu_codigo = 
 
 prompt === 12. Perfiles FACO con permiso 15 (Ingreso de Y); 01 les copia el estado al 460
 select r.per_codigo, r.rel_estado from vta_facorelpermen r where r.mnu_codigo = 15 order by 1;
+
+prompt === 13. Carga masiva Y/Z (02 a 04, 30-10-2026): nombres libres (esperado: 0 filas)
+select object_name, object_type from user_objects
+ where object_name in ('VTA_FACOCARGA_YZ_DET', 'VTA_FACOCARGA_YZ_RES', 'VTA_FACOCARGA_YZ_LOG',
+                       'SEQ_VTA_FACOCARGA_YZ', 'SEQ_VTA_FACOCARGA_YZ_LOG',
+                       'PKG_F8_CARGA_MASIVA_YZ');
+
+prompt === 14. Terminales del local 5 vigentes al 14/15/16-10-2026 (CSV de ejemplo: 1, 2 y 3; el 99 no debe salir)
+select ter_local, ter_terminal, ter_fechalta, ter_fechabaja from vta_facoterminales
+ where ter_local = 5
+   and (ter_fechabaja >= to_date('14-10-2026', 'dd-mm-yyyy') or ter_fechabaja is null)
+ order by ter_terminal;

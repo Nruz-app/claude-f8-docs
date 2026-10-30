@@ -47,9 +47,11 @@
 |---|---|
 | Submenú del botón Y (`MDIForm1.frm`, §5.2) | Implementado. Solo FACO: `INGY` → Form19Y con el permiso 15; `INGYMA` → Form174 con el permiso 460. El usuario lo compiló y lo vio funcionar en test |
 | Permiso 460 (`docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`) | **Ejecutado en test** por el usuario con los perfiles 10 y 11. Falta llevarlo a producción con los mismos 3 INSERT |
-| `Form174` "Ingreso de Cierres de Terminal Y Masivo" (§5.3) | **Buscar** y **Exportar Excel** programados, sin compilar después del último cambio. **Cargar** (`Command4`) y **Salir** (`Command3`) sin código |
-| CSV de carga (`docs/FCDVT-14/`, copia en `docs/sql/FCDVT-14/`) | Validado contra Form19Y y test (§6): 54 campos y filas de ejemplo válidas en test |
-| Cuadratura, log de auditoría, update, Z, SFCL y Chile | Pendientes, dependen de negocio (§7) |
+| `Form174` "Ingreso de Cierres de Terminal Y Masivo" (§5.3) | **Buscar** (desde el 30-10: valida en la base y muestra el resumen por terminal-día) y **Exportar Excel** programados, sin compilar. **Cargar** (`Command4`) sin código; **Salir** con la prueba temporal del cierre diario |
+| CSV de carga (`docs/FCDVT-14/`, copia en `docs/sql/FCDVT-14/`) | Desde el 30-10: **56 campos** (con `TIPO` y `TIPO_CARGA`), Y + una Z por terminal-día |
+| Carga Y/Z, etapa Buscar (`docs/sql/FCDVT-14/02` a `06`, §5.5) | `PKG_F8_CARGA_MASIVA_YZ` + tablas `VTA_FACOCARGA_YZ_DET` / `_RES` / `_LOG`. **Sin ejecutar** |
+| Cuadratura | Definida el 30-10: total Z = suma de los totales de las Y (§5.5). "Documentos = formas de pago" por Y, pendiente de negocio |
+| Grabado (Cargar), update, SFCL y Chile | Pendientes (§5.4, §7) |
 
 ## 3. Artefactos
 
@@ -62,7 +64,11 @@
 | `docs/sql/FCDVT-14/00_prechecks.sql` | Consultas de solo lectura: `vta_paint_z` por empresa, glosas duplicadas, columnas de libvta/zzz/termstat(y), secuencias, tablas de log, menú, volumen; §11-12: código 460 libre y perfiles con permiso 15 |
 | `docs/sql/FCDVT-14/00_LEEME.md` | Índice y orden de ejecución de los scripts |
 | `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql` | Inserta el permiso 460 "Ingreso de cierre de terminal Y masivo" en `VTA_FACOMENU` (`MenuPrincipal`) y `VTA_FACORELPERMEN` (perfiles 10 y 11) con INSERT explícitos, los mismos para test y producción |
-| `docs/sql/FCDVT-14/99_rollback.sql` | Borra el permiso 460 |
+| `docs/sql/FCDVT-14/99_rollback.sql` | Por partes: A borra el permiso 460; B desinstala la carga Y/Z |
+| `docs/sql/FCDVT-14/02` a `06`, `INSTALAR.sql` | Carga Y/Z, etapa Buscar (§5.5): tablas, `PKG_F8_CARGA_MASIVA_YZ`, grants y consultas de prueba |
+| `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv` | 23 filas (3 Z + 20 Y) del 16-10-2026, local 5; todo cuadra. Versión del 22-10 sin Z en `.bak_FCDVT-14_Z` |
+| `docs/sql/FCDVT-14/ejemplo_carga_YZ_FACO_errores.csv` | Un caso por resultado de Buscar (1 PROCESADO, 4 ERROR, 1 línea sin grupo) |
+| `FTEPROD/Form174.frm.bak_FCDVT-14_Resumen` | Respaldo de Form174 antes del Buscar con el package (30-10) |
 | `FTEPROD/MDIForm1.frm` | Submenú del botón Y solo en FACO (marcas `xintec-nruz 20-10-2026 FCDVT-14`), sin compilar |
 | `FTEPROD/Form174.frm` (+ `.frx`) | Pantalla "Ingreso de Cierres de Terminal Y Masivo" (la creó el usuario, en el `.vbp`). Programado: botón Buscar (§5.3) |
 | `FTEPROD/Form174.frm.bak_FCDVT-14` | Respaldo de Form174 antes de programar Buscar (solo el diseño) |
@@ -346,6 +352,8 @@ El usuario agregó desde el IDE, en `Button15`, dos ButtonMenus (`INGY` "Ingreso
 
 ### 5.4 Diseño propuesto del botón Cargar de Form174 (sin programar)
 
+> 30-10-2026: Cargar partirá de la carga validada por Buscar (§5.5). Grabará solo los grupos PROCESADO de `VTA_FACOCARGA_YZ_DET` (`mCarga`), sin volver a leer el archivo, y les dará un estado nuevo (por ejemplo CARGADO). Falta definir qué se graba con la fila Z. Lo que sigue es el diseño anterior, con lectura directa del CSV.
+
 Fuentes: `docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md`, §6 (validaciones), §6.1 (diferencias con Form19Y) y §7 (qué inserta); y la §4.4 de este índice (`Form19Y.GrabaZZZ`).
 
 1. **Requisitos previos:** que haya un archivo (`mArchivoCsv`, lo llena Buscar) y que `Flg_Pais$ = "FACO"`. Mostrar `lblLoad` y el cursor de espera.
@@ -369,6 +377,39 @@ Fuentes: `docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md`, §6 (validaciones), §6.1 (dif
    - No hay transacciones: si falla a mitad de una fila, informarlo para borrar lo que quedó a medias.
 5. **Resultado:** mostrar un resumen (leídas, grabadas, rechazadas con su motivo) y ofrecer exportar los errores. Guardar el log en la tabla que se defina (§7, pregunta 7).
 6. **Al cerrar:** igual que Form19Y. `MDIForm1` ya ejecuta `FormVariable.ProcesoConsulta` después de `Form174.Show 1`.
+
+### 5.5 Buscar con validación en la base: Y + Z y grilla de resumen (30-10-2026, sin compilar ni ejecutar)
+
+**Pedido del usuario.** El archivo trae, por terminal-día, varias Y y **una Z** cuyo monto es la suma de las Y. Al presionar Buscar, la grilla muestra **una fila por local, terminal y fecha** con la cantidad de Y, el monto total de las Y, el monto total de la Z y el estado (pendiente, error o procesado). Un package carga el archivo en una tabla, arma el resumen, valida Z = ΣY y registra los errores en un log. Esta etapa **no** crea Y ni Z.
+
+**Decisiones del usuario (30-10):**
+- el package separa y valida cada línea; Form174 solo la envía;
+- estados: PROCESADO si cuadra, ERROR si no cuadra, PENDIENTE como estado inicial (si queda así, el proceso se cayó);
+- la cuadratura compara los TOTALES (BOLETAS + N.CREDITO + FACTURA);
+- se agrega un CSV con casos de error.
+
+**Archivo (56 columnas).** `TIPO` (Y/Z) y `TIPO_CARGA` (INGRESAR; MODIFICAR se rechaza por ahora) van después de `CONT_REPOSICION`, como en el DF-SCC. Detalle en `FORMATO_CARGA_Y_FACO.md` §3.1, §6 y §6.2.
+
+**Base de datos** (`docs/sql/FCDVT-14/02` a `06`, `INSTALAR.sql`; índice en `00_LEEME.md`):
+
+| Objeto | Qué es |
+|---|---|
+| `VTA_FACOCARGA_YZ_DET` | Una fila por línea: la línea cruda, la identificación tipada, las 45 columnas de montos con su nombre `vta_cmp_asoc` (listas para el INSERT de Cargar), `det_total` y `det_estado` OK/ERROR |
+| `VTA_FACOCARGA_YZ_RES` | Resumen por fecha, local y terminal: cantidad y total de Y y de Z, líneas con error, estado y motivo |
+| `VTA_FACOCARGA_YZ_LOG` | INICIO (archivo y usuario), errores con línea, campo, valor y motivo (etapas LECTURA, VALIDACION, RESUMEN), FIN con los conteos, y ERROR si el proceso se cae. El log es autónomo: queda aunque haya rollback |
+| `PKG_F8_CARGA_MASIVA_YZ` | `prc_inicia` (solo FACO) → `prc_inserta_linea` (una por línea; la 1 debe ser el encabezado `c_encabezado`) → `prc_procesa` (terminal vigente a la fecha de la fila como `Oklt`, `NRO_Y` repetido, resumen PENDIENTE, después PROCESADO o ERROR) |
+
+ERROR si el grupo tiene líneas con error, si no tiene exactamente 1 Z, si no tiene Y o si el total de la Z es distinto de la suma de las Y. Quedan para Cargar: Z cerrada (`Est_TermStat`), `NRO_Y` ya existente en la base y el grabado.
+
+**Form174** (respaldo `Form174.frm.bak_FCDVT-14_Resumen`; marcas `xintec-nruz 30-10-2026 FCDVT-14`; la versión del 22-10 queda comentada):
+- `EncabezadoCsvY()` pasa a 56 columnas y Exportar Excel genera la fila de ejemplo con `Y;INGRESAR`.
+- `CargaGrillaCsv`: primero lee todo el archivo; después llama `prc_inicia`, `prc_inserta_linea` por cada línea (con su número en el archivo) y `prc_procesa`, con `ADODB.Command` parametrizado, como `EjecutaCierreDiario`. Al final muestra un MsgBox con el número de carga y los conteos. Si Oracle falla: `SystemMsg` + `frmLogOraError` y, si el resumen alcanzó a crearse, muestra los grupos PENDIENTE.
+- `LlenaGrillaResumen`: columnas Local, Terminal, Fecha, Cant. Y, Monto Total Y, Monto Total Z y Estado (más una columna oculta con el motivo). Las filas ERROR van en rojo, como en Form133, y las PENDIENTE en amarillo. Doble clic en una fila muestra el motivo.
+- `mCarga` guarda el número de la carga para Cargar.
+
+**Resultado esperado:** `ejemplo_carga_Y_FACO_20.csv` → 3 PROCESADO; `ejemplo_carga_YZ_FACO_errores.csv` → 1 PROCESADO y 4 ERROR. Consultas en `06_pruebas.sql`.
+
+**Para probar:** prechecks §13-14 → `INSTALAR.sql` en test (y `05` si el exe usa otro usuario) → compilar → Form174 ▸ Buscar con los dos CSV.
 
 ## 6. Hechos verificados en la base de test
 
@@ -433,3 +474,5 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 22-10-2026 | CSV de prueba de la grilla: `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv`. Tiene el formato de la plantilla y 20 Y del 16-10-2026 en el local 5 (T1 ×7, T2 ×7, T3 ×6), con las formas de pago cuadradas contra los TOTALES; la suma es 26.325.000. La plantilla no cambia. Se regeneró el manifiesto. |
 | 22-10-2026 | **Paquete de paso a producción** en `docs/Cambios/`: `MDIForm1.frm`, `Form174.frm` (versión prod, con Salir solo `Unload Me`) + `.frx` y la línea `Form=Form174.frm` del `.vbp`. El permiso 460 va junto con el exe, o se posterga mientras Cargar no esté programado |
 | 26-10-2026 | `CLAUDE.md` al día (`/init`): §5 y §9 advierten que el `Form174` local no es el de producción, que está en `docs/Cambios/archivos/`. En `docs/MANIFIESTO_FCDVT-14.md5` solo cambian los MD5 de `CLAUDE.md` y de este índice. Respaldo `docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip` |
+| 30-10-2026 | **Buscar con validación en la base (Y + Z)** (§5.5). El CSV pasa a 56 columnas (`TIPO`, `TIPO_CARGA`). `ejemplo_carga_Y_FACO_20.csv` queda con una Z por terminal (23 filas; respaldo `.bak_FCDVT-14_Z`) y se agrega `ejemplo_carga_YZ_FACO_errores.csv`. Scripts `02` a `06`, `INSTALAR.sql`, prechecks §13-14 y rollback parte B: `PKG_F8_CARGA_MASIVA_YZ` y tablas `VTA_FACOCARGA_YZ_DET` / `_RES` / `_LOG`, sin ejecutar. Form174: Buscar llama al package y la grilla muestra el resumen por terminal-día con su estado (respaldo `.bak_FCDVT-14_Resumen`, sin compilar). Plantilla y `FORMATO` actualizados (cuadratura §6.7 definida: total Z = ΣY). |
+| 30-10-2026 | **Estado congelado** antes de probar Buscar en test: manifiesto `docs/MANIFIESTO_FCDVT-14.md5` regenerado (agrega `02`-`06`, `INSTALAR.sql`, el CSV de errores, el respaldo del CSV de 20 Y y `Form174.frm.bak_FCDVT-14_Resumen`) y respaldo `docs/respaldos/FCDVT-14_2026-10-30_buscar-resumen-yz.zip`. Nada ejecutado en la base ni compilado. |

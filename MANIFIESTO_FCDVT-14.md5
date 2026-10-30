@@ -6,11 +6,13 @@
 # 2026-10-26 (2): CLAUDE.md con el clon offline del esquema (docs/ddl/, manifiesto propio MANIFIESTO_DDL.md5); actualizado solo el MD5 de CLAUDE.md (y de README_FSCC-12901.md donde aplica)
 # 2026-10-26 (4): Form174 Salir vFechaPrueba = 20260915 (FSCC-12901 prueba_test5), sin compilar; actualizados solo los MD5 de los archivos cambiados. Respaldo docs/respaldos/FSCC-12901_2026-10-26_prueba-test5.zip
 # 2026-10-28: FSCC-12901 prueba_test6; actualizados solo los MD5 de Form174.frm (vFechaPrueba = 20261014) y de los indices cambiados
-8e1f94a28aafbfde649c99b74252bcb3 *CLAUDE.md
-28a3dbc29e7079739c56dfd8ac98ff7d *FTEPROD/Form174.frm
+# 2026-10-30: estado congelado antes de probar Buscar (PKG_F8_CARGA_MASIVA_YZ, grilla resumen Y+Z); manifiesto regenerado con 02-06, INSTALAR, CSV de errores y respaldos nuevos. Sin ejecutar en la base ni compilar. Respaldo docs/respaldos/FCDVT-14_2026-10-30_buscar-resumen-yz.zip
+98a1afd3210c419180cba9e9118036d1 *CLAUDE.md
+4327b27755c00edfffd0e2ccde98c4c1 *FTEPROD/Form174.frm
 59a9ff73f64a47f89a9498057518d08f *FTEPROD/Form174.frm.bak_FCDVT-14
 e9432ce51bd668ce2dee620648d97ebd *FTEPROD/Form174.frm.bak_FCDVT-14_Exportar
 5a66e210bf9dac154f87b78bf4db8b59 *FTEPROD/Form174.frm.bak_FCDVT-14_Grilla
+28a3dbc29e7079739c56dfd8ac98ff7d *FTEPROD/Form174.frm.bak_FCDVT-14_Resumen
 6d7dcbfdc9a04c072cb0f3f7ecf8d925 *FTEPROD/Form174.frm.bak_FSCC-12901_CD_2008
 cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 76e3d15bab470cc93f27e6a0415e1015 *FTEPROD/Form19Y.frm
@@ -19,15 +21,23 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 0d7ba0705cc619a0d2742177831d4405 *FTEPROD/MDIForm1.frm.bak_FCDVT-14_Form174
 5dc1e839b3153014247ee4c8e822b7a3 *FTEPROD/MDIForm1.frx
 692a13fa336a9d91f8412cf03753ee05 *FTEPROD/recaudacion.vbp
-2697b3451dd088f825a06a6e62b71bf0 *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
-d7c5885fb6007779dbdc3d3fd0af2925 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
-b173180f18de044ceb119fef333f3f13 *docs/README_FCDVT-14.md
-32b1633e853ae10d8087aa28fb429aa7 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
-520bbb62508144903986d340c51f68fc *docs/sql/CLAUDE.md
-7a0879f4755431a19d629ce6cc79e931 *docs/sql/FCDVT-14/00_LEEME.md
-03a4525767b5ef2629209c627176a369 *docs/sql/FCDVT-14/00_prechecks.sql
+c6360a4688d094d0643e401fdabc4c0c *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
+29880bc81dfb3b2954762055f0fc6fe9 *docs/README_FCDVT-14.md
+5f7e07fb70d8b10d5322fd0dc1fb1385 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
+a1904c730faf400f8dc657e9b5e8fecc *docs/sql/CLAUDE.md
+6e9b25f3df533c19a4a50e4bf4b8446f *docs/sql/FCDVT-14/00_LEEME.md
+274fffa00cdab0ce1934d467ee4c85dc *docs/sql/FCDVT-14/00_prechecks.sql
 4623a236daee4abb03e753c738f94130 *docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql
-ad208caa974d3e7f5100d48a0a1a22d0 *docs/sql/FCDVT-14/99_rollback.sql
-2697b3451dd088f825a06a6e62b71bf0 *docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md
-acd05467c607558cb81dda8a7fd9b0ff *docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv
-d7c5885fb6007779dbdc3d3fd0af2925 *docs/sql/FCDVT-14/plantilla_carga_Y_FACO.csv
+9a1f78d363e74eacf55d1f7ba107676b *docs/sql/FCDVT-14/02_tablas_carga_yz.sql
+166841b18752ba127d67ecffac9398a7 *docs/sql/FCDVT-14/03_pkg_carga_masiva_yz_spec.sql
+f8667f9764df1e86eebacd4421dfc1db *docs/sql/FCDVT-14/04_pkg_carga_masiva_yz_body.sql
+5da334720d307f71209d2a366457b2e5 *docs/sql/FCDVT-14/05_grants_sinonimos.sql
+748dda7b6806f2bf862ee6f09f19c086 *docs/sql/FCDVT-14/06_pruebas.sql
+83294c25611bd13f19cf1cd127f4dbc3 *docs/sql/FCDVT-14/99_rollback.sql
+c6360a4688d094d0643e401fdabc4c0c *docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+896cdcc56323705b1f0c7e4d9cbaa50a *docs/sql/FCDVT-14/INSTALAR.sql
+c5cbd86aef2efa155d2ffbc71acdd859 *docs/sql/FCDVT-14/ejemplo_carga_YZ_FACO_errores.csv
+5ef88bd2dfe394a84b25003d3d7a835f *docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv
+4f63e770a650d3bc4080b5b3469fb574 *docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv.bak_FCDVT-14_Z
+8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/sql/FCDVT-14/plantilla_carga_Y_FACO.csv
