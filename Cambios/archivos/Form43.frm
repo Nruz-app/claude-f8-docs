@@ -185,7 +185,7 @@ Begin VB.Form Form43
          CalendarTitleBackColor=   12632256
          CalendarTitleForeColor=   128
          CalendarTrailingForeColor=   8421504
-         Format          =   137822209
+         Format          =   140378113
          CurrentDate     =   37707
       End
       Begin MSComCtl2.DTPicker DTPicker2 
@@ -202,7 +202,7 @@ Begin VB.Form Form43
          CalendarTitleBackColor=   12632256
          CalendarTitleForeColor=   128
          CalendarTrailingForeColor=   8421504
-         Format          =   137625601
+         Format          =   140378113
          CurrentDate     =   37707
       End
       Begin VB.Label Labelterminal 
@@ -2210,19 +2210,13 @@ If Flg_Pais$ = "ARG" Then
 End If
 
 '---INI---- xintec-nruz 22-10-2026 FCDVT-56: FACO muestra los terminales vigentes sin movimiento (Z sin libro de ventas Y), como Chile ----
-'Solo informe Terminal (VF_NumInforme = 0). Cerrar Terminal los cierra con CierraTerminal (Z).
-'xintec-nruz 28-10-2026 FCDVT-56: tambien con 0-TODOS (todos los locales), igual que local por local (antes solo con un local elegido)
-'If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
-If Flg_Pais$ = "FACO" And VF_NumInforme = 0 Then
+'Solo informe Terminal (VF_NumInforme = 0) y con un local elegido (no 0-TODOS). Cerrar Terminal los cierra con CierraTerminal (Z).
+If Flg_Pais$ = "FACO" And VLocal <> "" And VF_NumInforme = 0 Then
    sq = sq & " Union"
    sq = sq & " select t.ter_fecha, t.ter_local, t.ter_terminal, 0 as ter_cierrey, t.ter_estado"
    sq = sq & " from vta_" & Flg_Pais$ & "termstat t, vta_" & Flg_Pais$ & "terminales s"
-   'sq = sq & " where t.ter_local = " & VLocal
-   'sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
-   sq = sq & " where s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
-   If VLocal <> "" Then
-      sq = sq & " and t.ter_local = " & VLocal
-   End If
+   sq = sq & " where t.ter_local = " & VLocal
+   sq = sq & " and s.ter_local = t.ter_local and s.ter_terminal = t.ter_terminal"
    sq = sq & " and (s.ter_fechabaja is null or s.ter_fechabaja >= t.ter_fecha)"
    sq = sq & " and (t.ter_fecha >= to_date('" & Format(DTPicker1.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "')"
    sq = sq & " and t.ter_fecha <= to_date('" & Format(DTPicker2.Value, VgFormatoFechaWhere) & "','" & VgFormatoFechaWhere & "'))"
@@ -3967,7 +3961,7 @@ End With
    '---INI---- xintec-nruz 20-10-2026 FSCC-12901: TODOS (al comienzo del combo) en FACO para perfiles 9 y 10 ----
    If Flg_Pais$ = "FACO" And (Val(PERFILUSER) = PERFIL_USER_ADM Or Val(PERFILUSER) = PERFIL_USER_DIEZ) Then
       cod = 0
-      nombre = "TODOS"
+      nombre = "TODOS LOS LOCALES"
       Combo1.AddItem Right("     " & cod, 5) & "-" & nombre
       Combo2.AddItem cod
    End If

@@ -1948,15 +1948,6 @@ For k = LBound(vLista) To UBound(vLista)
             Set .ActiveConnection = Ado_Conn
             .CommandType = adCmdText
             '---INI---- xintec-nruz 20-10-2026 FSCC-12901: paquete multipais, se envia el pais (Flg_Pais$) como primer parametro ----
-            '.CommandText = "BEGIN PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(to_date(?, 'yyyymmdd'), ?, ?, ?, ?, ?, ?, ?); END;"
-            '.Parameters.Append .CreateParameter("p_fecha", adVarChar, adParamInput, 8, vDato(2))
-            '.Parameters.Append .CreateParameter("p_local", adInteger, adParamInput, , CLng(vDato(0)))
-            '.Parameters.Append .CreateParameter("p_terminal", adInteger, adParamInput, , CLng(vDato(1)))
-            '.Parameters.Append .CreateParameter("p_cierrey", adInteger, adParamInput, , CLng(vDato(3)))
-            '.Parameters.Append .CreateParameter("p_usuario", adVarChar, adParamInput, 50, Left(LOGINUSER & "", 50))
-            '.Parameters.Append .CreateParameter("o_resultado", adVarChar, adParamOutput, 30)
-            '.Parameters.Append .CreateParameter("o_monto_di", adVarChar, adParamOutput, 40)
-            '.Parameters.Append .CreateParameter("o_mensaje", adVarChar, adParamOutput, 1000)
             .CommandText = "BEGIN PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(?, to_date(?, 'yyyymmdd'), ?, ?, ?, ?, ?, ?, ?); END;"
             .Parameters.Append .CreateParameter("p_flg_pais", adVarChar, adParamInput, 10, Left(Flg_Pais$ & "", 10))
             .Parameters.Append .CreateParameter("p_fecha", adVarChar, adParamInput, 8, vDato(2))
@@ -1971,9 +1962,6 @@ For k = LBound(vLista) To UBound(vLista)
             .Execute
             If Err.Number = 0 Then
                 '---INI---- xintec-nruz 20-10-2026 FSCC-12901: salidas corridas en 1 por el parametro del pais ----
-                'vRes = "" & .Parameters(5).Value
-                'vMonto = "" & .Parameters(6).Value
-                'vMsgCaja = "" & .Parameters(7).Value
                 vRes = "" & .Parameters(6).Value
                 vMonto = "" & .Parameters(7).Value
                 vMsgCaja = "" & .Parameters(8).Value
@@ -2012,10 +2000,6 @@ Screen.MousePointer = 0
 If nCajas > nDetalle Then
     vDetalle = vDetalle & "... (" & (nCajas - nDetalle) & " cajas mas: ver VTA_FACOLOG_COMPENSA_DI)" & Chr(13)
 End If
-MsgBox "Compensacion automatica de DI (la Y no se cierra, queda Pendiente)" & Chr(13) & Chr(13) & _
-       "Cajas evaluadas: " & nCajas & Chr(13) & _
-       "Con DI registrada: " & nConDI & Chr(13) & _
-       "Sin DI: " & nSinDI & Chr(13) & Chr(13) & vDetalle, vbInformation, "Compensacion Automatica DI FACO"
 End Sub
 '---FIN---- xintec-nruz 19-10-2026 ----
 

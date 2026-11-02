@@ -202,6 +202,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 '---INI---- xintec-nruz 20-10-2026 FCDVT-14: carga masiva de cierres Y (FACO) ----
 Private mArchivoCsv As String   'ruta del CSV elegido; la usara el boton de carga
+Private mCarga As Double        'xintec-nruz 30-10-2026 FCDVT-14: carga de PKG_F8_CARGA_MASIVA_YZ (la usara Cargar)
 
 Private Sub Form_Load()
     NombreArchivo.Text = ""
@@ -216,7 +217,9 @@ Private Sub Command1_Click()
     Dim nomFile As String
     On Error GoTo cancelado
     CmDlog.CancelError = True
-    CmDlog.DialogTitle = "Seleccione el archivo CSV de cierres Y"
+    'CmDlog.DialogTitle = "Seleccione el archivo CSV de cierres Y"
+    'xintec-nruz 02-11-2026 FCDVT-14: el archivo trae Y y Z (antes "cierres Y")
+    CmDlog.DialogTitle = "Seleccione el archivo CSV de cierres Y y Z"
     CmDlog.Filter = "Archivos CSV (*.csv)|*.csv"
     CmDlog.FilterIndex = 1
     CmDlog.Flags = cdlOFNFileMustExist Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
@@ -239,6 +242,7 @@ Private Sub Command1_Click()
     NombreArchivo.ToolTipText = nomFile
     '---INI---- xintec-nruz 22-10-2026 FCDVT-14: muestra en la grilla los registros del archivo ----
     Call LimpiaGrilla
+    'xintec-nruz 02-11-2026 FCDVT-14: CargaGrillaCsv valida el archivo con PKG_F8_CARGA_MASIVA_YZ y muestra el resumen
     Call CargaGrillaCsv(nomFile)
     '---FIN----
     Exit Sub
@@ -250,10 +254,13 @@ cancelado:
 End Sub
 
 'Encabezado del CSV de carga masiva de Y FACO (54 columnas, docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3).
+'xintec-nruz 30-10-2026 FCDVT-14: 56 columnas, con TIPO (Y/Z) y TIPO_CARGA despues de CONT_REPOSICION (antes 54).
+'Debe ser igual a PKG_F8_CARGA_MASIVA_YZ.c_encabezado.
 'Lo usa Exportar Excel y lo usara Cargar para validar el archivo.
 Private Function EncabezadoCsvY() As String
     Dim s As String
-    s = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION"
+    's = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION"
+    s = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA"
     s = s & ";VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;REC_MEFECTIVO;REC_MRECAUDAEFEC;REC_MCHKDIA"
     s = s & ";REC_MCHKFECHA;REC_MTARJ;REC_MSODIMAC;REC_MCMR;REC_MTREGALO;REC_MTOTCONVENIO"
     s = s & ";REC_MTRASPASOTDE;REC_MRENUEVA;REC_MTOTFACXCOB;REC_MDOTACIONES;REC_MRETIROS;REC_MABONOCMR"
@@ -283,7 +290,9 @@ Private Sub Command2_Click()
     If LCase(Right(ruta, 4)) <> ".csv" Then ruta = ruta & ".csv"
 
     'Fila de ejemplo: FECHA = dia anterior al servidor; identificacion vacia; 45 montos en 0
-    fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;"
+    'fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;"
+    'xintec-nruz 30-10-2026 FCDVT-14: TIPO = Y y TIPO_CARGA = INGRESAR (56 columnas)
+    fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;" & ";Y;INGRESAR"
     For i = 1 To 45
         fila = fila & ";0"
     Next i
@@ -313,81 +322,234 @@ End Sub
 'Grid1 muestra una fila por cada fila (Y) del CSV elegido: local, terminal, fecha de venta y
 'monto total = TOTALES de la Y (BOLETAS + N.CREDITO + FACTURA, columnas 10 a 12 del CSV), el
 'mismo vta_totalvta que calcula Form19Y. Solo muestra; no valida ni graba (eso lo hara Cargar).
+'xintec-nruz 30-10-2026 FCDVT-14: version anterior (una fila por Y, sin validar), reemplazada por el bloque siguiente
+'Private Sub LimpiaGrilla()
+'    Dim i As Integer
+'    Grid1.Clear
+'    Grid1.Rows = 1
+'    Grid1.Cols = 4
+'    Grid1.TextMatrix(0, 0) = "Local"
+'    Grid1.TextMatrix(0, 1) = "Terminal"
+'    Grid1.TextMatrix(0, 2) = "Fecha Venta"
+'    Grid1.TextMatrix(0, 3) = "Monto Total"
+'    Grid1.ColWidth(0) = 1500
+'    Grid1.ColWidth(1) = 1500
+'    Grid1.ColWidth(2) = 2000
+'    Grid1.ColWidth(3) = 2500
+'    For i = 0 To 3
+'        Grid1.FixedAlignment(i) = 4      'encabezado centrado
+'    Next i
+'    Grid1.ColAlignment(0) = 4
+'    Grid1.ColAlignment(1) = 4
+'    Grid1.ColAlignment(2) = 4
+'    Grid1.ColAlignment(3) = 7            'monto a la derecha
+'End Sub
+'
+'Private Sub CargaGrillaCsv(ByVal ruta As String)
+'    Dim nArch As Integer, linea As String, vEncab As String
+'    Dim c() As String
+'    Dim nSaltadas As Long
+'
+'    On Error GoTo errArchivo
+'    lblLoad.Visible = True
+'    Screen.MousePointer = vbHourglass
+'    DoEvents
+'
+'    nArch = FreeFile
+'    Open ruta For Input As #nArch
+'    If EOF(nArch) Then
+'        Close #nArch
+'        Screen.MousePointer = vbDefault
+'        lblLoad.Visible = False
+'        MsgBox "El archivo esta vacio", vbExclamation, Me.Caption
+'        Exit Sub
+'    End If
+'
+'    'Linea 1: encabezado de la plantilla (sin distinguir mayusculas; se tolera un ; final)
+'    Line Input #nArch, vEncab
+'    vEncab = UCase(Trim(vEncab))
+'    If Right(vEncab, 1) = ";" Then vEncab = Left(vEncab, Len(vEncab) - 1)
+'    If vEncab <> UCase(EncabezadoCsvY()) Then
+'        Close #nArch
+'        Screen.MousePointer = vbDefault
+'        lblLoad.Visible = False
+'        MsgBox "El archivo no tiene el encabezado de la plantilla de carga masiva de Y." & vbCrLf & _
+'               "Use la plantilla que genera Exportar Excel.", vbExclamation, Me.Caption
+'        Exit Sub
+'    End If
+'
+'    'Una fila de la grilla por linea con datos; las vacias (o solo ;) se ignoran
+'    nSaltadas = 0
+'    Do While Not EOF(nArch)
+'        Line Input #nArch, linea
+'        If Trim(Replace(linea, ";", "")) <> "" Then
+'            c = Split(linea, ";")
+'            If UBound(c) < 11 Then
+'                nSaltadas = nSaltadas + 1
+'            Else
+'                Grid1.AddItem Trim(c(1)) & vbTab & Trim(c(2)) & vbTab & Trim(c(0)) & vbTab & _
+'                              Format(Val(c(9)) + Val(c(10)) + Val(c(11)), gFormat)
+'            End If
+'        End If
+'    Loop
+'    Close #nArch
+'
+'    Screen.MousePointer = vbDefault
+'    lblLoad.Visible = False
+'    If nSaltadas > 0 Then
+'        MsgBox nSaltadas & " fila(s) del archivo tienen menos de 12 columnas y no se muestran.", vbExclamation, Me.Caption
+'    End If
+'    Exit Sub
+'errArchivo:
+'    Close
+'    Screen.MousePointer = vbDefault
+'    lblLoad.Visible = False
+'    MsgBox "No se pudo leer el archivo: " & Err.Description, vbCritical, Me.Caption
+'End Sub
+'---FIN----
+'---INI---- xintec-nruz 30-10-2026 FCDVT-14: Buscar valida el CSV en la base (PKG_F8_CARGA_MASIVA_YZ) ----
+'Cada linea del archivo se envia al package, que la separa, la valida y la guarda en
+'VTA_FACOCARGA_YZ_DET (errores por fila y campo en VTA_FACOCARGA_YZ_LOG). Despues arma el
+'resumen VTA_FACOCARGA_YZ_RES: una fila por fecha / local / terminal con la cantidad de Y,
+'el monto total de las Y, el monto total de la Z y el estado (PENDIENTE / ERROR / PROCESADO).
+'Monto total = TOTALES (BOLETAS + N.CREDITO + FACTURA). PROCESADO = 1 Z, al menos 1 Y, sin
+'errores y total Z = suma total Y. Esta etapa no graba Y ni Z (eso lo hara Cargar).
+'Columna 7 de la grilla (oculta): motivo del estado; se ve con doble clic.
 Private Sub LimpiaGrilla()
     Dim i As Integer
     Grid1.Clear
     Grid1.Rows = 1
-    Grid1.Cols = 4
+    Grid1.Cols = 8
     Grid1.TextMatrix(0, 0) = "Local"
     Grid1.TextMatrix(0, 1) = "Terminal"
-    Grid1.TextMatrix(0, 2) = "Fecha Venta"
-    Grid1.TextMatrix(0, 3) = "Monto Total"
-    Grid1.ColWidth(0) = 1500
-    Grid1.ColWidth(1) = 1500
-    Grid1.ColWidth(2) = 2000
-    Grid1.ColWidth(3) = 2500
-    For i = 0 To 3
+    Grid1.TextMatrix(0, 2) = "Fecha"
+    Grid1.TextMatrix(0, 3) = "Cant. Y"
+    Grid1.TextMatrix(0, 4) = "Monto Total Y"
+    Grid1.TextMatrix(0, 5) = "Monto Total Z"
+    Grid1.TextMatrix(0, 6) = "Estado"
+    Grid1.TextMatrix(0, 7) = "Motivo"
+    Grid1.ColWidth(0) = 800
+    Grid1.ColWidth(1) = 900
+    Grid1.ColWidth(2) = 1200
+    Grid1.ColWidth(3) = 800
+    Grid1.ColWidth(4) = 1700
+    Grid1.ColWidth(5) = 1700
+    Grid1.ColWidth(6) = 1400
+    Grid1.ColWidth(7) = 0               'motivo: oculto, se muestra con doble clic
+    For i = 0 To 7
         Grid1.FixedAlignment(i) = 4      'encabezado centrado
     Next i
     Grid1.ColAlignment(0) = 4
     Grid1.ColAlignment(1) = 4
     Grid1.ColAlignment(2) = 4
-    Grid1.ColAlignment(3) = 7            'monto a la derecha
+    Grid1.ColAlignment(3) = 4
+    Grid1.ColAlignment(4) = 7            'montos a la derecha
+    Grid1.ColAlignment(5) = 7
+    Grid1.ColAlignment(6) = 4
 End Sub
 
 Private Sub CargaGrillaCsv(ByVal ruta As String)
-    Dim nArch As Integer, linea As String, vEncab As String
-    Dim c() As String
-    Dim nSaltadas As Long
+    Dim nArch As Integer, linea As String
+    Dim lineas() As String, nLineas As Long, i As Long
+    Dim cmd As ADODB.Command
+    Dim vOk As String, vErr As String, vLinErr As String
 
-    On Error GoTo errArchivo
+    mCarga = 0
     lblLoad.Visible = True
     Screen.MousePointer = vbHourglass
     DoEvents
 
+    '1) Lee el archivo completo (errores de archivo, antes de tocar la base)
+    On Error GoTo errArchivo
+    nLineas = 0
+    ReDim lineas(0)
     nArch = FreeFile
     Open ruta For Input As #nArch
-    If EOF(nArch) Then
-        Close #nArch
+    Do While Not EOF(nArch)
+        Line Input #nArch, linea
+        nLineas = nLineas + 1
+        ReDim Preserve lineas(nLineas)
+        lineas(nLineas) = linea
+    Loop
+    Close #nArch
+    If nLineas = 0 Then
         Screen.MousePointer = vbDefault
         lblLoad.Visible = False
         MsgBox "El archivo esta vacio", vbExclamation, Me.Caption
         Exit Sub
     End If
 
-    'Linea 1: encabezado de la plantilla (sin distinguir mayusculas; se tolera un ; final)
-    Line Input #nArch, vEncab
-    vEncab = UCase(Trim(vEncab))
-    If Right(vEncab, 1) = ";" Then vEncab = Left(vEncab, Len(vEncab) - 1)
-    If vEncab <> UCase(EncabezadoCsvY()) Then
-        Close #nArch
-        Screen.MousePointer = vbDefault
-        lblLoad.Visible = False
-        MsgBox "El archivo no tiene el encabezado de la plantilla de carga masiva de Y." & vbCrLf & _
-               "Use la plantilla que genera Exportar Excel.", vbExclamation, Me.Caption
-        Exit Sub
-    End If
+    On Error GoTo oraerror
+    '2) Abre la carga
+    Set cmd = New ADODB.Command
+    Set cmd.ActiveConnection = Ado_Conn
+    With cmd
+        .CommandType = adCmdText
+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inicia(?, ?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 1000, Left(ruta, 1000))
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, LOGINUSER)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Execute
+    End With
+    mCarga = cmd.Parameters(3).Value
+    Set cmd.ActiveConnection = Nothing
+    Set cmd = Nothing
 
-    'Una fila de la grilla por linea con datos; las vacias (o solo ;) se ignoran
-    nSaltadas = 0
-    Do While Not EOF(nArch)
-        Line Input #nArch, linea
-        If Trim(Replace(linea, ";", "")) <> "" Then
-            c = Split(linea, ";")
-            If UBound(c) < 11 Then
-                nSaltadas = nSaltadas + 1
-            Else
-                Grid1.AddItem Trim(c(1)) & vbTab & Trim(c(2)) & vbTab & Trim(c(0)) & vbTab & _
-                              Format(Val(c(9)) + Val(c(10)) + Val(c(11)), gFormat)
-            End If
+    '3) Envia cada linea (con su numero en el archivo); las vacias no se envian, salvo la 1
+    Set cmd = New ADODB.Command
+    Set cmd.ActiveConnection = Ado_Conn
+    With cmd
+        .CommandType = adCmdText
+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
+        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , 0)
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 4000, "")
+    End With
+    For i = 1 To nLineas
+        If i = 1 Or Trim(Replace(lineas(i), ";", "")) <> "" Then
+            cmd.Parameters(1).Value = i
+            cmd.Parameters(2).Value = Left(lineas(i), 4000)
+            cmd.Execute
         End If
-    Loop
-    Close #nArch
+    Next i
+    Set cmd.ActiveConnection = Nothing
+    Set cmd = Nothing
 
+    '4) Valida contra la base y arma el resumen
+    Set cmd = New ADODB.Command
+    Set cmd.ActiveConnection = Ado_Conn
+    With cmd
+        .CommandType = adCmdText
+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Execute
+    End With
+    vOk = IIf(IsNull(cmd.Parameters(1).Value), "0", cmd.Parameters(1).Value)
+    vErr = IIf(IsNull(cmd.Parameters(2).Value), "0", cmd.Parameters(2).Value)
+    vLinErr = IIf(IsNull(cmd.Parameters(3).Value), "0", cmd.Parameters(3).Value)
+    Set cmd.ActiveConnection = Nothing
+    Set cmd = Nothing
+
+    '5) Grilla
+    Call LlenaGrillaResumen(mCarga)
     Screen.MousePointer = vbDefault
     lblLoad.Visible = False
-    If nSaltadas > 0 Then
-        MsgBox nSaltadas & " fila(s) del archivo tienen menos de 12 columnas y no se muestran.", vbExclamation, Me.Caption
+    If Grid1.Rows = 1 Then
+        MsgBox "Carga N° " & mCarga & ": el archivo no generó ningún resumen." & vbCrLf & _
+               "Revise que el encabezado sea el de la plantilla (Exportar Excel)." & vbCrLf & _
+               "Detalle en VTA_FACOCARGA_YZ_LOG.", vbExclamation, Me.Caption
+    Else
+        MsgBox "Carga N° " & mCarga & vbCrLf & vbCrLf & _
+               "Grupos procesados: " & vOk & vbCrLf & _
+               "Grupos con error: " & vErr & vbCrLf & _
+               "Líneas con error: " & vLinErr & vbCrLf & vbCrLf & _
+               "Doble clic en una fila para ver el motivo." & vbCrLf & _
+               "Detalle por fila y campo en VTA_FACOCARGA_YZ_LOG.", _
+               IIf(Val(vErr) > 0 Or Val(vLinErr) > 0, vbExclamation, vbInformation), Me.Caption
     End If
     Exit Sub
 errArchivo:
@@ -395,15 +557,77 @@ errArchivo:
     Screen.MousePointer = vbDefault
     lblLoad.Visible = False
     MsgBox "No se pudo leer el archivo: " & Err.Description, vbCritical, Me.Caption
+    Exit Sub
+oraerror:
+    Screen.MousePointer = vbDefault
+    lblLoad.Visible = False
+    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
+    SystemMsg = "Problemas al validar el archivo en la base (PKG_F8_CARGA_MASIVA_YZ, carga " & mCarga & ")"
+    frmLogOraError.Show 1
+    'Si el resumen alcanzo a crearse, muestra los grupos que quedaron PENDIENTE
+    If mCarga > 0 Then Call LlenaGrillaResumen(mCarga)
+End Sub
+
+'Llena Grid1 con el resumen de la carga (VTA_FACOCARGA_YZ_RES). ERROR en rojo, PENDIENTE en amarillo.
+Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
+    Dim Consulta As Object, sq As String, c As Integer
+    Call LimpiaGrilla
+    Set Consulta = CreateObject("ADODB.Recordset")
+    With Consulta
+        .ActiveConnection = Ado_Conn
+        .CursorLocation = adUseClient
+        .CursorType = adOpenForwardOnly
+        .LockType = adLockReadOnly
+    End With
+    sq = "select res_local, res_terminal, to_char(res_fecha, 'dd-mm-yyyy') fecha, res_cant_y, " & _
+         "       nvl(res_total_y, 0) total_y, nvl(res_total_z, 0) total_z, res_estado, res_mensaje " & _
+         "from   vta_" & Flg_Pais$ & "carga_yz_res " & _
+         "where  res_carga = " & CStr(vCarga) & " " & _
+         "order by res_fecha, res_local, res_terminal"
+    On Error GoTo oraerror
+    Call Consulta.Open(sq)
+    Do While Not Consulta.EOF
+        Grid1.AddItem Consulta!res_local & vbTab & Consulta!res_terminal & vbTab & Consulta!fecha & vbTab & _
+                      Consulta!res_cant_y & vbTab & Format(Consulta!total_y, gFormat) & vbTab & _
+                      Format(Consulta!total_z, gFormat) & vbTab & Consulta!res_estado & vbTab & _
+                      IIf(IsNull(Consulta!res_mensaje), "", Consulta!res_mensaje)
+        If Consulta!res_estado <> "PROCESADO" Then
+            Grid1.Row = Grid1.Rows - 1
+            For c = 0 To 6
+                Grid1.Col = c
+                If Consulta!res_estado = "ERROR" Then
+                    Grid1.CellBackColor = &HFF            'rojo, como Form133
+                    Grid1.CellForeColor = &H80000005
+                Else
+                    Grid1.CellBackColor = &H80FFFF        'amarillo: PENDIENTE (el proceso se cayo)
+                End If
+            Next c
+        End If
+        Consulta.MoveNext
+    Loop
+    Set Consulta.ActiveConnection = Nothing
+    Exit Sub
+oraerror:
+    Set Consulta.ActiveConnection = Nothing
+    SystemMsg = "Problemas de comunicación con servidor al leer el resumen de la carga " & CStr(vCarga)
+    frmLogOraError.Show 1
+End Sub
+
+'Doble clic: muestra el motivo del estado del grupo
+Private Sub Grid1_DblClick()
+    If Grid1.Rows < 2 Or Grid1.Row < 1 Then Exit Sub
+    MsgBox "Fecha " & Grid1.TextMatrix(Grid1.Row, 2) & ", local " & Grid1.TextMatrix(Grid1.Row, 0) & _
+           ", terminal " & Grid1.TextMatrix(Grid1.Row, 1) & vbCrLf & vbCrLf & _
+           "Estado: " & Grid1.TextMatrix(Grid1.Row, 6) & vbCrLf & _
+           Grid1.TextMatrix(Grid1.Row, 7), vbInformation, Me.Caption
 End Sub
 '---FIN----
 
 '---INI---- xintec-nruz 20-10-2026 FSCC-12901: PRUEBA cierre diario desde Salir (temporal) ----
 'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
-'de prueba fija (vFechaPrueba = 20-08-2026 desde el 22-10, COMPENSA_DI prueba_test4; antes 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
+'de prueba fija (vFechaPrueba = 14-10-2026 desde el 28-10, COMPENSA_DI prueba_test6; antes 15-09-2026 prueba_test5, 20-08-2026 prueba_test4, 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
 Private Sub Command3_Click()
-    'xintec-nruz 22-10-2026 FCDVT-14: version prod, Salir solo cierra (la prueba del cierre diario queda sin uso)
-    'Call EjecutaCierreDiario
+    Call EjecutaCierreDiario
     Unload Me
 End Sub
 
@@ -420,7 +644,11 @@ Private Sub EjecutaCierreDiario()
     'xintec-nruz 22-10-2026 FCDVT-56: fecha de prueba 15-10-2026 (antes 17-09-2026; etapa sin venta, local 5 T2)
     'vFechaPrueba = "20261015"   'fecha de venta fija para la prueba en test (yyyymmdd)
     'xintec-nruz 22-10-2026 FSCC-12901: fecha de prueba 20-08-2026 (antes 15-10-2026; prueba_test4 COMPENSA_DI)
-    vFechaPrueba = "20260820"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'vFechaPrueba = "20260820"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'xintec-nruz 26-10-2026 FSCC-12901: fecha de prueba 15-09-2026 (antes 20-08-2026; prueba_test5 COMPENSA_DI)
+    'vFechaPrueba = "20260915"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'xintec-nruz 28-10-2026 FSCC-12901: fecha de prueba 14-10-2026 (antes 15-09-2026; prueba_test6 COMPENSA_DI)
+    vFechaPrueba = "20261014"   'fecha de venta fija para la prueba en test (yyyymmdd)
 
     On Error GoTo oraerror
     Screen.MousePointer = vbHourglass

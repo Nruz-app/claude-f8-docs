@@ -1,12 +1,14 @@
 # Cambios para producción: FSCC-12901, FCDVT-14 y FCDVT-56
 
-Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**).
+Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11).
+
+**Regla:** esta carpeta siempre refleja `FTEPROD/`. Todo cambio en un fuente de `FTEPROD/` se lleva aquí en la misma tarea (copia en `archivos/`, diff, este README y `MANIFIESTO.md5`). Ver CLAUDE.md §9.
 
 Contenido de esta carpeta:
 
 | Carpeta | Qué contiene |
 |---|---|
-| `archivos/` | Archivos listos para llevar a producción: copias binarias exactas, en Windows-1252 con CRLF. `Form174.frm` es la **versión de producción**, ver §2.4 |
+| `archivos/` | Archivos listos para llevar a producción: copias binarias exactas de `FTEPROD/`, en Windows-1252 con CRLF |
 | `archivos/otros/` | `Form172.frm` y `Form173.frm`: tienen cambios que **no** son de estos requerimientos (§4) |
 | `PROD/` | Los originales de producción de cada archivo que cambia. Sirven para el rollback y para comparar |
 | `diffs/` | Un `diff -u` por archivo, de PROD al nuevo, convertido a UTF-8 para leerlo |
@@ -16,10 +18,10 @@ Contenido de esta carpeta:
 
 | # | Archivo | Requerimiento | Tipo | Líneas (+ / −) | MD5 PROD | MD5 nuevo |
 |---|---|---|---|---|---|---|
-| 1 | `Form133.frm` | FSCC-12901 | Modificado | +136 / −10 | `26eeeb01…` | `00abac13…` |
-| 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +119 / −27 | `0e1bfd0c…` | `48ad588f…` |
+| 1 | `Form133.frm` | FSCC-12901 | Modificado | +120 / −10 | `26eeeb01…` | `ed11df46…` |
+| 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `07270ede…` |
 | 3 | `MDIForm1.frm` | FCDVT-14 | Modificado | +52 / −0 | `ee06d78d…` | `9d032f55…` |
-| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +438 | — | `958dd200…` / `cc816b30…` |
+| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +663 | — | `1fe58dfd…` / `cc816b30…` |
 | 5 | `recaudacion.vbp` | FCDVT-14 | Agregar una línea | +1 útil | `d986352f…` | (no se copia, §2.5) |
 | — | `Módulo1.bas` | Versión | **Falta hacerlo** | — | — | Subir `Gversion` (§3) |
 
@@ -46,7 +48,7 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 |---|---|---|
 | 19-10 · cajas de la carga | `CargarArchivo`, declaraciones y bucle de inserción | Arma la lista `|local;terminal;fecha;Y|`, sin repetir, de las filas FACO con Y > 0 que se insertaron |
 | 19-10 · la carga ya no cierra la Y | `CargarArchivo`, después del mensaje "Se Cargaron N Registros" | Si es FACO y hay cajas, llama a `EjecutaCompensaDIFACO` |
-| 19-10 / 20-10 · `EjecutaCompensaDIFACO` (sub nueva) | Antes de `Form_Load` | Por cada caja llama con `ADODB.Command` a `PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(Flg_Pais$, fecha, local, terminal, Y, …)`. La versión multipaís del 20-10 pasa el país como primer parámetro. Un error en una caja no corta las demás. Al final muestra un resumen: cajas con DI, sin DI y el detalle |
+| 19-10 / 20-10 · `EjecutaCompensaDIFACO` (sub nueva) | Antes de `Form_Load` | Por cada caja llama con `ADODB.Command` a `PKG_F8_COMPENSA_DI_CARGA.prc_compensa_caja(Flg_Pais$, fecha, local, terminal, Y, …)`. La versión multipaís del 20-10 pasa el país como primer parámetro. Un error en una caja no corta las demás. **Desde el 30-10 no muestra el resumen final** (cajas con DI, sin DI y detalle): la versión LOCAL ya no tiene ese `MsgBox` ni las líneas comentadas de la llamada anterior sin país |
 
 - **Otros países:** sin cambios, porque todo está condicionado a `Flg_Pais$ = "FACO"`.
 - **Prerrequisitos en la base de producción** (`docs/sql/FSCC-12901_COMPENSA_DI/`, ver su `00_LEEME.md`):
@@ -67,14 +69,15 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 | 20-10 · confirmación con TODOS | FSCC-12901 | `Command4_Click` (Cerrar Terminal) | Con `0-TODOS` pide confirmar el número de cajas con DR 0, los locales y el rango de fechas |
 | 20-10 · mensaje final | FSCC-12901 | `Command4_Click` | En FACO cuenta las filas "Cerrado" antes y después del cierre. Antes siempre decía "No hay Terminales que Cumplan…" |
 | 22-10 · filtro de Terminal | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal, el combo Terminal filtra cuando es distinto de 0 |
-| 22-10 · terminales sin movimiento | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal (con un local elegido o, desde el 28-10, con `0-TODOS`), agrega con un `UNION` los terminales vigentes que tienen la Z pero no libro de ventas Y. Salen con Cierre Y 0 y el estado de la Z. "Cerrar Terminal" ya los cerraba con `CierraTerminal`, que deja la Z en estado 1 |
+| 22-10 · terminales sin movimiento | FCDVT-56 | `FuncStrPivote` | En FACO, con la opción Terminal y **un local elegido** (no con `0-TODOS`), agrega con un `UNION` los terminales vigentes que tienen la Z pero no libro de ventas Y. Salen con Cierre Y 0 y el estado de la Z. "Cerrar Terminal" ya los cerraba con `CierraTerminal`, que deja la Z en estado 1. El cambio del 28-10, que lo extendía a `0-TODOS`, **no está** en la versión LOCAL del 30-10 |
+| 20-10 · nombre de `0-TODOS` | FSCC-12901 | `LeeLocales` | La opción se muestra como "TODOS LOS LOCALES" (la versión del 28-10 decía "TODOS") |
 
 - **Prerrequisitos en la base:** ninguno. Usa tablas existentes.
 - **Qué probar:**
   1. CC, FACO, local con un terminal sin venta (por ejemplo local 5, T2): se ve con Cierre Y 0 y "Pendiente"; "Cerrar Terminal" lo pasa a "Cerrado".
-  2. Con `0-TODOS` (perfil 9 o 10) y Terminal 0 aparecen también los terminales sin venta de todos los locales, y al cerrar aparece la confirmación.
+  2. Con `0-TODOS LOS LOCALES` (perfil 9 o 10) aparecen las cajas con DR 0 de todos los locales (sin los terminales sin venta), y al cerrar aparece la confirmación.
   3. Otro país: sin cambios.
-- **Riesgo:** con un local grande la consulta tarda más, porque cada fila hace unas 10 consultas. Desde el 28-10, a pedido del usuario, con `0-TODOS` también se agregan los terminales sin venta: con un rango de varios días la consulta puede tardar bastante.
+- **Riesgo:** con un local grande la consulta tarda más, porque cada fila hace unas 10 consultas.
 
 ### 2.3 `MDIForm1.frm`: submenú del botón Y (FCDVT-14)
 
@@ -94,13 +97,16 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 
 | Control o rutina | Estado | Qué hace |
 |---|---|---|
-| Buscar (`Command1`) | Programado | Elige el CSV y muestra la ruta. **Carga la grilla** `Grid1` (22-10) con Local, Terminal, Fecha Venta y Monto Total (BOLETAS + N.CREDITO + FACTURA). Si el encabezado no es el de la plantilla, avisa |
-| Exportar Excel (`Command2`) | Programado | Guarda una plantilla CSV con las 54 columnas |
-| Cargar (`Command4`) | **Sin código** | El botón existe, pero todavía no hace nada (diseño en `docs/README_FCDVT-14.md` §5.4) |
-| Salir (`Command3`) | **Versión prod** | En LOCAL, Salir ejecuta la **prueba temporal** del cierre diario (`EjecutaCierreDiario`, que llama a `PKG_F8_CIERRE_DIARIO` con una fecha fija). La copia de `archivos/` lo deja **solo con `Unload Me`**: la llamada queda comentada con la marca `xintec-nruz 22-10-2026 FCDVT-14: version prod`. Esa es la única diferencia con `FTEPROD/Form174.frm` (MD5 `a61757ca…`, con la fecha de prueba 20-08-2026 desde el 22-10) |
+| Buscar (`Command1`) | Programado | Elige el CSV de cierres **Y y Z** y lo valida en la base (30-10 / 02-11): `PKG_F8_CARGA_MASIVA_YZ.prc_inicia` abre la carga, `prc_inserta_linea` envía cada línea con su número y `prc_procesa` valida y arma el resumen. La grilla (`LlenaGrillaResumen`) muestra el resumen por terminal-día desde `vta_<pfx>carga_yz_res`: Local, Terminal, Fecha, Cant. Y, Monto Total Y, Monto Total Z y Estado (ERROR en rojo, PENDIENTE en amarillo). Doble clic en una fila muestra el motivo. Al final avisa grupos procesados, grupos y líneas con error; el detalle queda en `VTA_FACOCARGA_YZ_LOG` |
+| Exportar Excel (`Command2`) | Programado | Guarda una plantilla CSV con **56 columnas**: agrega `TIPO` (Y/Z) y `TIPO_CARGA` después de `CONT_REPOSICION` (antes 54). Debe coincidir con `PKG_F8_CARGA_MASIVA_YZ.c_encabezado` |
+| Cargar (`Command4`) | **Sin código** | El botón existe, pero todavía no hace nada (diseño en `docs/README_FCDVT-14.md` §5.4). `mCarga` guarda el número de carga para cuando se programe |
+| Salir (`Command3`) | **Prueba temporal** | Ejecuta `EjecutaCierreDiario` antes de `Unload Me`: llama a `PKG_F8_CIERRE_DIARIO` con la fecha fija de prueba `vFechaPrueba = 20261014`. Desde el 02-11 la copia de `archivos/` es **idéntica** a `FTEPROD/Form174.frm` (antes la llamada iba comentada como "version prod"), por decisión del usuario |
 
 - **OCX:** `COMDLG32.OCX` y `MSFLXGRD.OCX`. Los dos ya están en el `.vbp` de producción.
-- **Prerrequisitos en la base:** ninguno para Buscar y Exportar. `EjecutaCierreDiario` queda en el código, pero no se llama.
+- **Prerrequisitos en la base:**
+  - Buscar: `docs/sql/FCDVT-14/` 02 a 05 (tablas `VTA_FACOCARGA_YZ_*`, `PKG_F8_CARGA_MASIVA_YZ` y grants; o `INSTALAR.sql`). Si el package no está, Buscar muestra el error de Oracle.
+  - Salir: `PKG_F8_CIERRE_DIARIO` (`docs/sql/FSCC-12901_CIERRE_DIARIO/`).
+- **Riesgo:** tal como está, en producción **cada vez que se cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 14-10-2026**. Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
 - **Decisión pendiente:** como Cargar todavía no hace nada, la opción "Ingreso del YYY Masivo" mostraría una pantalla que no graba. Se puede dejar el permiso 460 sin ejecutar en producción hasta que Cargar esté listo; el submenú aparece solo con ese permiso.
 
 ### 2.5 `recaudacion.vbp`
@@ -117,8 +123,8 @@ Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esa 
 
 1. **Base de producción, antes del exe:**
    - FSCC-12901: `docs/sql/FSCC-12901_COMPENSA_DI/` (02 a 06). Lo requiere `Form133`.
-   - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4.
-   - El cron de cierre diario (`docs/sql/FSCC-12901_CIERRE_DIARIO/`, que con FCDVT-56 incluye la etapa sin venta) **no depende del exe** y puede ir aparte. Todavía no está probado en test.
+   - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4. Además 02 a 05 (carga Y/Z), que los usa Buscar de `Form174`.
+   - El cron de cierre diario (`docs/sql/FSCC-12901_CIERRE_DIARIO/`, que con FCDVT-56 incluye la etapa sin venta). Mientras `Form174` llame a `EjecutaCierreDiario` desde Salir (§2.4), el exe **sí** depende de él.
 2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm` y `Form174.frx`, y agregar `Form=Form174.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
 3. **Versión:** subir `Global Const Gversion` en `Módulo1.bas` (hoy `"3.4.9"`) y `vta_parametros.vta_ultversion` de cada país (CLAUDE.md §2). Si no se hace, el exe no arranca o se autoactualiza a otra versión.
 4. **Compilar** `f8a.exe`. El IDE no debe generar ningún `Form*.log`.
