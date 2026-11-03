@@ -13,6 +13,15 @@
 --      15-10 T2 (Z 425.000 <> Y 420.000), 15-10 T3 (sin Z), 14-10 T1
 --      (REC_MEFECTIVO 12a00 y TIPO X), 15-10 T99 (terminal no vigente);
 --      mas 1 linea con 50 campos, sin grupo.
+--   pruebas/ (03-11-2026; detalle por grupo y por linea en pruebas/README.md):
+--      p01_campos_malos.csv     -> 1 PROCESADO, 14 ERROR, 19 lineas con error
+--      p02_falta_z.csv          -> 3 PROCESADO, 3 ERROR (sin Z, sin Y, 2 Z)
+--      p03_cuadratura.csv       -> 3 PROCESADO, 1 ERROR (Z = suma Y + 1)
+--      p04_nro_y.csv            -> 2 PROCESADO, 1 ERROR (NRO_Y repetido)
+--      p05_estructura.csv       -> 1 PROCESADO, 1 ERROR (T99), 4 lineas con error
+--      p06_encabezado_54.csv    -> carga rechazada (encabezado), sin grupos
+--      p07_solo_encabezado.csv  -> sin grupos
+--      p08_volumen.csv          -> 90 PROCESADO (630 filas)
 -- =====================================================================
 
 prompt === 1. Ultimas cargas (INICIO y FIN)

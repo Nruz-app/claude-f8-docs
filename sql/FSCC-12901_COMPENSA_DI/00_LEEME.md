@@ -44,6 +44,7 @@ Reglas decididas:
 | `prueba_test4/` | Prueba | Del 22-10-2026: réplica de `prueba_test3/` el **20-08-2026**, con los mismos 4 escenarios y sobres `<local><terminal>0820<n>`. Salir de `Form174` usó `vFechaPrueba = "20260820"` hasta el 26-10. La fecha **no está verificada como limpia**: correr antes P0. Con `CD_SIN_VENTA = S` el cierre también cierra las Z sin venta del día (ver su `LEEME.md`) |
 | `prueba_test5/` | Prueba | Del 26-10-2026: réplica de `prueba_test4/` el **15-09-2026**, con los mismos 4 escenarios y sobres `<local><terminal>0915<n>`. Salir de `Form174` usa `vFechaPrueba = "20260915"`. **El 15-09 ya tiene datos FACO en test**: correr antes P0; el cierre con Salir puede contar también otras Y del día (ver su `LEEME.md`) |
 | `prueba_test6/` | Prueba | Del 28-10-2026: réplica de `prueba_test5/` el **14-10-2026**, con los mismos 4 escenarios y sobres `<local><terminal>1014<n>`. Salir de `Form174` usa `vFechaPrueba = "20261014"`. **No se verificó si el 14-10 tiene datos FACO en test** (sin VPN): correr antes P0; el cierre con Salir puede contar también otras Y del día (ver su `LEEME.md`) |
+| `prueba_test7/` | Prueba | Del 03-11-2026: réplica de `prueba_test6/` el **02-11-2026**, con los mismos 4 escenarios y sobres `<local><terminal>1102<n>`. Salir de `Form174` usa `vFechaPrueba = "20261102"`. **No se verificó si el 02-11 tiene datos FACO en test** (sin VPN; fecha reciente): correr antes P0; el cierre con Salir puede contar también otras Y del día (ver su `LEEME.md`) |
 
 ## `PKG_F8_COMPENSA_DI_CARGA`
 

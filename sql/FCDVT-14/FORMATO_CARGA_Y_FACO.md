@@ -130,6 +130,8 @@ Archivos en `docs/sql/FCDVT-14/`:
 
 Fecha, local y terminales son válidos en test (local 5, terminales 1 a 3). En esta etapa Buscar **no graba** Y ni Z: solo llena las tablas `VTA_FACOCARGA_YZ_*`.
 
+Hay más casos de prueba, uno por tipo de validación (campos malos, falta de Z, cuadratura, `NRO_Y`, estructura de la línea, encabezado y volumen), en `docs/sql/FCDVT-14/pruebas/`. El resultado esperado de cada uno está en su `README.md`.
+
 ## 5. Cómo lo prepara el usuario
 
 0. La plantilla vacía se baja desde F8 ▸ botón Y ▸ "Ingreso del YYY Masivo" (Form174) ▸ **Exportar Excel**. Trae el encabezado y una fila con la fecha de ayer, la identificación vacía, `TIPO = Y`, `TIPO_CARGA = INGRESAR` y los montos en 0. Se copia esa fila una vez por cada Y y una vez más para la Z del terminal-día (con `TIPO = Z`).

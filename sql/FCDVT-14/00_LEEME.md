@@ -20,6 +20,7 @@ Archivos de carga (CSV, formato `FORMATO_CARGA_Y_FACO.md`):
 |---|---|
 | `plantilla_carga_Y_FACO.csv` | Plantilla con el encabezado de **56 columnas** (con `TIPO` y `TIPO_CARGA`) y 4 filas de ejemplo: T1 con Z + 2 Y y T2 con 1 Y sin Z. Es una copia de `docs/FCDVT-14/` |
 | `ejemplo_carga_Y_FACO_20.csv` | 30-10-2026: 23 filas del 16-10-2026, local 5. Por terminal, 1 Z (cada concepto = suma de sus Y) y sus Y: T1 7 Y (9.400.000), T2 7 Y (7.435.000) y T3 6 Y (9.490.000); en total 26.325.000. Buscar: 3 grupos PROCESADO. La versión del 22-10 (20 Y sin Z, 56 columnas) quedó en `.bak_FCDVT-14_Z` |
+| `pruebas/` | 03-11-2026: 8 CSV de prueba de Buscar, uno por tipo de caso: campos malos (`p01`), falta de Z, Z sin Y y 2 Z (`p02`), cuadratura (`p03`), `NRO_Y` repetido (`p04`), estructura de la línea (`p05`), encabezado de 54 columnas (`p06`), solo encabezado (`p07`) y volumen de 630 filas (`p08`). El resultado esperado de cada uno está en `pruebas/README.md` |
 | `ejemplo_carga_YZ_FACO_errores.csv` | 30-10-2026: un caso por resultado. Buscar: 1 PROCESADO (15-10 T1) y 4 ERROR (15-10 T2 Z ≠ ΣY, 15-10 T3 sin Z, 14-10 T1 monto `12a00` y `TIPO X`, terminal 99 no vigente), más una línea de 50 campos que solo queda en el log |
 
 Notas:
