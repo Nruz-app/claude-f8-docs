@@ -1,22 +1,28 @@
 # MANIFIESTO docs/Cambios - paso a produccion FSCC-12901 / FCDVT-14 / FCDVT-56 (22-10-2026, actualizado 02-11-2026). Verificar desde esta carpeta: grep -v '^#' MANIFIESTO.md5 | md5sum -c
+# 2026-11-03: Form174 (doble clic abre Form175, fecha de prueba 02-11-2026), Form175 nuevo y .vbp con Form=Form175.frm
+# 2026-11-03: Form174 abre Form175 con un solo clic (Grid1_Click)
+# 2026-11-03: Form174 Exportar Excel genera plantilla .xlsx con formato
 26eeeb01e993eece2440ed9739a94562 *PROD/Form133.frm
 0e1bfd0ce9c86e18f8913dbf2876c35d *PROD/Form43.frm
 ee06d78d2d8afd28fa67a146643563e3 *PROD/MDIForm1.frm
 1f17838b52350b69ec28715cb3f267f5 *PROD/otros/Form172.frm
 2218417ba4b2ea3b8565a6158322004d *PROD/otros/Form173.frm
 d986352ffb4d9d10a509a8b6c0d83ed8 *PROD/recaudacion.vbp
-52b4b4ad08fe911aa7047e6b1a2d855d *README.md
+21cd2575cbd78fd35080421a7d365ff3 *README.md
 ed11df46050aa6909ecc3590bedc639b *archivos/Form133.frm
-1fe58dfd147317480e1ff8c236111824 *archivos/Form174.frm
+5743a2fd64987d957a30485593115d22 *archivos/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form174.frx
+efa7e85f0044780fc8ecae5cf1257351 *archivos/Form175.frm
+cc816b30965b9897e284bdf47ef0e79c *archivos/Form175.frx
 07270edec5550b04491ae977bc70f1b4 *archivos/Form43.frm
 9d032f555cb47a4fca38b6284919fe69 *archivos/MDIForm1.frm
 27b61539585f68206cd8f42c3bbe9f67 *archivos/otros/Form172.frm
 ba54fb8660f25dede87d49e53eee00e7 *archivos/otros/Form173.frm
 90ce46567e69d5ca536f89590ea6020e *diffs/Form133.frm.diff
-02eb8f9e15789f6410bea6fd8d773c56 *diffs/Form174.frm.diff
+21ee206822ed36d339eb978b93ba801e *diffs/Form174.frm.diff
+636ac8df7e5d762c14a342b4addbc40e *diffs/Form175.frm.diff
 395ae16bf61748254ccd288e42465832 *diffs/Form43.frm.diff
 1073b6f32c781a2c74664c2c9401f93a *diffs/MDIForm1.frm.diff
 31245db39f26275f44e5385276ee30c4 *diffs/otros/Form172.frm.diff
 8b3b12eb6d477767c8cf5c2a1a86ae5d *diffs/otros/Form173.frm.diff
-04dcbceea21ec7314df58d5e1e7f3e1f *diffs/recaudacion.vbp.diff
+72224d2b00e5bf09b7b3a4b3ecb2d036 *diffs/recaudacion.vbp.diff

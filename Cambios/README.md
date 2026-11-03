@@ -1,6 +1,6 @@
 # Cambios para producción: FSCC-12901, FCDVT-14 y FCDVT-56
 
-Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11).
+Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11). Actualizado el 03-11-2026: `Form174.frm` (fecha de prueba de Salir 02-11-2026 y clic en la grilla que abre Form175), `Form175.frm` + `.frx` nuevos y la línea `Form=Form175.frm` del `.vbp`. Más tarde el mismo día, `Form174.frm` con Exportar Excel como plantilla `.xlsx` (§2.4).
 
 **Regla:** esta carpeta siempre refleja `FTEPROD/`. Todo cambio en un fuente de `FTEPROD/` se lleva aquí en la misma tarea (copia en `archivos/`, diff, este README y `MANIFIESTO.md5`). Ver CLAUDE.md §9.
 
@@ -21,8 +21,9 @@ Contenido de esta carpeta:
 | 1 | `Form133.frm` | FSCC-12901 | Modificado | +120 / −10 | `26eeeb01…` | `ed11df46…` |
 | 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `07270ede…` |
 | 3 | `MDIForm1.frm` | FCDVT-14 | Modificado | +52 / −0 | `ee06d78d…` | `9d032f55…` |
-| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +663 | — | `1fe58dfd…` / `cc816b30…` |
-| 5 | `recaudacion.vbp` | FCDVT-14 | Agregar una línea | +1 útil | `d986352f…` | (no se copia, §2.5) |
+| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +881 | — | `5743a2fd…` / `cc816b30…` |
+| 4b | `Form175.frm` + `Form175.frx` | FCDVT-14 | **Nuevo** | +254 | — | `efa7e85f…` / `cc816b30…` (el `.frx` es copia de `Form174.frx`) |
+| 5 | `recaudacion.vbp` | FCDVT-14 | Agregar dos líneas (`Form174`, `Form175`) | +2 útiles | `d986352f…` | (no se copia, §2.5) |
 | — | `Módulo1.bas` | Versión | **Falta hacerlo** | — | — | Subir `Gversion` (§3) |
 
 **No se llevan:**
@@ -97,27 +98,42 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 
 | Control o rutina | Estado | Qué hace |
 |---|---|---|
-| Buscar (`Command1`) | Programado | Elige el CSV de cierres **Y y Z** y lo valida en la base (30-10 / 02-11): `PKG_F8_CARGA_MASIVA_YZ.prc_inicia` abre la carga, `prc_inserta_linea` envía cada línea con su número y `prc_procesa` valida y arma el resumen. La grilla (`LlenaGrillaResumen`) muestra el resumen por terminal-día desde `vta_<pfx>carga_yz_res`: Local, Terminal, Fecha, Cant. Y, Monto Total Y, Monto Total Z y Estado (ERROR en rojo, PENDIENTE en amarillo). Doble clic en una fila muestra el motivo. Al final avisa grupos procesados, grupos y líneas con error; el detalle queda en `VTA_FACOCARGA_YZ_LOG` |
-| Exportar Excel (`Command2`) | Programado | Guarda una plantilla CSV con **56 columnas**: agrega `TIPO` (Y/Z) y `TIPO_CARGA` después de `CONT_REPOSICION` (antes 54). Debe coincidir con `PKG_F8_CARGA_MASIVA_YZ.c_encabezado` |
+| Buscar (`Command1`) | Programado | Elige el CSV de cierres **Y y Z** y lo valida en la base (30-10 / 02-11): `PKG_F8_CARGA_MASIVA_YZ.prc_inicia` abre la carga, `prc_inserta_linea` envía cada línea con su número y `prc_procesa` valida y arma el resumen. La grilla (`LlenaGrillaResumen`) muestra el resumen por terminal-día desde `vta_<pfx>carga_yz_res`: Local, Terminal, Fecha, Cant. Y, Monto Total Y, Monto Total Z y Estado (ERROR en rojo, PENDIENTE en amarillo). Un clic en una fila abre **`Form175`** con el log del grupo (desde el 03-11; antes un `MsgBox` con doble clic, que queda comentado), ver §2.6. Al final avisa grupos procesados, grupos y líneas con error; el detalle queda en `VTA_FACOCARGA_YZ_LOG` |
+| Exportar Excel (`Command2`) | Programado | Desde el 03-11 guarda una **plantilla Excel `.xlsx` con formato** (antes un CSV, que queda comentado). Tiene tres hojas: **Carga**, **Instrucciones** (pasos y un ejemplo de Z + 2 Y que no se carga) y **Listas**, oculta. En la hoja Carga:<br>• encabezado de 56 columnas (`EncabezadoCsvY`, igual a `PKG_F8_CARGA_MASIVA_YZ.c_encabezado`), con la glosa de Form19Y en un comentario;<br>• FECHA y HORA con formato texto;<br>• validación de número entero en las identificaciones y los montos;<br>• listas en TIPO (Y/Z) y TIPO_CARGA (INGRESAR);<br>• fila 1 y columnas A:C inmovilizadas.<br>El usuario la completa y la guarda como "CSV (delimitado por comas)" para elegirla en Buscar, que no cambia. Usa Excel por automatización (`CreateObject`, como `Form171`), así que **requiere Excel 2007 o posterior** en el equipo |
 | Cargar (`Command4`) | **Sin código** | El botón existe, pero todavía no hace nada (diseño en `docs/README_FCDVT-14.md` §5.4). `mCarga` guarda el número de carga para cuando se programe |
-| Salir (`Command3`) | **Prueba temporal** | Ejecuta `EjecutaCierreDiario` antes de `Unload Me`: llama a `PKG_F8_CIERRE_DIARIO` con la fecha fija de prueba `vFechaPrueba = 20261014`. Desde el 02-11 la copia de `archivos/` es **idéntica** a `FTEPROD/Form174.frm` (antes la llamada iba comentada como "version prod"), por decisión del usuario |
+| Salir (`Command3`) | **Prueba temporal** | Ejecuta `EjecutaCierreDiario` antes de `Unload Me`: llama a `PKG_F8_CIERRE_DIARIO` con la fecha fija de prueba `vFechaPrueba = 20261102` (desde el 03-11; antes 20261014). Desde el 02-11 la copia de `archivos/` es **idéntica** a `FTEPROD/Form174.frm` (antes la llamada iba comentada como "version prod"), por decisión del usuario |
 
 - **OCX:** `COMDLG32.OCX` y `MSFLXGRD.OCX`. Los dos ya están en el `.vbp` de producción.
 - **Prerrequisitos en la base:**
   - Buscar: `docs/sql/FCDVT-14/` 02 a 05 (tablas `VTA_FACOCARGA_YZ_*`, `PKG_F8_CARGA_MASIVA_YZ` y grants; o `INSTALAR.sql`). Si el package no está, Buscar muestra el error de Oracle.
   - Salir: `PKG_F8_CIERRE_DIARIO` (`docs/sql/FSCC-12901_CIERRE_DIARIO/`).
-- **Riesgo:** tal como está, en producción **cada vez que se cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 14-10-2026**. Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
+- **Riesgo:** tal como está, en producción **cada vez que se cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 02-11-2026**. Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
 - **Decisión pendiente:** como Cargar todavía no hace nada, la opción "Ingreso del YYY Masivo" mostraría una pantalla que no graba. Se puede dejar el permiso 460 sin ejecutar en producción hasta que Cargar esté listo; el submenú aparece solo con ese permiso.
 
 ### 2.5 `recaudacion.vbp`
 
-La única diferencia útil es una línea nueva, `Form=Form174.frm`. En LOCAL está después de `Form=Form173.frm` (ver `diffs/recaudacion.vbp.diff`).
+Las únicas diferencias útiles son **dos líneas nuevas**, `Form=Form174.frm` y `Form=Form175.frm` (desde el 03-11). En LOCAL van después de `Form=Form173.frm` (ver `diffs/recaudacion.vbp.diff`).
 
 Las demás diferencias son de ambiente y **no se llevan**:
 - las rutas relativas de las 4 `Reference` (`..\Windows` contra `..\..\..\WINDOWS`);
 - `MSCOMCTL.OCX` en minúsculas.
 
-Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esa línea**. También se puede agregar el formulario desde el IDE con Proyecto → Agregar formulario.
+Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esas dos líneas**. También se pueden agregar los formularios desde el IDE con Proyecto → Agregar formulario.
+
+### 2.6 `Form175.frm` + `Form175.frx`: Detalle del Log de la Carga Masiva de Y y Z (FCDVT-14), nuevo
+
+Se abre con un clic en una fila de la grilla de `Form174` (`Grid1_Click`; el clic en el encabezado no abre nada), que llama a `Form175.MuestraLog(carga, fecha, local, terminal, estado, mensaje)`. Es modal y tiene el mismo aspecto que Form174: el `.frx` es una copia binaria de `Form174.frx` (mismas imágenes y offsets).
+
+| Control o rutina | Qué hace |
+|---|---|
+| `lblGrupo` / `lblMensaje` | Carga, fecha, local, terminal y estado del grupo, y su `res_mensaje` |
+| `Grid1` (`LlenaGrillaLog`) | Todo el log del grupo, desde `vta_<pfx>carga_yz_log`. Muestra las líneas del archivo que forman el grupo (según `vta_<pfx>carga_yz_det`) y el mensaje RESUMEN del grupo, que no tiene línea. Columnas: Línea, Tipo (Y/Z), N° Y, Etapa, Campo, Valor y Motivo; con motivos largos la fila se hace más alta. Si el grupo no tiene log (PROCESADO), lo indica en una fila |
+| Salir (`Command3`) | `Unload Me` |
+
+- **OCX:** `MSFLXGRD.OCX`, que ya está en el `.vbp`.
+- **Prerrequisitos en la base:** los mismos de Buscar (§2.4). Solo lee, con el patrón de Recordset de solo lectura.
+- **No muestra** las líneas que no pertenecen a ningún grupo (fecha, local o terminal ilegibles, o número de campos distinto de 56), porque no tienen fila en la grilla de Form174. Se ven en `VTA_FACOCARGA_YZ_LOG` (consulta 3 de `docs/sql/FCDVT-14/06_pruebas.sql`).
+- **Qué probar:** Buscar con `docs/sql/FCDVT-14/pruebas/p01_campos_malos.csv`, clic en 02-10 T2: línea 6, LECTURA, HORA, `25:00`, "Hora fuera de rango". En 09-10 T2: la línea del TIPO vacío y la fila RESUMEN. En 01-10 T1 (PROCESADO): "Sin errores registrados para este grupo".
 
 ## 3. Pasos sugeridos para el paso a producción
 
@@ -125,13 +141,13 @@ Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esa 
    - FSCC-12901: `docs/sql/FSCC-12901_COMPENSA_DI/` (02 a 06). Lo requiere `Form133`.
    - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4. Además 02 a 05 (carga Y/Z), que los usa Buscar de `Form174`.
    - El cron de cierre diario (`docs/sql/FSCC-12901_CIERRE_DIARIO/`, que con FCDVT-56 incluye la etapa sin venta). Mientras `Form174` llame a `EjecutaCierreDiario` desde Salir (§2.4), el exe **sí** depende de él.
-2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm` y `Form174.frx`, y agregar `Form=Form174.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
+2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm`, `Form174.frx`, `Form175.frm` y `Form175.frx`, y agregar `Form=Form174.frm` y `Form=Form175.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
 3. **Versión:** subir `Global Const Gversion` en `Módulo1.bas` (hoy `"3.4.9"`) y `vta_parametros.vta_ultversion` de cada país (CLAUDE.md §2). Si no se hace, el exe no arranca o se autoactualiza a otra versión.
 4. **Compilar** `f8a.exe`. El IDE no debe generar ningún `Form*.log`.
 5. **Probar en producción:** los puntos "Qué probar" de §2.1 a §2.4.
 6. **Rollback:**
    - volver a copiar los archivos de `PROD/`;
-   - quitar `Form174` del `.vbp`;
+   - quitar `Form174` y `Form175` del `.vbp`;
    - recompilar, o usar el exe anterior (`f8a <fecha>.exe`);
    - en la base, los `99_rollback.sql` de cada carpeta.
 

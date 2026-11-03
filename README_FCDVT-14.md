@@ -68,6 +68,9 @@
 | `docs/sql/FCDVT-14/02` a `06`, `INSTALAR.sql` | Carga Y/Z, etapa Buscar (§5.5): tablas, `PKG_F8_CARGA_MASIVA_YZ`, grants y consultas de prueba |
 | `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv` | 23 filas (3 Z + 20 Y) del 16-10-2026, local 5; todo cuadra. Versión del 22-10 sin Z en `.bak_FCDVT-14_Z` |
 | `docs/sql/FCDVT-14/ejemplo_carga_YZ_FACO_errores.csv` | Un caso por resultado de Buscar (1 PROCESADO, 4 ERROR, 1 línea sin grupo) |
+| `FTEPROD/Form175.frm` (+ `.frx`) | Detalle del log de un grupo de la carga masiva; se abre con un clic en la grilla de Form174 (§5.6) |
+| `FTEPROD/Form174.frm.bak_FCDVT-14_Log`, `recaudacion.vbp.bak_FCDVT-14_Form175` | Respaldos antes de Form175 (03-11) |
+| `FTEPROD/Form174.frm.bak_FCDVT-14_Clic`, `Form174.frm.bak_FCDVT-14_Plantilla` | Respaldos antes del clic simple y antes de la plantilla .xlsx de Exportar Excel (03-11) |
 | `docs/sql/FCDVT-14/pruebas/` | 8 CSV de prueba de Buscar, uno por tipo de caso (campos malos, falta de Z, cuadratura, `NRO_Y`, estructura de la línea, encabezado, volumen), con el resultado esperado en su `README.md` (03-11) |
 | `FTEPROD/Form174.frm.bak_FCDVT-14_Resumen` | Respaldo de Form174 antes del Buscar con el package (30-10) |
 | `FTEPROD/MDIForm1.frm` | Submenú del botón Y solo en FACO (marcas `xintec-nruz 20-10-2026 FCDVT-14`), sin compilar |
@@ -412,6 +415,48 @@ ERROR si el grupo tiene líneas con error, si no tiene exactamente 1 Z, si no ti
 
 **Para probar:** prechecks §13-14 → `INSTALAR.sql` en test (y `05` si el exe usa otro usuario) → compilar → Form174 ▸ Buscar con los dos CSV.
 
+### 5.6 Form175: detalle del log de un grupo (03-11-2026, sin compilar)
+
+**Qué pide el usuario.** Que el doble clic en una fila de la grilla de Form174, en vez del `MsgBox` con el motivo, abra una pantalla con todo el log de esa fila (fecha, local y terminal), para saber qué falló en el archivo.
+
+**Form175** (nuevo, `FTEPROD/Form175.frm` + `.frx`; marcas `xintec-nruz 03-11-2026 FCDVT-14`):
+- Mismo aspecto que Form174. El `.frx` es una copia binaria de `Form174.frx` (mismas imágenes y offsets).
+- Entrada: `Public Sub MuestraLog(vCarga, vFecha, vLocal, vTerminal, vEstado, vMensaje)`. Guarda los datos, llena la grilla y hace `Me.Show 1`. No se usan globales nuevas ni se toca `Módulo1.bas`.
+- `LlenaGrillaLog`: lee `vta_<pfx>carga_yz_log` y agrega el tipo y el N° Y de cada línea desde `vta_<pfx>carga_yz_det` (outer join `(+)`). Trae:
+  - las líneas del archivo cuyo detalle es de esa fecha, local y terminal;
+  - el mensaje RESUMEN del grupo (`log_valor = 'dd-mm-yyyy L<local> T<terminal>'`).
+  
+  Orden: línea (nulas al final) y `log_id`. Columnas: Línea, Tipo, N° Y, Etapa, Campo, Valor y Motivo. Con motivos largos la fila se hace más alta (hasta 6 renglones). Si no hay log (grupo PROCESADO), lo indica en una fila.
+- Las líneas sin grupo (fecha, local o terminal ilegibles, o campos distintos de 56) no tienen fila en Form174, así que no se ven aquí; están en la consulta 3 de `06_pruebas.sql`.
+
+**Form174** (respaldo `Form174.frm.bak_FCDVT-14_Log`): `Grid1_DblClick` pasa a `Grid1_Click` (un solo clic, pedido del usuario; respaldo `Form174.frm.bak_FCDVT-14_Clic`; el clic en el encabezado no abre nada), deja comentado el `MsgBox` y llama a `Form175.MuestraLog` con la carga (`mCarga`) y las columnas Fecha, Local, Terminal, Estado y Motivo de la fila. El mensaje final de Buscar dice "Clic en una fila para ver el detalle del log.".
+
+**`recaudacion.vbp`** (respaldo `recaudacion.vbp.bak_FCDVT-14_Form175`): `Form=Form175.frm` después de `Form=Form174.frm`.
+
+**Para probar:** compilar (y revisar que no aparezca `Form175.log`) → Buscar con `docs/sql/FCDVT-14/pruebas/p01_campos_malos.csv` → clic en 02-10 T2 (línea 6, HORA `25:00`), en 09-10 T2 (TIPO vacío y fila RESUMEN) y en 01-10 T1 ("Sin errores registrados para este grupo").
+
+### 5.7 Exportar Excel: plantilla .xlsx con formato (03-11-2026, sin compilar)
+
+**Qué pide el usuario.** Que Exportar Excel descargue un Excel con el formato correcto, para que el usuario no tenga que armarlo y solo escriba los valores. **Decisión del usuario:** Buscar no cambia. El usuario completa el `.xlsx` y lo guarda como "CSV (delimitado por comas)".
+
+**Form174** (respaldo `Form174.frm.bak_FCDVT-14_Plantilla`; la versión CSV de `Command2_Click` queda comentada):
+- `Command2_Click` arma con Excel por automatización (`CreateObject`, enlace tardío, como `Form171`) un libro de tres hojas y lo guarda como `.xlsx` (`SaveAs`, formato 51). Nombre sugerido: `plantilla_carga_YZ_FACO.xlsx`.
+  - **Carga** es la hoja que se guarda como CSV.
+    - Fila 1: el encabezado de 56 columnas de `EncabezadoCsvY()`, con un comentario por columna (`GlosaColumnaCsv`, nueva, con las glosas de FORMATO §3), en negrita y con el color de la grilla.
+    - Filas 2 a 2000: FECHA (A) y HORA (E) con formato texto `@` y mensaje de ingreso.
+    - Validación de número entero en B-D, F-I y L-BD.
+    - Listas en TIPO (J, `ListaTipo`) y TIPO_CARGA (K, `ListaTipoCarga`). Son nombres definidos sobre la hoja Listas, así funcionan en Excel 2007 y no dependen del separador de lista regional.
+    - La fila 1 y las columnas A:C quedan inmovilizadas; si Excel no da la ventana, se sigue sin inmovilizar.
+  - **Instrucciones** trae 9 pasos y un ejemplo de Z + 2 Y.
+  - **Listas** queda oculta.
+- Por qué así: la hoja Carga tiene solo las 56 columnas, así que el CSV sale con 56 campos. Las filas que solo tienen formato o validación salen como `;;;;` y Buscar ya las ignora. El formato de los montos es General: Excel no redondea al mostrar, así que un decimal que se cuele llega al package y se rechaza.
+- Si Excel no está instalado o falla, se muestra `MsgBox` con el error y se cierra Excel.
+
+**Para probar:**
+1. Exportar Excel y abrir el archivo: 3 hojas (Listas oculta), comentarios en el encabezado, listas en J/K, rechazo de `100,5` en un monto y FECHA que no se convierte.
+2. Completar una Z y 2 Y y guardar como CSV (delimitado por comas).
+3. Buscar con ese CSV: 1 grupo PROCESADO.
+
 ## 6. Hechos verificados en la base de test
 
 Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-12901): `VTA_PAINT_Z` de FACO tiene 53 filas en test, 47 campos, signo siempre `+`, grupos ZZZ 1, 2, 3, 6 y 7.
@@ -479,3 +524,6 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 30-10-2026 | **Estado congelado** antes de probar Buscar en test: manifiesto `docs/MANIFIESTO_FCDVT-14.md5` regenerado (agrega `02`-`06`, `INSTALAR.sql`, el CSV de errores, el respaldo del CSV de 20 Y y `Form174.frm.bak_FCDVT-14_Resumen`) y respaldo `docs/respaldos/FCDVT-14_2026-10-30_buscar-resumen-yz.zip`. Nada ejecutado en la base ni compilado. |
 | 02-11-2026 | Revisión: Buscar (`Command1_Click`) ya llamaba a `CargaGrillaCsv`, que usa `PKG_F8_CARGA_MASIVA_YZ` (30-10). Solo se cambia el título del diálogo a "cierres Y y Z" y se marca el llamado. Respaldo `Form174.frm.bak_FCDVT-14_Buscar`. Sin compilar. |
 | 03-11-2026 | El usuario confirma que Buscar funciona en test con los dos CSV de ejemplo. Se agregan 8 CSV de prueba en `docs/sql/FCDVT-14/pruebas/` (`p01` a `p08`): campos malos, falta de Z, Z sin Y, 2 Z, cuadratura, `NRO_Y` repetido, estructura de la línea, encabezado de 54 columnas, solo encabezado y volumen. El resultado esperado de cada uno está en `pruebas/README.md`, verificado reproduciendo las reglas del package. Sin cambios en el exe ni en la base. |
+| 03-11-2026 | **Form175** (§5.6): el doble clic en la grilla de Form174 abre el detalle del log del grupo (antes, un `MsgBox`). `Form175.frm` + `.frx` (copia de `Form174.frx`), `Form174.Grid1_DblClick` y `Form=Form175.frm` en el `.vbp`. Respaldos `Form174.frm.bak_FCDVT-14_Log` y `recaudacion.vbp.bak_FCDVT-14_Form175`. Sin compilar. Se sincronizó `docs/Cambios/`, que también recibe el cambio de `Form174` del 03-11 a las 10:02 (fecha de prueba 02-11-2026 de Salir) que no estaba. |
+| 03-11-2026 | Form174: Form175 se abre con **un solo clic** (`Grid1_Click`, antes `Grid1_DblClick`), a pedido del usuario. Un clic en el encabezado no abre nada (`MouseRow < 1`). El mensaje final de Buscar dice "Clic en una fila…". Respaldo `Form174.frm.bak_FCDVT-14_Clic`. Sin compilar. `docs/Cambios/` sincronizado. |
+| 03-11-2026 | Form174: **Exportar Excel genera una plantilla `.xlsx` con formato** (§5.7): hojas Carga (encabezado con comentarios, FECHA y HORA texto, enteros validados, listas en TIPO y TIPO_CARGA), Instrucciones y Listas oculta. El usuario la guarda como CSV para Buscar, que no cambia. Respaldo `Form174.frm.bak_FCDVT-14_Plantilla`. `FORMATO` §5 actualizado (2 copias). Sin compilar. `docs/Cambios/` sincronizado. |

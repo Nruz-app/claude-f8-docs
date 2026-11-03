@@ -22,11 +22,12 @@
  Form=Form162.frm
  Form=Form163.frm
  Form=Form164.frm
-@@ -186,6 +186,7 @@
+@@ -186,6 +186,8 @@
  Form=Form71.frm
  Form=Form172.frm
  Form=Form173.frm
 +Form=Form174.frm
++Form=Form175.frm
  IconForm="MDIForm1"
  Startup="Form1"
  HelpFile=""

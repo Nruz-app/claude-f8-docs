@@ -272,38 +272,213 @@ Private Function EncabezadoCsvY() As String
     EncabezadoCsvY = s
 End Function
 
-'Boton Exportar Excel: guarda una plantilla CSV (;) lista para completar
+'xintec-nruz 03-11-2026 FCDVT-14: version CSV de Exportar Excel, reemplazada por la plantilla .xlsx (bloque siguiente)
+''Boton Exportar Excel: guarda una plantilla CSV (;) lista para completar
+'Private Sub Command2_Click()
+'    Dim ruta As String, fila As String, i As Integer, nArch As Integer
+'    On Error GoTo cancelado
+'    CmDlog.CancelError = True
+'    CmDlog.DialogTitle = "Guardar plantilla de carga masiva de Y"
+'    CmDlog.Filter = "Archivos CSV (*.csv)|*.csv"
+'    CmDlog.FilterIndex = 1
+'    CmDlog.DefaultExt = "csv"
+'    CmDlog.Flags = cdlOFNOverwritePrompt Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
+'    CmDlog.filename = "plantilla_carga_Y_FACO.csv"
+'    CmDlog.ShowSave
+'    ruta = Trim(CmDlog.filename)
+'    On Error GoTo errArchivo
+'    If ruta = "" Then Exit Sub
+'    If LCase(Right(ruta, 4)) <> ".csv" Then ruta = ruta & ".csv"
+'
+'    'Fila de ejemplo: FECHA = dia anterior al servidor; identificacion vacia; 45 montos en 0
+'    'fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;"
+'    'xintec-nruz 30-10-2026 FCDVT-14: TIPO = Y y TIPO_CARGA = INGRESAR (56 columnas)
+'    fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;" & ";Y;INGRESAR"
+'    For i = 1 To 45
+'        fila = fila & ";0"
+'    Next i
+'
+'    nArch = FreeFile
+'    Open ruta For Output As #nArch
+'    Print #nArch, EncabezadoCsvY()
+'    Print #nArch, fila
+'    Close #nArch
+'
+'    If MsgBox("Plantilla guardada en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
+'              "¿Desea abrirla en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
+'        Shell "explorer.exe """ & ruta & """", vbNormalFocus
+'    End If
+'    Exit Sub
+'cancelado:
+'    'Cancelar en el dialogo (cdlCancel): no se hace nada
+'    If Err.Number <> cdlCancel Then MsgBox "Error al elegir el archivo: " & Err.Description, vbCritical, Me.Caption
+'    Exit Sub
+'errArchivo:
+'    Close
+'    MsgBox "No se pudo guardar la plantilla: " & Err.Description, vbCritical, Me.Caption
+'End Sub
+'---FIN----
+
+'---INI---- xintec-nruz 03-11-2026 FCDVT-14: Exportar Excel genera una plantilla .xlsx con formato (antes CSV, comentado arriba) ----
+'Hoja Carga: encabezado de 56 columnas (EncabezadoCsvY) con la glosa en un comentario, FECHA y HORA como texto,
+'numeros enteros validados y listas en TIPO / TIPO_CARGA. Hoja Instrucciones con los pasos y un ejemplo. Hoja Listas oculta.
+'El usuario completa Carga y la guarda como "CSV (delimitado por comas)" para elegirla en Buscar (Buscar no cambia).
+'Constantes de Excel (enlace tardio): xlValidateInputOnly = 0, xlValidateWholeNumber = 1, xlValidateList = 3,
+'xlValidAlertStop = 1, xlBetween = 1, xlSheetHidden = 0, xlOpenXMLWorkbook = 51
 Private Sub Command2_Click()
-    Dim ruta As String, fila As String, i As Integer, nArch As Integer
+    Dim ruta As String, i As Integer, r As Integer
+    Dim xlApp As Object, xlBook As Object, xlHoja As Object, xlInst As Object, xlLis As Object
+    Dim vCols() As String, vFila() As String, vFecha As String, vTexto() As String
     On Error GoTo cancelado
     CmDlog.CancelError = True
-    CmDlog.DialogTitle = "Guardar plantilla de carga masiva de Y"
-    CmDlog.Filter = "Archivos CSV (*.csv)|*.csv"
+    CmDlog.DialogTitle = "Guardar plantilla Excel de carga masiva de Y y Z"
+    CmDlog.Filter = "Libro de Excel (*.xlsx)|*.xlsx"
     CmDlog.FilterIndex = 1
-    CmDlog.DefaultExt = "csv"
+    CmDlog.DefaultExt = "xlsx"
     CmDlog.Flags = cdlOFNOverwritePrompt Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
-    CmDlog.filename = "plantilla_carga_Y_FACO.csv"
+    CmDlog.filename = "plantilla_carga_YZ_FACO.xlsx"
     CmDlog.ShowSave
     ruta = Trim(CmDlog.filename)
-    On Error GoTo errArchivo
+    On Error GoTo errExcel
     If ruta = "" Then Exit Sub
-    If LCase(Right(ruta, 4)) <> ".csv" Then ruta = ruta & ".csv"
+    If LCase(Right(ruta, 5)) <> ".xlsx" Then ruta = ruta & ".xlsx"
 
-    'Fila de ejemplo: FECHA = dia anterior al servidor; identificacion vacia; 45 montos en 0
-    'fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;"
-    'xintec-nruz 30-10-2026 FCDVT-14: TIPO = Y y TIPO_CARGA = INGRESAR (56 columnas)
-    fila = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy") & ";;;;;;;;" & ";Y;INGRESAR"
-    For i = 1 To 45
-        fila = fila & ";0"
+    Screen.MousePointer = vbHourglass
+    vCols = Split(EncabezadoCsvY(), ";")
+    vFecha = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy")
+
+    Set xlApp = CreateObject("Excel.Application")
+    xlApp.DisplayAlerts = False
+    Set xlBook = xlApp.Workbooks.Add
+    Do While xlBook.Worksheets.Count < 3
+        xlBook.Worksheets.Add , xlBook.Worksheets(xlBook.Worksheets.Count)
+    Loop
+    Do While xlBook.Worksheets.Count > 3
+        xlBook.Worksheets(xlBook.Worksheets.Count).Delete
+    Loop
+    Set xlHoja = xlBook.Worksheets(1)
+    Set xlInst = xlBook.Worksheets(2)
+    Set xlLis = xlBook.Worksheets(3)
+    xlHoja.Name = "Carga"
+    xlInst.Name = "Instrucciones"
+    xlLis.Name = "Listas"
+
+    'Listas de TIPO y TIPO_CARGA (con nombre, para que la validacion funcione desde otra hoja)
+    xlLis.Cells(1, 1).Value = "Y"
+    xlLis.Cells(2, 1).Value = "Z"
+    xlLis.Cells(1, 2).Value = "INGRESAR"
+    xlBook.Names.Add "ListaTipo", "=Listas!$A$1:$A$2"
+    xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
+
+    'Hoja Carga, fila 1: encabezado tecnico (no se cambia) con la glosa en un comentario
+    For i = 0 To UBound(vCols)
+        xlHoja.Cells(1, i + 1).Value = vCols(i)
+        xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
     Next i
+    With xlHoja.Range("A1:BD1")
+        .Font.Bold = True
+        .Font.Color = 3560496
+        .Interior.Color = 10807499          'mismo fondo que el encabezado de la grilla
+    End With
 
-    nArch = FreeFile
-    Open ruta For Output As #nArch
-    Print #nArch, EncabezadoCsvY()
-    Print #nArch, fila
-    Close #nArch
+    'Filas 2 a 2000: FECHA y HORA como texto
+    xlHoja.Range("A2:A2000").NumberFormat = "@"
+    xlHoja.Range("E2:E2000").NumberFormat = "@"
+    With xlHoja.Range("A2:A2000").Validation
+        .Delete
+        .Add 0
+        .InputTitle = "FECHA"
+        .InputMessage = "dd-mm-yyyy, anterior a hoy (ej. " & vFecha & ")"
+    End With
+    With xlHoja.Range("E2:E2000").Validation
+        .Delete
+        .Add 0
+        .InputTitle = "HORA"
+        .InputMessage = "HH:MM, 24 horas (ej. 18:05)"
+    End With
+
+    'Identificacion numerica y montos: solo enteros
+    For r = 1 To 3
+        With xlHoja.Range(Choose(r, "B2:D2000", "F2:I2000", "L2:BD2000")).Validation
+            .Delete
+            .Add 1, 1, 1, "-999999999999", "999999999999"
+            .ErrorTitle = "Solo números enteros"
+            .ErrorMessage = "Ingrese un número entero, sin decimales ni separador de miles (negativos con -)."
+        End With
+    Next r
+
+    'TIPO y TIPO_CARGA: listas
+    With xlHoja.Range("J2:J2000").Validation
+        .Delete
+        .Add 3, 1, 1, "=ListaTipo"
+        .ErrorTitle = "TIPO"
+        .ErrorMessage = "Debe ser Y (cierre Y) o Z (cierre Z del terminal y fecha)."
+    End With
+    With xlHoja.Range("K2:K2000").Validation
+        .Delete
+        .Add 3, 1, 1, "=ListaTipoCarga"
+        .ErrorTitle = "TIPO_CARGA"
+        .ErrorMessage = "Debe ser INGRESAR."
+    End With
+    xlHoja.Range("A1:BD1").EntireColumn.AutoFit
+
+    'Hoja Instrucciones
+    ReDim vTexto(12)
+    vTexto(0) = "Plantilla de carga masiva de cierres Y y Z (FACO) - Ingreso del YYY Masivo"
+    vTexto(1) = ""
+    vTexto(2) = "1. Complete la hoja Carga desde la fila 2: una fila por cada cierre Y y una fila Z por cada terminal y fecha."
+    vTexto(3) = "2. El total de la Z (BOLETAS + N.CREDITO + FACTURA) debe ser igual a la suma de los totales de sus Y."
+    vTexto(4) = "3. FECHA (dd-mm-yyyy, anterior a hoy) y HORA (HH:MM) ya tienen formato de texto: escríbalas tal cual."
+    vTexto(5) = "4. Números y montos: enteros, sin decimales ni separador de miles; negativos con el signo menos. Vacío = 0."
+    vTexto(6) = "5. TIPO (Y o Z) y TIPO_CARGA (INGRESAR) se eligen de la lista. En la fila Z, NRO_Y va vacío."
+    vTexto(7) = "6. Pase el mouse sobre cada encabezado de la hoja Carga para ver qué dato va."
+    vTexto(8) = "7. No cambie ni mueva los encabezados de la fila 1 y no agregue columnas."
+    vTexto(9) = "8. Para cargar: con la hoja Carga activa, Archivo > Guardar como > ""CSV (delimitado por comas) (*.csv)"". Acepte el aviso de que solo se guarda la hoja activa."
+    vTexto(10) = "9. En F8 > botón Y > Ingreso del YYY Masivo > Buscar, elija ese archivo .csv."
+    vTexto(11) = ""
+    vTexto(12) = "Ejemplo (no se carga; solo muestra cómo se llena un terminal y fecha con su Z y dos Y):"
+    For i = 0 To 12
+        xlInst.Cells(i + 1, 1).Value = vTexto(i)
+    Next i
+    xlInst.Cells(1, 1).Font.Bold = True
+    xlInst.Range("A14:O17").NumberFormat = "@"
+    For r = 0 To 3
+        vFila = Split(Choose(r + 1, _
+            "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA;VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;REC_MEFECTIVO", _
+            vFecha & ";5;1;;21:00;102;5002;93343;2918;Z;INGRESAR;300000;0;0;300000", _
+            vFecha & ";5;1;1;12:00;101;5001;93343;2918;Y;INGRESAR;100000;0;0;100000", _
+            vFecha & ";5;1;2;18:00;102;5002;93343;2918;Y;INGRESAR;200000;0;0;200000"), ";")
+        For i = 0 To UBound(vFila)
+            xlInst.Cells(14 + r, i + 1).Value = vFila(i)
+        Next i
+    Next r
+    xlInst.Range("A14:O14").Font.Bold = True
+    xlInst.Range("A14:O14").Interior.Color = 10807499
+    xlInst.Range("A14:O17").Columns.AutoFit
+
+    'Listas oculta; se guarda con Carga activa
+    xlLis.Visible = 0
+    xlHoja.Activate
+    xlHoja.Range("A2").Select
+    'Inmoviliza la fila 1 y las columnas A:C; si Excel no da la ventana (oculto), se sigue sin inmovilizar
+    On Error Resume Next
+    xlApp.ActiveWindow.SplitRow = 1
+    xlApp.ActiveWindow.SplitColumn = 3
+    xlApp.ActiveWindow.FreezePanes = True
+    Err.Clear
+    On Error GoTo errExcel
+    xlBook.SaveAs ruta, 51
+    xlBook.Close False
+    xlApp.Quit
+    Set xlLis = Nothing
+    Set xlInst = Nothing
+    Set xlHoja = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+    Screen.MousePointer = vbDefault
 
     If MsgBox("Plantilla guardada en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
+              "Complétela y guárdela como CSV (delimitado por comas) para cargarla con Buscar." & vbCrLf & vbCrLf & _
               "¿Desea abrirla en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
         Shell "explorer.exe """ & ruta & """", vbNormalFocus
     End If
@@ -312,10 +487,51 @@ cancelado:
     'Cancelar en el dialogo (cdlCancel): no se hace nada
     If Err.Number <> cdlCancel Then MsgBox "Error al elegir el archivo: " & Err.Description, vbCritical, Me.Caption
     Exit Sub
-errArchivo:
-    Close
-    MsgBox "No se pudo guardar la plantilla: " & Err.Description, vbCritical, Me.Caption
+errExcel:
+    Screen.MousePointer = vbDefault
+    MsgBox "No se pudo generar la plantilla Excel: " & Err.Description, vbCritical, Me.Caption
+    Resume limpiar
+limpiar:
+    On Error Resume Next
+    If Not xlBook Is Nothing Then xlBook.Close False
+    If Not xlApp Is Nothing Then xlApp.Quit
+    Set xlLis = Nothing
+    Set xlInst = Nothing
+    Set xlHoja = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
 End Sub
+
+'Texto del comentario de cada columna de la plantilla (glosa de Form19Y; docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3)
+Private Function GlosaColumnaCsv(ByVal n As Integer) As String
+    Dim s As String, vG() As String
+    Select Case n
+        Case 1: GlosaColumnaCsv = "FECHA. Obligatoria. dd-mm-yyyy, anterior a hoy."
+        Case 2: GlosaColumnaCsv = "LOCAL. Obligatorio. Número entero."
+        Case 3: GlosaColumnaCsv = "TERMINAL. Obligatorio. Número entero."
+        Case 4: GlosaColumnaCsv = "N° DE CIERRE DE Y. Opcional: vacío = el siguiente número. En la fila Z va vacío."
+        Case 5: GlosaColumnaCsv = "HORA. Obligatoria. HH:MM (24 horas)."
+        Case 6: GlosaColumnaCsv = "SECUENCIA. Obligatoria. Número entero."
+        Case 7: GlosaColumnaCsv = "N° BOLETA. Obligatorio. Número entero."
+        Case 8: GlosaColumnaCsv = "VENDEDOR. Obligatorio. Número entero."
+        Case 9: GlosaColumnaCsv = "CONT. REPOSICION. Obligatorio. Número entero."
+        Case 10: GlosaColumnaCsv = "TIPO. Y = cierre Y; Z = cierre Z del terminal y fecha (una sola)."
+        Case 11: GlosaColumnaCsv = "TIPO_CARGA. INGRESAR."
+        Case 12 To 56
+            s = "BOLETAS|N.CREDITO (va en negativo)|FACTURA|EFECTIVO|EFECT.RECAUDACION|CHEQUES AL DIA|CHEQUE POSFECHADO"
+            s = s & "|TARJETA CREDITO|TARJETA DEBITO|CMR|GIFT CARD|TARJETA EMPRESA / GIFT CARD EMPRESA|TDE|RENUEVA CMR"
+            s = s & "|FACTURAS X COBRAR|DOTACIONES|RETIROS (va en negativo)|ABONO CMR|AVANCE CMR|PREPAGO RENUEVA"
+            s = s & "|ENVIO DINERO NACIONAL|REV. TRANS. GIRO EFEC.|RETIRO DINERO NACIONAL|ACT. GIFT CARD > EFECTIVO"
+            s = s & "|ACT. GIFT CARD > CHEQUE|ACT. GIFT CARD > CMR|ACT. GIFT CARD > TARJETA DEBITO|ACT. GIFT CARD > TARJETA CREDITO"
+            s = s & "|REVERSA ACTIVACION|REVERSA ACTIVACION > EFECTIVO|REVERSA ACTIVACION > CMR|ABONO TDE|TRASPASO TDE"
+            s = s & "|SELLOS VERDES|RECAUDACION|REVERSA RECAUDACION|CANJE DE PUNTOS|REV. CANJE DE PUNTOS|PAGO FACTURAS"
+            s = s & "|REC. A TERCEROS|REV. REC. A TERCEROS|QUICKPAYCMR|QUICKPAYDEBITO|ECOMPAY|PUNTOS+PESOS"
+            vG = Split(s, "|")
+            GlosaColumnaCsv = vG(n - 12) & ". Monto entero, sin separador de miles. Vacío = 0."
+        Case Else
+            GlosaColumnaCsv = ""
+    End Select
+End Function
 '---FIN----
 
 '---INI---- xintec-nruz 22-10-2026 FCDVT-14: grilla con los registros del CSV (Buscar) ----
@@ -543,11 +759,12 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
                "Revise que el encabezado sea el de la plantilla (Exportar Excel)." & vbCrLf & _
                "Detalle en VTA_FACOCARGA_YZ_LOG.", vbExclamation, Me.Caption
     Else
+        'xintec-nruz 03-11-2026 FCDVT-14: el clic abre Form175 (antes "Doble clic en una fila para ver el motivo.")
         MsgBox "Carga N° " & mCarga & vbCrLf & vbCrLf & _
                "Grupos procesados: " & vOk & vbCrLf & _
                "Grupos con error: " & vErr & vbCrLf & _
                "Líneas con error: " & vLinErr & vbCrLf & vbCrLf & _
-               "Doble clic en una fila para ver el motivo." & vbCrLf & _
+               "Clic en una fila para ver el detalle del log." & vbCrLf & _
                "Detalle por fila y campo en VTA_FACOCARGA_YZ_LOG.", _
                IIf(Val(vErr) > 0 Or Val(vLinErr) > 0, vbExclamation, vbInformation), Me.Caption
     End If
@@ -613,19 +830,27 @@ oraerror:
     frmLogOraError.Show 1
 End Sub
 
-'Doble clic: muestra el motivo del estado del grupo
-Private Sub Grid1_DblClick()
+'Clic: abre Form175 con el detalle del log del grupo
+'xintec-nruz 03-11-2026 FCDVT-14: Form175 con el log del grupo (antes MsgBox con el estado y el motivo)
+'xintec-nruz 03-11-2026 FCDVT-14: un solo clic (antes Grid1_DblClick); clic en el encabezado no abre nada
+'Private Sub Grid1_DblClick()
+Private Sub Grid1_Click()
     If Grid1.Rows < 2 Or Grid1.Row < 1 Then Exit Sub
-    MsgBox "Fecha " & Grid1.TextMatrix(Grid1.Row, 2) & ", local " & Grid1.TextMatrix(Grid1.Row, 0) & _
-           ", terminal " & Grid1.TextMatrix(Grid1.Row, 1) & vbCrLf & vbCrLf & _
-           "Estado: " & Grid1.TextMatrix(Grid1.Row, 6) & vbCrLf & _
-           Grid1.TextMatrix(Grid1.Row, 7), vbInformation, Me.Caption
+    If Grid1.MouseRow < 1 Then Exit Sub
+    'MsgBox "Fecha " & Grid1.TextMatrix(Grid1.Row, 2) & ", local " & Grid1.TextMatrix(Grid1.Row, 0) & _
+    '       ", terminal " & Grid1.TextMatrix(Grid1.Row, 1) & vbCrLf & vbCrLf & _
+    '       "Estado: " & Grid1.TextMatrix(Grid1.Row, 6) & vbCrLf & _
+    '       Grid1.TextMatrix(Grid1.Row, 7), vbInformation, Me.Caption
+    If mCarga <= 0 Then Exit Sub
+    Call Form175.MuestraLog(mCarga, Grid1.TextMatrix(Grid1.Row, 2), Grid1.TextMatrix(Grid1.Row, 0), _
+                            Grid1.TextMatrix(Grid1.Row, 1), Grid1.TextMatrix(Grid1.Row, 6), _
+                            Grid1.TextMatrix(Grid1.Row, 7))
 End Sub
 '---FIN----
 
 '---INI---- xintec-nruz 20-10-2026 FSCC-12901: PRUEBA cierre diario desde Salir (temporal) ----
 'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
-'de prueba fija (vFechaPrueba = 14-10-2026 desde el 28-10, COMPENSA_DI prueba_test6; antes 15-09-2026 prueba_test5, 20-08-2026 prueba_test4, 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
+'de prueba fija (vFechaPrueba = 02-11-2026 desde el 03-11, COMPENSA_DI prueba_test7; antes 14-10-2026 prueba_test6, 15-09-2026 prueba_test5, 20-08-2026 prueba_test4, 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
 Private Sub Command3_Click()
     Call EjecutaCierreDiario
     Unload Me
@@ -648,7 +873,9 @@ Private Sub EjecutaCierreDiario()
     'xintec-nruz 26-10-2026 FSCC-12901: fecha de prueba 15-09-2026 (antes 20-08-2026; prueba_test5 COMPENSA_DI)
     'vFechaPrueba = "20260915"   'fecha de venta fija para la prueba en test (yyyymmdd)
     'xintec-nruz 28-10-2026 FSCC-12901: fecha de prueba 14-10-2026 (antes 15-09-2026; prueba_test6 COMPENSA_DI)
-    vFechaPrueba = "20261014"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'vFechaPrueba = "20261014"   'fecha de venta fija para la prueba en test (yyyymmdd)
+    'xintec-nruz 03-11-2026 FSCC-12901: fecha de prueba 02-11-2026 (antes 14-10-2026; prueba_test7 COMPENSA_DI)
+    vFechaPrueba = "20261102"   'fecha de venta fija para la prueba en test (yyyymmdd)
 
     On Error GoTo oraerror
     Screen.MousePointer = vbHourglass

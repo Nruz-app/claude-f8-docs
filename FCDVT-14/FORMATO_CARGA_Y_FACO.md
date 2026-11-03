@@ -134,7 +134,24 @@ Hay más casos de prueba, uno por tipo de validación (campos malos, falta de Z,
 
 ## 5. Cómo lo prepara el usuario
 
-0. La plantilla vacía se baja desde F8 ▸ botón Y ▸ "Ingreso del YYY Masivo" (Form174) ▸ **Exportar Excel**. Trae el encabezado y una fila con la fecha de ayer, la identificación vacía, `TIPO = Y`, `TIPO_CARGA = INGRESAR` y los montos en 0. Se copia esa fila una vez por cada Y y una vez más para la Z del terminal-día (con `TIPO = Z`).
+**Con la plantilla Excel (desde el 03-11-2026, recomendado):**
+
+1. F8 ▸ botón Y ▸ "Ingreso del YYY Masivo" (Form174) ▸ **Exportar Excel**. Se guarda un `.xlsx` (por defecto `plantilla_carga_YZ_FACO.xlsx`; requiere Excel 2007 o posterior) con tres hojas:
+   - **Carga**:
+     - la fila 1 trae el encabezado de las 56 columnas, cada una con un comentario que explica qué dato va;
+     - FECHA y HORA ya tienen formato texto;
+     - identificaciones y montos aceptan solo enteros (Excel rechaza decimales al escribirlos);
+     - TIPO (Y/Z) y TIPO_CARGA (INGRESAR) se eligen de una lista;
+     - la fila 1 y las columnas A:C quedan inmovilizadas.
+   - **Instrucciones**: los pasos y un ejemplo (Z + 2 Y) que no se carga.
+   - **Listas**: oculta; tiene los valores de las listas.
+2. Completar la hoja Carga desde la fila 2: una fila por Y y una Z por terminal-día. Los montos que no aplican se dejan vacíos (= 0).
+3. Con la hoja Carga activa: Archivo ▸ Guardar como ▸ **"CSV (delimitado por comas) (*.csv)"**, y aceptar el aviso de que solo se guarda la hoja activa.
+4. En Form174, **Buscar** ese `.csv`.
+
+**Con un Excel armado a mano o con el CSV `plantilla_carga_Y_FACO.csv`** (forma anterior):
+
+0. La versión anterior de Exportar Excel guardaba un CSV con el encabezado y una fila con la fecha de ayer, la identificación vacía, `TIPO = Y`, `TIPO_CARGA = INGRESAR` y los montos en 0. Hay que copiar esa fila una vez por cada Y y una vez más para la Z del terminal-día (con `TIPO = Z`).
 1. Abrir `plantilla_carga_Y_FACO.csv` en Excel. Con configuración regional en español separa por `;`.
 2. Borrar las filas de ejemplo y completar una fila por Y y una fila Z por terminal-día, cuyo TOTAL (BOLETAS + N.CREDITO + FACTURA) debe ser la suma de los de sus Y. Si hay que pegar desde el reporte del POS, pegar **solo valores**.
 3. Dar a las columnas `FECHA` y `HORA` formato **Texto** antes de escribir, para que Excel no las convierta. No usar separador de miles.

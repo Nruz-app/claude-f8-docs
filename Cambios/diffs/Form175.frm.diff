@@ -1,0 +1,257 @@
+--- PROD/Form175.frm
++++ NUEVO/Form175.frm
+@@ -0,0 +1,254 @@
++VERSION 5.00
++Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
++Begin VB.Form Form175
++   BackColor       =   &H00E0E0E0&
++   Caption         =   " Detalle del Log de la Carga Masiva de Y y Z"
++   ClientHeight    =   7200
++   ClientLeft      =   2055
++   ClientTop       =   1410
++   ClientWidth     =   10410
++   LinkTopic       =   "Form175"
++   MaxButton       =   0   'False
++   ScaleHeight     =   7200
++   ScaleWidth      =   10410
++   StartUpPosition =   2  'CenterScreen
++   Visible         =   0   'False
++   Begin VB.CommandButton Command3
++      BackColor       =   &H00A4E8CB&
++      Caption         =   "&Salir"
++      Height          =   375
++      Left            =   8160
++      MaskColor       =   &H00000080&
++      Style           =   1  'Graphical
++      TabIndex        =   2
++      Top             =   6480
++      Width           =   1500
++   End
++   Begin VB.PictureBox Picture1
++      Appearance      =   0  'Flat
++      BackColor       =   &H00C0C0C0&
++      BorderStyle     =   0  'None
++      ForeColor       =   &H80000008&
++      Height          =   570
++      Left            =   10200
++      Picture         =   "Form175.frx":0000
++      ScaleHeight     =   570
++      ScaleWidth      =   3135
++      TabIndex        =   3
++      Top             =   0
++      Width           =   3135
++   End
++   Begin VB.Frame Frame1
++      BackColor       =   &H00E0E0E0&
++      Height          =   1095
++      Left            =   480
++      TabIndex        =   4
++      Top             =   960
++      Width           =   9135
++      Begin VB.Label lblGrupo
++         BackColor       =   &H00E0E0E0&
++         Caption         =   "Carga"
++         BeginProperty Font
++            Name            =   "MS Sans Serif"
++            Size            =   8.25
++            Charset         =   0
++            Weight          =   700
++            Underline       =   0   'False
++            Italic          =   0   'False
++            Strikethrough   =   0   'False
++         EndProperty
++         ForeColor       =   &H00000080&
++         Height          =   255
++         Left            =   240
++         TabIndex        =   0
++         Top             =   240
++         Width           =   8655
++      End
++      Begin VB.Label lblMensaje
++         BackColor       =   &H00E0E0E0&
++         Caption         =   "Estado"
++         ForeColor       =   &H00000080&
++         Height          =   495
++         Left            =   240
++         TabIndex        =   5
++         Top             =   540
++         Width           =   8655
++      End
++   End
++   Begin MSFlexGridLib.MSFlexGrid Grid1
++      Height          =   4215
++      Left            =   480
++      TabIndex        =   1
++      Top             =   2160
++      Width           =   9135
++      _ExtentX        =   16113
++      _ExtentY        =   7435
++      _Version        =   393216
++      Cols            =   7
++      FixedCols       =   0
++      BackColor       =   16119285
++      ForeColor       =   128
++      BackColorFixed  =   10807499
++      ForeColorFixed  =   3560496
++      BackColorSel    =   13692411
++      ForeColorSel    =   128
++      BackColorBkg    =   15132904
++      WordWrap        =   -1  'True
++      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851}
++         Name            =   "MS Sans Serif"
++         Size            =   8.25
++         Charset         =   0
++         Weight          =   700
++         Underline       =   0   'False
++         Italic          =   0   'False
++         Strikethrough   =   0   'False
++      EndProperty
++   End
++   Begin VB.Label Label10
++      BackColor       =   &H00C0C0C0&
++      Height          =   1245
++      Left            =   13320
++      TabIndex        =   6
++      Top             =   -240
++      Width           =   1065
++   End
++   Begin VB.Label Label11
++      BackColor       =   &H00C0C0C0&
++      Height          =   9585
++      Left            =   13920
++      TabIndex        =   7
++      Top             =   0
++      Width           =   615
++   End
++   Begin VB.Image Image1
++      Height          =   810
++      Left            =   1620
++      Picture         =   "Form175.frx":1644
++      Top             =   -210
++      Width           =   13590
++   End
++   Begin VB.Image Image2
++      Height          =   1830
++      Left            =   -150
++      Picture         =   "Form175.frx":171C
++      Top             =   -1230
++      Width           =   4665
++   End
++End
++Attribute VB_Name = "Form175"
++Attribute VB_GlobalNameSpace = False
++Attribute VB_Creatable = False
++Attribute VB_PredeclaredId = True
++Attribute VB_Exposed = False
++'---INI---- xintec-nruz 03-11-2026 FCDVT-14: detalle del log de un grupo (fecha, local, terminal) de la carga masiva ----
++'Se abre con un clic en la grilla de Form174 (Form175.MuestraLog). Lee VTA_<pfx>CARGA_YZ_LOG:
++'las lineas del archivo que forman el grupo (VTA_<pfx>CARGA_YZ_DET) y el mensaje RESUMEN del grupo.
++Private mCarga As Double
++Private mFecha As String        'dd-mm-yyyy
++Private mLocal As String
++Private mTerminal As String
++
++Private Sub Form_Load()
++    Call LimpiaGrilla
++End Sub
++
++'Punto de entrada: carga, fecha (dd-mm-yyyy), local y terminal del grupo, mas su estado y mensaje
++Public Sub MuestraLog(ByVal vCarga As Double, ByVal vFecha As String, ByVal vLocal As String, _
++                      ByVal vTerminal As String, ByVal vEstado As String, ByVal vMensaje As String)
++    mCarga = vCarga
++    mFecha = Trim(vFecha)
++    mLocal = Trim(vLocal)
++    mTerminal = Trim(vTerminal)
++    lblGrupo.Caption = "Carga N° " & CStr(mCarga) & "     Fecha " & mFecha & "     Local " & mLocal & _
++                       "     Terminal " & mTerminal & "     Estado: " & vEstado
++    lblMensaje.Caption = vMensaje
++    Call LlenaGrillaLog
++    Me.Show 1
++End Sub
++
++Private Sub LimpiaGrilla()
++    Dim i As Integer
++    Grid1.Clear
++    Grid1.Rows = 1
++    Grid1.Cols = 7
++    Grid1.TextMatrix(0, 0) = "Línea"
++    Grid1.TextMatrix(0, 1) = "Tipo"
++    Grid1.TextMatrix(0, 2) = "N° Y"
++    Grid1.TextMatrix(0, 3) = "Etapa"
++    Grid1.TextMatrix(0, 4) = "Campo"
++    Grid1.TextMatrix(0, 5) = "Valor"
++    Grid1.TextMatrix(0, 6) = "Motivo"
++    Grid1.ColWidth(0) = 600
++    Grid1.ColWidth(1) = 500
++    Grid1.ColWidth(2) = 550
++    Grid1.ColWidth(3) = 1150
++    Grid1.ColWidth(4) = 1700
++    Grid1.ColWidth(5) = 1300
++    Grid1.ColWidth(6) = 3050
++    For i = 0 To 6
++        Grid1.FixedAlignment(i) = 4      'encabezado centrado
++    Next i
++    Grid1.ColAlignment(0) = 4
++    Grid1.ColAlignment(1) = 4
++    Grid1.ColAlignment(2) = 4
++    Grid1.ColAlignment(3) = 1
++    Grid1.ColAlignment(4) = 1
++    Grid1.ColAlignment(5) = 1
++    Grid1.ColAlignment(6) = 1
++End Sub
++
++Private Sub LlenaGrillaLog()
++    Dim Consulta As Object, sq As String, vMotivo As String, nLin As Integer
++    Call LimpiaGrilla
++    If mCarga <= 0 Or mFecha = "" Or Val(mLocal) = 0 Or mTerminal = "" Then Exit Sub
++    Set Consulta = CreateObject("ADODB.Recordset")
++    With Consulta
++        .ActiveConnection = Ado_Conn
++        .CursorLocation = adUseClient
++        .CursorType = adOpenForwardOnly
++        .LockType = adLockReadOnly
++    End With
++    sq = "select l.log_linea, d.det_tipo, d.det_nro_y, l.log_etapa, l.log_campo, l.log_valor, l.log_motivo " & _
++         "from   vta_" & Flg_Pais$ & "carga_yz_log l, vta_" & Flg_Pais$ & "carga_yz_det d " & _
++         "where  l.log_carga = " & CStr(mCarga) & " " & _
++         "and    d.det_carga (+) = l.log_carga " & _
++         "and    d.det_linea (+) = l.log_linea " & _
++         "and   (l.log_linea in (select x.det_linea from vta_" & Flg_Pais$ & "carga_yz_det x " & _
++         "                        where x.det_carga = " & CStr(mCarga) & " " & _
++         "                        and   x.det_fecha = to_date('" & mFecha & "', 'dd-mm-yyyy') " & _
++         "                        and   x.det_local = " & Val(mLocal) & " " & _
++         "                        and   x.det_terminal = " & Val(mTerminal) & ") " & _
++         "    or (l.log_etapa = 'RESUMEN' and l.log_valor = '" & mFecha & " L" & Val(mLocal) & " T" & Val(mTerminal) & "')) " & _
++         "order by l.log_linea nulls last, l.log_id"
++    On Error GoTo oraerror
++    Call Consulta.Open(sq)
++    Do While Not Consulta.EOF
++        vMotivo = IIf(IsNull(Consulta!log_motivo), "", Consulta!log_motivo)
++        Grid1.AddItem IIf(IsNull(Consulta!log_linea), "", Consulta!log_linea) & vbTab & _
++                      IIf(IsNull(Consulta!det_tipo), "", Consulta!det_tipo) & vbTab & _
++                      IIf(IsNull(Consulta!det_nro_y), "", Consulta!det_nro_y) & vbTab & _
++                      Consulta!log_etapa & vbTab & _
++                      IIf(IsNull(Consulta!log_campo), "", Consulta!log_campo) & vbTab & _
++                      IIf(IsNull(Consulta!log_valor), "", Consulta!log_valor) & vbTab & vMotivo
++        'Motivo largo: la fila crece (unos 30 caracteres por renglon, maximo 6 renglones)
++        nLin = Int(Len(vMotivo) / 30) + 1
++        If nLin > 6 Then nLin = 6
++        If nLin > 1 Then Grid1.RowHeight(Grid1.Rows - 1) = Grid1.RowHeight(0) * nLin
++        Consulta.MoveNext
++    Loop
++    Set Consulta.ActiveConnection = Nothing
++    If Grid1.Rows = 1 Then
++        Grid1.AddItem "" & vbTab & "" & vbTab & "" & vbTab & "" & vbTab & "" & vbTab & "" & vbTab & _
++                      "Sin errores registrados para este grupo"
++    End If
++    Exit Sub
++oraerror:
++    Set Consulta.ActiveConnection = Nothing
++    SystemMsg = "Problemas de comunicación con servidor al leer el log de la carga " & CStr(mCarga)
++    frmLogOraError.Show 1
++End Sub
++
++Private Sub Command3_Click()
++    Unload Me
++End Sub
++'---FIN----
