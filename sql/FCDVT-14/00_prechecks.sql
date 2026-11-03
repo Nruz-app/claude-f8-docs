@@ -92,7 +92,8 @@ select r.per_codigo, r.rel_estado from vta_facorelpermen r where r.mnu_codigo = 
 prompt === 12. Perfiles FACO con permiso 15 (Ingreso de Y); 01 les copia el estado al 460
 select r.per_codigo, r.rel_estado from vta_facorelpermen r where r.mnu_codigo = 15 order by 1;
 
-prompt === 13. Carga masiva Y/Z (02 a 04, 30-10-2026): nombres libres (esperado: 0 filas)
+prompt === 13. Carga masiva Y/Z (02 a 04): objetos del prefijo FACO. Base nueva: 0 filas (02 los crea);
+prompt ===     test: 5 filas desde el 30-10 (02 no las vuelve a crear) + el package. Otro pais: cambiar FACO en los nombres
 select object_name, object_type from user_objects
  where object_name in ('VTA_FACOCARGA_YZ_DET', 'VTA_FACOCARGA_YZ_RES', 'VTA_FACOCARGA_YZ_LOG',
                        'SEQ_VTA_FACOCARGA_YZ', 'SEQ_VTA_FACOCARGA_YZ_LOG',

@@ -208,12 +208,13 @@ Private Sub LlenaGrillaLog()
         .CursorType = adOpenForwardOnly
         .LockType = adLockReadOnly
     End With
+    'xintec-nruz 03-11-2026 FCDVT-14: multipais, prefijo del pais con Chile sin prefijo (antes "vta_" & Flg_Pais$)
     sq = "select l.log_linea, d.det_tipo, d.det_nro_y, l.log_etapa, l.log_campo, l.log_valor, l.log_motivo " & _
-         "from   vta_" & Flg_Pais$ & "carga_yz_log l, vta_" & Flg_Pais$ & "carga_yz_det d " & _
+         "from   vta_" & PrefijoCargaYZ() & "carga_yz_log l, vta_" & PrefijoCargaYZ() & "carga_yz_det d " & _
          "where  l.log_carga = " & CStr(mCarga) & " " & _
          "and    d.det_carga (+) = l.log_carga " & _
          "and    d.det_linea (+) = l.log_linea " & _
-         "and   (l.log_linea in (select x.det_linea from vta_" & Flg_Pais$ & "carga_yz_det x " & _
+         "and   (l.log_linea in (select x.det_linea from vta_" & PrefijoCargaYZ() & "carga_yz_det x " & _
          "                        where x.det_carga = " & CStr(mCarga) & " " & _
          "                        and   x.det_fecha = to_date('" & mFecha & "', 'dd-mm-yyyy') " & _
          "                        and   x.det_local = " & Val(mLocal) & " " & _
@@ -251,4 +252,8 @@ End Sub
 Private Sub Command3_Click()
     Unload Me
 End Sub
+'xintec-nruz 03-11-2026 FCDVT-14: prefijo de las tablas VTA_<pfx>CARGA_YZ_* del pais (Chile sin prefijo, como vta_locales)
+Private Function PrefijoCargaYZ() As String
+    PrefijoCargaYZ = UCase(IIf(Flg_Pais$ = "CHI", "", Flg_Pais$))
+End Function
 '---FIN----

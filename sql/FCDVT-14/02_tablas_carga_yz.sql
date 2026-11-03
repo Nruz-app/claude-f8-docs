@@ -1,31 +1,72 @@
 -- =====================================================================
--- FCDVT-14 - Paso 02: tablas de la carga masiva de cierres Y / Z (FACO)
--- xintec-nruz 30-10-2026
+-- FCDVT-14 - Paso 02: tablas de la carga masiva de cierres Y / Z
+-- MULTIPAIS: un juego de tablas por prefijo de pais (Flg_Pais$)
+-- xintec-nruz 30-10-2026 / 03-11-2026 (multipais)
+-- Version anterior (solo FACO, DDL estatico, la instalada en test el 30-10):
+--   anterior_2026-11-03/02_tablas_carga_yz.sql
+--
 -- Las usa PKG_F8_CARGA_MASIVA_YZ (pasos 03 y 04), llamado desde
--- Form174 (boton Buscar):
---   VTA_FACOCARGA_YZ_DET : una fila por linea del CSV, ya separada y tipada
---   VTA_FACOCARGA_YZ_RES : resumen por fecha / local / terminal (grilla)
---   VTA_FACOCARGA_YZ_LOG : log por carga (INICIO, errores por fila/campo, FIN)
--- Formato del CSV: FORMATO_CARGA_Y_FACO.md (56 columnas).
+-- Form174 (boton Buscar). Para el prefijo <P> crea:
+--   VTA_<P>CARGA_YZ_DET : una fila por linea del CSV, ya separada y tipada
+--   VTA_<P>CARGA_YZ_RES : resumen por fecha / local / terminal (grilla)
+--   VTA_<P>CARGA_YZ_LOG : log por carga (INICIO, errores por fila/campo, FIN)
+--   SEQ_VTA_<P>CARGA_YZ y SEQ_VTA_<P>CARGA_YZ_LOG
+-- Ejemplos: FACO -> VTA_FACOCARGA_YZ_DET (los nombres que ya existen en
+-- test); Chile (prefijo vacio) -> VTA_CARGA_YZ_DET.
+--
+-- Solo crea lo que NO existe: en test, con FACO ya instalado, no hace nada
+-- y se puede volver a ejecutar. Formato del CSV: FORMATO_CARGA_Y_FACO.md.
 -- Esta etapa NO graba libvta / zzz / termstat(y): eso lo hara Cargar.
+--
+-- Columnas de DET: los montos tienen el nombre de vta_paint_z.vta_cmp_asoc
+-- de FACO (columnas 12 a 56 del CSV). Antes de habilitar otro pais hay que
+-- comparar su vta_paint_z (ver 00_LEEME.md, "Multipais").
+--
+-- res_estado:
+--   PENDIENTE : recien creado (si queda asi, el proceso se cayo; ver log)
+--   ERROR     : no cuadra o tiene filas con error (motivo en res_mensaje)
+--   CARGADO   : 1 Z, al menos 1 Y, sin errores y total Z = suma total Y
+--               (hasta el 03-11-2026 se llamaba PROCESADO)
+-- log_etapa: INICIO, LECTURA (formato de la linea), VALIDACION (contra la
+--   base), RESUMEN (grupo en ERROR), FIN, ERROR (el proceso se cayo)
 -- =====================================================================
+set serveroutput on
 
-create table VTA_FACOCARGA_YZ_DET (
-  det_carga           number          not null,   -- SEQ_VTA_FACOCARGA_YZ (una por archivo)
-  det_linea           number          not null,   -- numero de linea en el archivo (1 = encabezado)
-  det_texto           varchar2(4000),             -- linea tal como venia
-  det_fecha           date,                       -- FECHA (dd-mm-yyyy)
-  det_local           number,                     -- LOCAL
-  det_terminal        number,                     -- TERMINAL
-  det_nro_y           number,                     -- NRO_Y (vacio = se asignara max+1 al cargar)
-  det_hora            varchar2(5),                -- HORA (HH:MM)
-  det_secuencia       number,                     -- SECUENCIA
-  det_num_boleta      number,                     -- NUM_BOLETA
-  det_vendedor        number,                     -- VENDEDOR
-  det_cont_repo       number,                     -- CONT_REPOSICION
-  det_tipo            varchar2(1),                -- TIPO: Y / Z
-  det_tipo_carga      varchar2(20),               -- TIPO_CARGA: INGRESAR (MODIFICAR fuera de alcance)
-  -- Montos: mismo nombre que vta_paint_z.vta_cmp_asoc (columnas 12 a 56 del CSV)
+declare
+  v_prefijo varchar2(10) := 'FACO';   -- EDITAR: prefijo del pais (FACO, SFCL, ...; Chile = '')
+  v_p       varchar2(10);
+
+  procedure crea (p_nombre in varchar2, p_tipo in varchar2, p_ddl in varchar2) is
+    v_n number;
+  begin
+    select count(*) into v_n from user_objects
+     where object_name = p_nombre and object_type = p_tipo;
+    if v_n > 0 then
+      dbms_output.put_line('Ya existe, no se crea: ' || p_tipo || ' ' || p_nombre);
+    else
+      execute immediate replace(p_ddl, '{P}', v_p);
+      dbms_output.put_line('Creado: ' || p_tipo || ' ' || p_nombre);
+    end if;
+  end crea;
+begin
+  v_p := upper(trim(v_prefijo));
+
+  crea('VTA_' || v_p || 'CARGA_YZ_DET', 'TABLE', q'[
+create table VTA_{P}CARGA_YZ_DET (
+  det_carga           number          not null,
+  det_linea           number          not null,
+  det_texto           varchar2(4000),
+  det_fecha           date,
+  det_local           number,
+  det_terminal        number,
+  det_nro_y           number,
+  det_hora            varchar2(5),
+  det_secuencia       number,
+  det_num_boleta      number,
+  det_vendedor        number,
+  det_cont_repo       number,
+  det_tipo            varchar2(1),
+  det_tipo_carga      varchar2(20),
   vta_montobol        number,
   vta_montoncr        number,
   vta_montofac        number,
@@ -71,56 +112,54 @@ create table VTA_FACOCARGA_YZ_DET (
   rec_mquickpaybco    number,
   rec_ecompay         number,
   rec_mpagopuntos     number,
-  det_total           number,                     -- TOTALES = BOLETAS + N.CREDITO + FACTURA
-  det_estado          varchar2(10)    not null,   -- OK / ERROR (el motivo esta en el log)
+  det_total           number,
+  det_estado          varchar2(10)    not null,
   det_fechahora       date            default sysdate not null,
-  constraint PK_VTA_FACOCARGA_YZ_DET primary key (det_carga, det_linea)
-);
+  constraint PK_VTA_{P}CARGA_YZ_DET primary key (det_carga, det_linea)
+)]');
 
-create table VTA_FACOCARGA_YZ_RES (
+  crea('VTA_' || v_p || 'CARGA_YZ_RES', 'TABLE', q'[
+create table VTA_{P}CARGA_YZ_RES (
   res_carga           number          not null,
   res_fecha           date            not null,
   res_local           number          not null,
   res_terminal        number          not null,
-  res_cant_y          number          not null,   -- filas TIPO = Y
-  res_total_y         number,                     -- suma de TOTALES de las Y
-  res_cant_z          number          not null,   -- filas TIPO = Z (debe ser 1)
-  res_total_z         number,                     -- TOTALES de la Z
-  res_lin_error       number          not null,   -- filas del grupo con error de formato o de base
+  res_cant_y          number          not null,
+  res_total_y         number,
+  res_cant_z          number          not null,
+  res_total_z         number,
+  res_lin_error       number          not null,
   res_estado          varchar2(20)    not null,
-        -- PENDIENTE : recien creado (si queda asi, el proceso se cayo; ver log)
-        -- ERROR     : no cuadra o tiene filas con error (motivo en res_mensaje)
-        -- PROCESADO : 1 Z, al menos 1 Y, sin errores y total Z = suma total Y
   res_mensaje         varchar2(1000),
   res_usuario         varchar2(50),
   res_fechahora       date            default sysdate not null,
-  constraint PK_VTA_FACOCARGA_YZ_RES primary key (res_carga, res_fecha, res_local, res_terminal)
-);
+  constraint PK_VTA_{P}CARGA_YZ_RES primary key (res_carga, res_fecha, res_local, res_terminal)
+)]');
 
-create table VTA_FACOCARGA_YZ_LOG (
-  log_id              number          not null,   -- SEQ_VTA_FACOCARGA_YZ_LOG
+  crea('VTA_' || v_p || 'CARGA_YZ_LOG', 'TABLE', q'[
+create table VTA_{P}CARGA_YZ_LOG (
+  log_id              number          not null,
   log_carga           number          not null,
-  log_linea           number,                     -- linea del archivo (nula = de la carga)
+  log_linea           number,
   log_etapa           varchar2(20)    not null,
-        -- INICIO, LECTURA (formato de la linea), VALIDACION (contra la base),
-        -- RESUMEN (grupo en ERROR), FIN, ERROR (el proceso se cayo)
-  log_campo           varchar2(30),               -- columna del CSV
-  log_valor           varchar2(200),              -- valor recibido
+  log_campo           varchar2(30),
+  log_valor           varchar2(200),
   log_motivo          varchar2(1000),
   log_usuario         varchar2(50),
   log_fechahora       date            default sysdate not null,
-  constraint PK_VTA_FACOCARGA_YZ_LOG primary key (log_id)
-);
+  constraint PK_VTA_{P}CARGA_YZ_LOG primary key (log_id)
+)]');
 
-create index IND_VTA_FACOCARGA_YZ_LOG_01
-  on VTA_FACOCARGA_YZ_LOG (log_carga, log_linea);
+  crea('IND_VTA_' || v_p || 'CARGA_YZ_LOG_01', 'INDEX',
+       'create index IND_VTA_{P}CARGA_YZ_LOG_01 on VTA_{P}CARGA_YZ_LOG (log_carga, log_linea)');
 
-create sequence SEQ_VTA_FACOCARGA_YZ
-  start with 1 increment by 1 nocache nocycle;
+  crea('SEQ_VTA_' || v_p || 'CARGA_YZ', 'SEQUENCE',
+       'create sequence SEQ_VTA_{P}CARGA_YZ start with 1 increment by 1 nocache nocycle');
+  crea('SEQ_VTA_' || v_p || 'CARGA_YZ_LOG', 'SEQUENCE',
+       'create sequence SEQ_VTA_{P}CARGA_YZ_LOG start with 1 increment by 1 nocache nocycle');
 
-create sequence SEQ_VTA_FACOCARGA_YZ_LOG
-  start with 1 increment by 1 nocache nocycle;
-
-comment on table VTA_FACOCARGA_YZ_DET is 'FCDVT-14 Carga masiva Y/Z FACO: lineas del CSV (PKG_F8_CARGA_MASIVA_YZ)';
-comment on table VTA_FACOCARGA_YZ_RES is 'FCDVT-14 Carga masiva Y/Z FACO: resumen por fecha, local y terminal (grilla de Form174)';
-comment on table VTA_FACOCARGA_YZ_LOG is 'FCDVT-14 Carga masiva Y/Z FACO: log por carga, fila y campo';
+  execute immediate replace(q'[comment on table VTA_{P}CARGA_YZ_DET is 'FCDVT-14 Carga masiva Y/Z: lineas del CSV (PKG_F8_CARGA_MASIVA_YZ)']', '{P}', v_p);
+  execute immediate replace(q'[comment on table VTA_{P}CARGA_YZ_RES is 'FCDVT-14 Carga masiva Y/Z: resumen por fecha, local y terminal (grilla de Form174). Estados PENDIENTE / ERROR / CARGADO']', '{P}', v_p);
+  execute immediate replace(q'[comment on table VTA_{P}CARGA_YZ_LOG is 'FCDVT-14 Carga masiva Y/Z: log por carga, fila y campo']', '{P}', v_p);
+end;
+/

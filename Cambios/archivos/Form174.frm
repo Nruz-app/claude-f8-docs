@@ -628,6 +628,7 @@ End Function
 'VTA_FACOCARGA_YZ_DET (errores por fila y campo en VTA_FACOCARGA_YZ_LOG). Despues arma el
 'resumen VTA_FACOCARGA_YZ_RES: una fila por fecha / local / terminal con la cantidad de Y,
 'el monto total de las Y, el monto total de la Z y el estado (PENDIENTE / ERROR / PROCESADO).
+'xintec-nruz 03-11-2026 FCDVT-14: PROCESADO pasa a CARGADO; tablas VTA_<pfx>CARGA_YZ_* del pais (package multipais).
 'Monto total = TOTALES (BOLETAS + N.CREDITO + FACTURA). PROCESADO = 1 Z, al menos 1 Y, sin
 'errores y total Z = suma total Y. Esta etapa no graba Y ni Z (eso lo hara Cargar).
 'Columna 7 de la grilla (oculta): motivo del estado; se ve con doble clic.
@@ -717,15 +718,20 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
     Set cmd.ActiveConnection = Ado_Conn
     With cmd
         .CommandType = adCmdText
-        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?); END;"
+        'xintec-nruz 03-11-2026 FCDVT-14: multipais, el pais va primero (antes prc_inserta_linea(carga, linea, texto))
+        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?); END;"
+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
         .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
         .Parameters.Append .CreateParameter(, adDouble, adParamInput, , 0)
         .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 4000, "")
     End With
     For i = 1 To nLineas
         If i = 1 Or Trim(Replace(lineas(i), ";", "")) <> "" Then
-            cmd.Parameters(1).Value = i
-            cmd.Parameters(2).Value = Left(lineas(i), 4000)
+            'cmd.Parameters(1).Value = i
+            'cmd.Parameters(2).Value = Left(lineas(i), 4000)
+            cmd.Parameters(2).Value = i
+            cmd.Parameters(3).Value = Left(lineas(i), 4000)
             cmd.Execute
         End If
     Next i
@@ -737,16 +743,22 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
     Set cmd.ActiveConnection = Ado_Conn
     With cmd
         .CommandType = adCmdText
-        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?); END;"
+        'xintec-nruz 03-11-2026 FCDVT-14: multipais, el pais va primero (antes prc_procesa(carga, ok, err, lin))
+        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?); END;"
+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
         .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
         .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
         .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
         .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
         .Execute
     End With
-    vOk = IIf(IsNull(cmd.Parameters(1).Value), "0", cmd.Parameters(1).Value)
-    vErr = IIf(IsNull(cmd.Parameters(2).Value), "0", cmd.Parameters(2).Value)
-    vLinErr = IIf(IsNull(cmd.Parameters(3).Value), "0", cmd.Parameters(3).Value)
+    'vOk = IIf(IsNull(cmd.Parameters(1).Value), "0", cmd.Parameters(1).Value)
+    'vErr = IIf(IsNull(cmd.Parameters(2).Value), "0", cmd.Parameters(2).Value)
+    'vLinErr = IIf(IsNull(cmd.Parameters(3).Value), "0", cmd.Parameters(3).Value)
+    vOk = IIf(IsNull(cmd.Parameters(2).Value), "0", cmd.Parameters(2).Value)
+    vErr = IIf(IsNull(cmd.Parameters(3).Value), "0", cmd.Parameters(3).Value)
+    vLinErr = IIf(IsNull(cmd.Parameters(4).Value), "0", cmd.Parameters(4).Value)
     Set cmd.ActiveConnection = Nothing
     Set cmd = Nothing
 
@@ -755,17 +767,19 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
     Screen.MousePointer = vbDefault
     lblLoad.Visible = False
     If Grid1.Rows = 1 Then
+        'xintec-nruz 03-11-2026 FCDVT-14: tabla de log del pais (antes VTA_FACOCARGA_YZ_LOG fijo)
         MsgBox "Carga N° " & mCarga & ": el archivo no generó ningún resumen." & vbCrLf & _
                "Revise que el encabezado sea el de la plantilla (Exportar Excel)." & vbCrLf & _
-               "Detalle en VTA_FACOCARGA_YZ_LOG.", vbExclamation, Me.Caption
+               "Detalle en VTA_" & PrefijoCargaYZ() & "CARGA_YZ_LOG.", vbExclamation, Me.Caption
     Else
         'xintec-nruz 03-11-2026 FCDVT-14: el clic abre Form175 (antes "Doble clic en una fila para ver el motivo.")
+        'xintec-nruz 03-11-2026 FCDVT-14: estado CARGADO (antes "Grupos procesados") y tabla de log del pais
         MsgBox "Carga N° " & mCarga & vbCrLf & vbCrLf & _
-               "Grupos procesados: " & vOk & vbCrLf & _
+               "Grupos cargados: " & vOk & vbCrLf & _
                "Grupos con error: " & vErr & vbCrLf & _
                "Líneas con error: " & vLinErr & vbCrLf & vbCrLf & _
                "Clic en una fila para ver el detalle del log." & vbCrLf & _
-               "Detalle por fila y campo en VTA_FACOCARGA_YZ_LOG.", _
+               "Detalle por fila y campo en VTA_" & PrefijoCargaYZ() & "CARGA_YZ_LOG.", _
                IIf(Val(vErr) > 0 Or Val(vLinErr) > 0, vbExclamation, vbInformation), Me.Caption
     End If
     Exit Sub
@@ -785,6 +799,11 @@ oraerror:
     If mCarga > 0 Then Call LlenaGrillaResumen(mCarga)
 End Sub
 
+'xintec-nruz 03-11-2026 FCDVT-14: prefijo de las tablas VTA_<pfx>CARGA_YZ_* del pais (Chile sin prefijo, como vta_locales)
+Private Function PrefijoCargaYZ() As String
+    PrefijoCargaYZ = UCase(IIf(Flg_Pais$ = "CHI", "", Flg_Pais$))
+End Function
+
 'Llena Grid1 con el resumen de la carga (VTA_FACOCARGA_YZ_RES). ERROR en rojo, PENDIENTE en amarillo.
 Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
     Dim Consulta As Object, sq As String, c As Integer
@@ -796,9 +815,15 @@ Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
         .CursorType = adOpenForwardOnly
         .LockType = adLockReadOnly
     End With
+    'sq = "select res_local, res_terminal, to_char(res_fecha, 'dd-mm-yyyy') fecha, res_cant_y, " & _
+    '     "       nvl(res_total_y, 0) total_y, nvl(res_total_z, 0) total_z, res_estado, res_mensaje " & _
+    '     "from   vta_" & Flg_Pais$ & "carga_yz_res " & _
+    '     "where  res_carga = " & CStr(vCarga) & " " & _
+    '     "order by res_fecha, res_local, res_terminal"
+    'xintec-nruz 03-11-2026 FCDVT-14: multipais, prefijo del pais con Chile sin prefijo (antes "vta_" & Flg_Pais$)
     sq = "select res_local, res_terminal, to_char(res_fecha, 'dd-mm-yyyy') fecha, res_cant_y, " & _
          "       nvl(res_total_y, 0) total_y, nvl(res_total_z, 0) total_z, res_estado, res_mensaje " & _
-         "from   vta_" & Flg_Pais$ & "carga_yz_res " & _
+         "from   vta_" & PrefijoCargaYZ() & "carga_yz_res " & _
          "where  res_carga = " & CStr(vCarga) & " " & _
          "order by res_fecha, res_local, res_terminal"
     On Error GoTo oraerror
@@ -808,7 +833,9 @@ Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
                       Consulta!res_cant_y & vbTab & Format(Consulta!total_y, gFormat) & vbTab & _
                       Format(Consulta!total_z, gFormat) & vbTab & Consulta!res_estado & vbTab & _
                       IIf(IsNull(Consulta!res_mensaje), "", Consulta!res_mensaje)
-        If Consulta!res_estado <> "PROCESADO" Then
+        'xintec-nruz 03-11-2026 FCDVT-14: el estado correcto es CARGADO (antes PROCESADO)
+        'If Consulta!res_estado <> "PROCESADO" Then
+        If Consulta!res_estado <> "CARGADO" Then
             Grid1.Row = Grid1.Rows - 1
             For c = 0 To 6
                 Grid1.Col = c

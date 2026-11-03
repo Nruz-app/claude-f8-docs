@@ -71,6 +71,7 @@
 | `FTEPROD/Form175.frm` (+ `.frx`) | Detalle del log de un grupo de la carga masiva; se abre con un clic en la grilla de Form174 (§5.6) |
 | `FTEPROD/Form174.frm.bak_FCDVT-14_Log`, `recaudacion.vbp.bak_FCDVT-14_Form175` | Respaldos antes de Form175 (03-11) |
 | `FTEPROD/Form174.frm.bak_FCDVT-14_Clic`, `Form174.frm.bak_FCDVT-14_Plantilla` | Respaldos antes del clic simple y antes de la plantilla .xlsx de Exportar Excel (03-11) |
+| `docs/sql/FCDVT-14/anterior_2026-11-03/`, `FTEPROD/Form174.frm.bak_FCDVT-14_Multipais`, `Form175.frm.bak_FCDVT-14_Multipais` | Respaldo de la versión solo FACO (scripts y exe) antes del package multipaís (§5.8) |
 | `docs/sql/FCDVT-14/pruebas/` | 8 CSV de prueba de Buscar, uno por tipo de caso (campos malos, falta de Z, cuadratura, `NRO_Y`, estructura de la línea, encabezado, volumen), con el resultado esperado en su `README.md` (03-11) |
 | `FTEPROD/Form174.frm.bak_FCDVT-14_Resumen` | Respaldo de Form174 antes del Buscar con el package (30-10) |
 | `FTEPROD/MDIForm1.frm` | Submenú del botón Y solo en FACO (marcas `xintec-nruz 20-10-2026 FCDVT-14`), sin compilar |
@@ -426,7 +427,7 @@ ERROR si el grupo tiene líneas con error, si no tiene exactamente 1 Z, si no ti
   - las líneas del archivo cuyo detalle es de esa fecha, local y terminal;
   - el mensaje RESUMEN del grupo (`log_valor = 'dd-mm-yyyy L<local> T<terminal>'`).
   
-  Orden: línea (nulas al final) y `log_id`. Columnas: Línea, Tipo, N° Y, Etapa, Campo, Valor y Motivo. Con motivos largos la fila se hace más alta (hasta 6 renglones). Si no hay log (grupo PROCESADO), lo indica en una fila.
+  Orden: línea (nulas al final) y `log_id`. Columnas: Línea, Tipo, N° Y, Etapa, Campo, Valor y Motivo. Con motivos largos la fila se hace más alta (hasta 6 renglones). Si no hay log (grupo CARGADO; antes PROCESADO), lo indica en una fila.
 - Las líneas sin grupo (fecha, local o terminal ilegibles, o campos distintos de 56) no tienen fila en Form174, así que no se ven aquí; están en la consulta 3 de `06_pruebas.sql`.
 
 **Form174** (respaldo `Form174.frm.bak_FCDVT-14_Log`): `Grid1_DblClick` pasa a `Grid1_Click` (un solo clic, pedido del usuario; respaldo `Form174.frm.bak_FCDVT-14_Clic`; el clic en el encabezado no abre nada), deja comentado el `MsgBox` y llama a `Form175.MuestraLog` con la carga (`mCarga`) y las columnas Fecha, Local, Terminal, Estado y Motivo de la fila. El mensaje final de Buscar dice "Clic en una fila para ver el detalle del log.".
@@ -455,7 +456,33 @@ ERROR si el grupo tiene líneas con error, si no tiene exactamente 1 Z, si no ti
 **Para probar:**
 1. Exportar Excel y abrir el archivo: 3 hojas (Listas oculta), comentarios en el encabezado, listas en J/K, rechazo de `100,5` en un monto y FECHA que no se convierte.
 2. Completar una Z y 2 Y y guardar como CSV (delimitado por comas).
-3. Buscar con ese CSV: 1 grupo PROCESADO.
+3. Buscar con ese CSV: 1 grupo CARGADO.
+
+### 5.8 Estado CARGADO y package multipaís (03-11-2026, sin compilar ni ejecutar)
+
+**Qué pide el usuario.**
+1. Que el estado de un grupo correcto se llame **CARGADO** en vez de PROCESADO.
+2. Que `PKG_F8_CARGA_MASIVA_YZ` no tenga FACO fijo y sea **multipaís**, para pedirlo más adelante para Chile u otro país. Elige **tablas por país, con prefijo**, como el resto del F8.
+3. Que lo actual quede como respaldo.
+
+**Base** (`docs/sql/FCDVT-14/`; detalle en su `00_LEEME.md`, secciones "Multipaís" y "Respaldo"):
+- `02` crea, para el prefijo del bloque `EDITAR`, `VTA_<pfx>CARGA_YZ_DET/_RES/_LOG` y `SEQ_VTA_<pfx>CARGA_YZ[_LOG]`, solo si no existen. FACO conserva los nombres del 30-10, así que en test no crea nada.
+- `03`/`04`:
+  - `pr_config` con lista blanca (solo `FACO`) y SQL dinámico con `{P}` + `fn_r`, el patrón de `PKG_F8_COMPENSA_DI_CARGA`;
+  - `prc_inserta_linea(p_flg_pais, …)` y `prc_procesa(p_flg_pais, …)`; las firmas sin país se mantienen y usan FACO;
+  - `c_estado_ok = 'CARGADO'`. Misma lógica y mismos mensajes que la versión del 30-10.
+- `05` y `99` (partes B y C) trabajan por prefijo. Las cargas viejas de test conservan PROCESADO.
+- **Respaldo:** `anterior_2026-11-03/` con la versión solo FACO. Para volver atrás: `99_rollback.sql` parte C y los `.bak_FCDVT-14_Multipais` del exe.
+
+**Exe:**
+- `Form174`: las llamadas pasan `Flg_Pais$` primero; la grilla y los mensajes usan `PrefijoCargaYZ()`, que arma el prefijo del país y deja a Chile (`CHI`) sin prefijo; el color compara con CARGADO y el mensaje dice "Grupos cargados".
+- `Form175`: lee con `PrefijoCargaYZ()`.
+- Respaldos: `Form174.frm.bak_FCDVT-14_Multipais` y `Form175.frm.bak_FCDVT-14_Multipais`.
+- **Compatibilidad:** el exe nuevo requiere el package nuevo. El package nuevo acepta también el exe anterior.
+
+**Limitación:** los 56 campos (`c_encabezado`, columnas de DET, Exportar Excel y `EncabezadoCsvY`) son los de `vta_paint_z` de FACO. Otro país puede necesitar otro encabezado y otras columnas; los pasos están en `00_LEEME.md`, sección "Multipaís".
+
+**Para probar:** `INSTALAR.sql` en test → compilar → Buscar con `pruebas/p02_falta_z.csv` → 3 CARGADO y 3 ERROR → clic en un grupo → Form175 con su log.
 
 ## 6. Hechos verificados en la base de test
 
@@ -527,3 +554,4 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 03-11-2026 | **Form175** (§5.6): el doble clic en la grilla de Form174 abre el detalle del log del grupo (antes, un `MsgBox`). `Form175.frm` + `.frx` (copia de `Form174.frx`), `Form174.Grid1_DblClick` y `Form=Form175.frm` en el `.vbp`. Respaldos `Form174.frm.bak_FCDVT-14_Log` y `recaudacion.vbp.bak_FCDVT-14_Form175`. Sin compilar. Se sincronizó `docs/Cambios/`, que también recibe el cambio de `Form174` del 03-11 a las 10:02 (fecha de prueba 02-11-2026 de Salir) que no estaba. |
 | 03-11-2026 | Form174: Form175 se abre con **un solo clic** (`Grid1_Click`, antes `Grid1_DblClick`), a pedido del usuario. Un clic en el encabezado no abre nada (`MouseRow < 1`). El mensaje final de Buscar dice "Clic en una fila…". Respaldo `Form174.frm.bak_FCDVT-14_Clic`. Sin compilar. `docs/Cambios/` sincronizado. |
 | 03-11-2026 | Form174: **Exportar Excel genera una plantilla `.xlsx` con formato** (§5.7): hojas Carga (encabezado con comentarios, FECHA y HORA texto, enteros validados, listas en TIPO y TIPO_CARGA), Instrucciones y Listas oculta. El usuario la guarda como CSV para Buscar, que no cambia. Respaldo `Form174.frm.bak_FCDVT-14_Plantilla`. `FORMATO` §5 actualizado (2 copias). Sin compilar. `docs/Cambios/` sincronizado. |
+| 03-11-2026 | **Estado CARGADO y package multipaís** (§5.8). El estado de un grupo correcto pasa de PROCESADO a CARGADO. `PKG_F8_CARGA_MASIVA_YZ` recibe el país (lista blanca, solo FACO; SQL `{P}`) con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`; FACO conserva sus nombres. `02`, `03`, `04`, `05`, `06`, `INSTALAR` y `99` (parte C: volver a la versión anterior) actualizados; respaldo en `anterior_2026-11-03/`. Form174/Form175 pasan el país y usan `PrefijoCargaYZ()` (respaldos `.bak_FCDVT-14_Multipais`). Pruebas y `FORMATO` con CARGADO. Sin compilar ni ejecutar. `docs/Cambios/` sincronizado. |

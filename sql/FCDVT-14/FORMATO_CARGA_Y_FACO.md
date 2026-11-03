@@ -125,8 +125,8 @@ Archivos en `docs/sql/FCDVT-14/`:
 | Archivo | Qué muestra |
 |---|---|
 | `plantilla_carga_Y_FACO.csv` | Encabezado de 56 columnas y 4 filas: 16-10-2026, local 5. Terminal 1: Z (2.292.000) + 2 Y (1.450.000 y 842.000); terminal 2: 1 Y (300.000), **sin Z** (Buscar la marca en ERROR) |
-| `ejemplo_carga_Y_FACO_20.csv` | 23 filas del 16-10-2026, local 5: por terminal, 1 Z + sus Y (T1 7 Y, T2 7 Y, T3 6 Y). Cada concepto de la Z es la suma de las Y. Buscar: **3 grupos PROCESADO** (9.400.000, 7.435.000 y 9.490.000; en total 26.325.000) |
-| `ejemplo_carga_YZ_FACO_errores.csv` | Un caso por resultado: 15-10 T1 cuadrado (PROCESADO); 15-10 T2 con Z 425.000 y Y 420.000; 15-10 T3 sin Z; 14-10 T1 con `REC_MEFECTIVO = 12a00` y `TIPO = X`; terminal 99 no vigente (4 ERROR); y una línea con 50 campos (solo log) |
+| `ejemplo_carga_Y_FACO_20.csv` | 23 filas del 16-10-2026, local 5: por terminal, 1 Z + sus Y (T1 7 Y, T2 7 Y, T3 6 Y). Cada concepto de la Z es la suma de las Y. Buscar: **3 grupos CARGADO** (9.400.000, 7.435.000 y 9.490.000; en total 26.325.000) |
+| `ejemplo_carga_YZ_FACO_errores.csv` | Un caso por resultado: 15-10 T1 cuadrado (CARGADO); 15-10 T2 con Z 425.000 y Y 420.000; 15-10 T3 sin Z; 14-10 T1 con `REC_MEFECTIVO = 12a00` y `TIPO = X`; terminal 99 no vigente (4 ERROR); y una línea con 50 campos (solo log) |
 
 Fecha, local y terminales son válidos en test (local 5, terminales 1 a 3). En esta etapa Buscar **no graba** Y ni Z: solo llena las tablas `VTA_FACOCARGA_YZ_*`.
 
@@ -180,7 +180,7 @@ Form174 envía cada línea a `PKG_F8_CARGA_MASIVA_YZ` (`docs/sql/FCDVT-14/02` a 
 |---|---|
 | PENDIENTE | Recién creado. Si queda así, el proceso se cayó (ver log, etapa ERROR) |
 | ERROR | Hay filas con error, no hay exactamente 1 Z, no hay Y, o el total de la Z es distinto de la suma de las Y. El motivo queda en `res_mensaje` (doble clic en la grilla) |
-| PROCESADO | 1 Z, al menos 1 Y, sin errores y total Z = suma total Y |
+| CARGADO | 1 Z, al menos 1 Y, sin errores y total Z = suma total Y (hasta el 03-11-2026 se llamaba PROCESADO) |
 
 Cada error queda en `VTA_FACOCARGA_YZ_LOG` con su línea, campo, valor y motivo. Las validaciones 4 (Z no cerrada) y 5 (`NRO_Y` ya existente) dependen del estado de la base al grabar y quedan para Cargar.
 
