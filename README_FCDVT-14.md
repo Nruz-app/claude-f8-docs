@@ -41,17 +41,23 @@
 
 **Análisis** (16-10-2026). Faltan las respuestas de negocio (§7) y correr los prechecks en test.
 
-**Al 20-10-2026 (congelado, ver manifiesto y ZIP en §9):** primera subtarea, **inserción masiva de Y para FACO**, en desarrollo.
+**Al 03-11-2026 (congelado, manifiesto y ZIP en §9):** primera subtarea, **carga masiva de Y y Z para FACO**, etapa Buscar terminada. El usuario la probó en test con la versión del 30-10 y "funciona bien". Lo que se hizo después del 30-10 está **sin compilar ni ejecutar**.
 
 | Pieza | Estado |
 |---|---|
 | Submenú del botón Y (`MDIForm1.frm`, §5.2) | Implementado. Solo FACO: `INGY` → Form19Y con el permiso 15; `INGYMA` → Form174 con el permiso 460. El usuario lo compiló y lo vio funcionar en test |
 | Permiso 460 (`docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`) | **Ejecutado en test** por el usuario con los perfiles 10 y 11. Falta llevarlo a producción con los mismos 3 INSERT |
-| `Form174` "Ingreso de Cierres de Terminal Y Masivo" (§5.3) | **Buscar** (desde el 30-10: valida en la base y muestra el resumen por terminal-día) y **Exportar Excel** programados, sin compilar. **Cargar** (`Command4`) sin código; **Salir** con la prueba temporal del cierre diario |
-| CSV de carga (`docs/FCDVT-14/`, copia en `docs/sql/FCDVT-14/`) | Desde el 30-10: **56 campos** (con `TIPO` y `TIPO_CARGA`), Y + una Z por terminal-día |
-| Carga Y/Z, etapa Buscar (`docs/sql/FCDVT-14/02` a `06`, §5.5) | `PKG_F8_CARGA_MASIVA_YZ` + tablas `VTA_FACOCARGA_YZ_DET` / `_RES` / `_LOG`. **Sin ejecutar** |
-| Cuadratura | Definida el 30-10: total Z = suma de los totales de las Y (§5.5). "Documentos = formas de pago" por Y, pendiente de negocio |
-| Grabado (Cargar), update, SFCL y Chile | Pendientes (§5.4, §7) |
+| `Form174` Buscar (§5.5, §5.8) | Valida el CSV con `PKG_F8_CARGA_MASIVA_YZ` y muestra el resumen por terminal-día. Estados **PENDIENTE / ERROR / CARGADO** (CARGADO antes se llamaba PROCESADO). Pasa `Flg_Pais$` al package. La versión del 30-10 está probada en test; la del 03-11, sin compilar |
+| `Form174` clic en la grilla (§5.6) | Un **solo clic** en una fila abre `Form175` con el log del grupo |
+| `Form175` (nuevo, §5.6) | Detalle del log de un grupo. Está en el `.vbp`. Sin compilar |
+| `Form174` Exportar Excel (§5.7) | Genera una plantilla `.xlsx` con formato: hojas Carga, Instrucciones y Listas (oculta). El usuario la completa y la **guarda como CSV**; Buscar solo lee CSV, por decisión del usuario. Sin compilar |
+| `Form174` Cargar (`Command4`) | **Sin código** (diseño en §5.4). Debe grabar los grupos CARGADO |
+| `Form174` Salir | Ejecuta la **prueba temporal** del cierre diario (`EjecutaCierreDiario`, FSCC-12901, fecha fija `vFechaPrueba`). La copia de producción (`docs/Cambios/`) es idéntica, por decisión del usuario; está marcada como riesgo |
+| Package y tablas (`docs/sql/FCDVT-14/02`-`06`, §5.8) | **Multipaís** con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`, solo FACO habilitado. En test está instalada la **versión del 30-10** (solo FACO, respaldada en `anterior_2026-11-03/`). Falta ejecutar `INSTALAR.sql` con la multipaís: el exe nuevo la necesita |
+| Archivos de prueba (`docs/sql/FCDVT-14/pruebas/`) | 8 CSV (`p01`-`p08`) con el resultado esperado en su `README.md` |
+| Cuadratura | Total Z = suma de los totales de las Y (§5.5). "Documentos = formas de pago" por Y, pendiente de negocio |
+| Grabado (Cargar), update (`MODIFICAR`), SFCL y Chile | Pendientes (§5.4, §7). Para otro país, ver "Multipaís" en `docs/sql/FCDVT-14/00_LEEME.md` |
+| Paso a producción | `docs/Cambios/` está sincronizado con `FTEPROD` (regla permanente de CLAUDE.md §9). Falta subir `Gversion` |
 
 ## 3. Artefactos
 
@@ -519,13 +525,17 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 4. Antes de tocar `.frm`: respaldo `.bak_FCDVT-14` y edición binaria (Windows-1252 + CRLF).
 5. ~~Submenú de Y y permiso 460 en test~~: hecho el 20-10-2026 (§5.2).
 
-**Para retomar Form174 (siguiente sesión):**
-1. Verificar que nada cambió desde que se congeló: `grep -v '^#' docs/MANIFIESTO_FCDVT-14.md5 | md5sum -c`. Si `Form174.frm` o `MDIForm1.frm` no coinciden, el usuario los editó en el IDE: leerlos antes de tocarlos.
-2. **El usuario edita en el IDE.** Antes de editar un `.frm`, pedirle que guarde y cierre el proyecto; después, que lo vuelva a abrir. Edición binaria (Perl `:raw`, CP1252 + CRLF), respaldo `.bak_FCDVT-14_<paso>` y código dentro del bloque `'---INI---- xintec-nruz … FCDVT-14` / `'---FIN----` de Form174.
-3. Compilar y probar Buscar y Exportar Excel (§5.3).
-4. Programar **Salir** (`Command3_Click`: `Unload Me`).
-5. Programar **Cargar** (`Command4`) según el diseño de §5.4.
-6. Probar en test con `plantilla_carga_Y_FACO.csv` (16-10-2026, local 5, terminales 1 y 2). Después borrar esas Y con un script de limpieza y anotar el resultado en §6 y §9.
+**Para retomar (desde el 03-11-2026):**
+1. Verificar que nada cambió desde que se congeló: `grep -v '^#' docs/MANIFIESTO_FCDVT-14.md5 | md5sum -c`. Si un `.frm` no coincide, el usuario lo editó en el IDE: leerlo antes de tocarlo y sincronizar `docs/Cambios/` (regla de CLAUDE.md §9).
+2. **El usuario edita en el IDE.** Antes de editar un `.frm`, pedirle que guarde y cierre el proyecto, y después que lo vuelva a abrir. Edición binaria CP1252 + CRLF (script Perl/Python, nunca Edit/Write directo), respaldo `.bak_FCDVT-14_<paso>`, marcas `xintec-nruz dd-mm-yyyy FCDVT-14`, lo anterior comentado. **Nunca** poner un comentario dentro de una sentencia continuada con `_`.
+3. Pendiente inmediato del usuario, en test:
+   1. ejecutar `docs/sql/FCDVT-14/INSTALAR.sql` (package multipaís; `02` no crea nada para FACO);
+   2. compilar;
+   3. probar con `pruebas/p02_falta_z.csv` (3 CARGADO, 3 ERROR), el clic que abre Form175 y Exportar Excel → CSV → Buscar.
+   
+   Si el multipaís falla: `99_rollback.sql` parte C y `FTEPROD/Form17[45].frm.bak_FCDVT-14_Multipais`.
+4. Siguiente desarrollo: **Cargar** (`Command4`, §5.4). Debe grabar en libvta, zzz y termstat(y) los grupos CARGADO de `VTA_<pfx>CARGA_YZ_DET` (`mCarga`), sin volver a leer el archivo. Falta definir qué se graba con la fila Z y la glosa de `ter_notas` (`FORMATO` §7-8).
+5. Antes de producción: decidir qué hacer con la prueba del cierre diario en Salir (§2), subir `Gversion` y ejecutar `01` junto con el exe.
 
 ## 9. Historial
 
@@ -555,3 +565,4 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 03-11-2026 | Form174: Form175 se abre con **un solo clic** (`Grid1_Click`, antes `Grid1_DblClick`), a pedido del usuario. Un clic en el encabezado no abre nada (`MouseRow < 1`). El mensaje final de Buscar dice "Clic en una fila…". Respaldo `Form174.frm.bak_FCDVT-14_Clic`. Sin compilar. `docs/Cambios/` sincronizado. |
 | 03-11-2026 | Form174: **Exportar Excel genera una plantilla `.xlsx` con formato** (§5.7): hojas Carga (encabezado con comentarios, FECHA y HORA texto, enteros validados, listas en TIPO y TIPO_CARGA), Instrucciones y Listas oculta. El usuario la guarda como CSV para Buscar, que no cambia. Respaldo `Form174.frm.bak_FCDVT-14_Plantilla`. `FORMATO` §5 actualizado (2 copias). Sin compilar. `docs/Cambios/` sincronizado. |
 | 03-11-2026 | **Estado CARGADO y package multipaís** (§5.8). El estado de un grupo correcto pasa de PROCESADO a CARGADO. `PKG_F8_CARGA_MASIVA_YZ` recibe el país (lista blanca, solo FACO; SQL `{P}`) con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`; FACO conserva sus nombres. `02`, `03`, `04`, `05`, `06`, `INSTALAR` y `99` (parte C: volver a la versión anterior) actualizados; respaldo en `anterior_2026-11-03/`. Form174/Form175 pasan el país y usan `PrefijoCargaYZ()` (respaldos `.bak_FCDVT-14_Multipais`). Pruebas y `FORMATO` con CARGADO. Sin compilar ni ejecutar. `docs/Cambios/` sincronizado. |
+| 03-11-2026 | **Estado congelado** ("documenta todo"): §2 Estado y §8 Cómo retomar al día; memoria del proyecto; `docs/MANIFIESTO_FCDVT-14.md5` verificado; respaldo `docs/respaldos/FCDVT-14_2026-11-03_multipais-cargado.zip`. Nada ejecutado en la base ni compilado después del 30-10. |

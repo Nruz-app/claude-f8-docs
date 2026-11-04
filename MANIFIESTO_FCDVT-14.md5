@@ -16,7 +16,8 @@
 # 2026-11-03: Form174 Exportar Excel genera plantilla .xlsx con formato; FORMATO 5 actualizado; respaldo .bak_FCDVT-14_Plantilla. Sin compilar.
 # 2026-11-03: estado CARGADO y PKG_F8_CARGA_MASIVA_YZ multipais (02-06, INSTALAR, 99); respaldo anterior_2026-11-03/; Form174/Form175 con pais (.bak_FCDVT-14_Multipais). Sin compilar ni ejecutar.
 # 2026-11-03: agrega el respaldo docs/sql/FCDVT-14/anterior_2026-11-03/.
-1262ff8c5488bc2db8972ed1c2f19864 *CLAUDE.md
+# 2026-11-03: estado congelado (documenta todo): README_FCDVT-14 2 y 8, CLAUDE.md 3; respaldo docs/respaldos/FCDVT-14_2026-11-03_multipais-cargado.zip
+2d2b126881113750de671a879e897c2e *CLAUDE.md
 e5728c84115595076d460500e3de8bcb *FTEPROD/Form174.frm
 59a9ff73f64a47f89a9498057518d08f *FTEPROD/Form174.frm.bak_FCDVT-14
 4327b27755c00edfffd0e2ccde98c4c1 *FTEPROD/Form174.frm.bak_FCDVT-14_Buscar
@@ -33,7 +34,7 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 3b78c88571822f42ad31e77e50af4f39 *FTEPROD/recaudacion.vbp
 0f831d509c1e4c40e2bcc71b4921ee5e *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
 8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
-bacbaf22c51d89f7f6d931a10cc7e46a *docs/README_FCDVT-14.md
+7d08da6071e96467c679b0418752b046 *docs/README_FCDVT-14.md
 5f7e07fb70d8b10d5322fd0dc1fb1385 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
 7dff708ce50630da98f5a70a8729bca7 *docs/sql/CLAUDE.md
 fe0954671adf9a40a64538a4378a45d4 *docs/sql/FCDVT-14/00_LEEME.md
