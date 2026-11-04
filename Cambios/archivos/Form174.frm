@@ -210,6 +210,7 @@ Private Sub Form_Load()
     lblLoad.Visible = False
     mArchivoCsv = ""
     Call LimpiaGrilla      'xintec-nruz 22-10-2026 FCDVT-14: encabezados de la grilla del CSV
+    Command4.Enabled = False   'xintec-nruz 04-11-2026 FCDVT-14: Cargar se habilita despues de un Buscar con grupos CARGADO
 End Sub
 
 'Boton Buscar: selecciona el archivo CSV y muestra la ruta en NombreArchivo
@@ -672,6 +673,7 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
     Dim vOk As String, vErr As String, vLinErr As String
 
     mCarga = 0
+    Command4.Enabled = False   'xintec-nruz 04-11-2026 FCDVT-14: Cargar solo despues de un Buscar con grupos CARGADO
     lblLoad.Visible = True
     Screen.MousePointer = vbHourglass
     DoEvents
@@ -764,6 +766,7 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
 
     '5) Grilla
     Call LlenaGrillaResumen(mCarga)
+    Command4.Enabled = (Val(vOk) > 0)   'xintec-nruz 04-11-2026 FCDVT-14: hay grupos CARGADO para grabar
     Screen.MousePointer = vbDefault
     lblLoad.Visible = False
     If Grid1.Rows = 1 Then
@@ -804,7 +807,7 @@ Private Function PrefijoCargaYZ() As String
     PrefijoCargaYZ = UCase(IIf(Flg_Pais$ = "CHI", "", Flg_Pais$))
 End Function
 
-'Llena Grid1 con el resumen de la carga (VTA_FACOCARGA_YZ_RES). ERROR en rojo, PENDIENTE en amarillo.
+'Llena Grid1 con el resumen de la carga (VTA_<pfx>CARGA_YZ_RES). ERROR en rojo, PENDIENTE en amarillo, GRABADO en verde (xintec-nruz 04-11-2026 FCDVT-14).
 Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
     Dim Consulta As Object, sq As String, c As Integer
     Call LimpiaGrilla
@@ -842,6 +845,9 @@ Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
                 If Consulta!res_estado = "ERROR" Then
                     Grid1.CellBackColor = &HFF            'rojo, como Form133
                     Grid1.CellForeColor = &H80000005
+                'xintec-nruz 04-11-2026 FCDVT-14: GRABADO (Cargar ya lo grabo) en verde, como los totales de Form19Y
+                ElseIf Consulta!res_estado = "GRABADO" Then
+                    Grid1.CellBackColor = &HA4E8CB
                 Else
                     Grid1.CellBackColor = &H80FFFF        'amarillo: PENDIENTE (el proceso se cayo)
                 End If
@@ -873,6 +879,81 @@ Private Sub Grid1_Click()
                             Grid1.TextMatrix(Grid1.Row, 1), Grid1.TextMatrix(Grid1.Row, 6), _
                             Grid1.TextMatrix(Grid1.Row, 7))
 End Sub
+
+'---INI---- xintec-nruz 04-11-2026 FCDVT-14: boton Cargar ----
+'Graba los grupos CARGADO de la carga (mCarga) con PKG_F8_GRABA_MASIVA_YZ.prc_graba:
+'libvta 'F8'/99 + zzz (+ termstat -1 si falta) para la Z y libvta 'Y' + zzz + termstaty -1
+'para cada Y. REEMPLAZA la Z y las Y que el terminal-dia ya tenga (como Form19). El package
+'hace commit por grupo: un grupo que falla queda en ERROR con el motivo y no deja nada a medias.
+Private Sub Command4_Click()
+    Dim cmd As ADODB.Command
+    Dim r As Integer, nCargados As Integer
+    Dim vOk As String, vErr As String
+
+    If mCarga <= 0 Then
+        MsgBox "Primero use Buscar para validar un archivo.", vbExclamation, Me.Caption
+        Exit Sub
+    End If
+    nCargados = 0
+    For r = 1 To Grid1.Rows - 1
+        If Grid1.TextMatrix(r, 6) = "CARGADO" Then nCargados = nCargados + 1
+    Next r
+    If nCargados = 0 Then
+        MsgBox "La carga N° " & mCarga & " no tiene grupos CARGADO para grabar.", vbExclamation, Me.Caption
+        Command4.Enabled = False
+        Exit Sub
+    End If
+    If MsgBox("Se grabarán " & nCargados & " cierre(s) de terminal (Z y sus Y) de la carga N° " & mCarga & "." & vbCrLf & vbCrLf & _
+              "Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo." & vbCrLf & _
+              "Los grupos con error no se graban." & vbCrLf & vbCrLf & _
+              "¿Desea continuar?", vbQuestion + vbYesNo + vbDefaultButton2, Me.Caption) <> vbYes Then
+        Exit Sub
+    End If
+
+    lblLoad.Visible = True
+    Screen.MousePointer = vbHourglass
+    DoEvents
+
+    On Error GoTo oraerror
+    Set cmd = New ADODB.Command
+    Set cmd.ActiveConnection = Ado_Conn
+    With cmd
+        .CommandType = adCmdText
+        'xintec-nruz 04-11-2026 FCDVT-14: grabado en package propio (antes PKG_F8_CARGA_MASIVA_YZ.prc_graba)
+        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_graba(?, ?, ?, ?, ?); END;"
+        .CommandText = "BEGIN PKG_F8_GRABA_MASIVA_YZ.prc_graba(?, ?, ?, ?, ?); END;"
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
+        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, LOGINUSER)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
+        .Execute
+    End With
+    vOk = IIf(IsNull(cmd.Parameters(3).Value), "0", cmd.Parameters(3).Value)
+    vErr = IIf(IsNull(cmd.Parameters(4).Value), "0", cmd.Parameters(4).Value)
+    Set cmd.ActiveConnection = Nothing
+    Set cmd = Nothing
+
+    Call LlenaGrillaResumen(mCarga)
+    Command4.Enabled = False
+    Screen.MousePointer = vbDefault
+    lblLoad.Visible = False
+    MsgBox "Carga N° " & mCarga & vbCrLf & vbCrLf & _
+           "Grupos grabados: " & vOk & vbCrLf & _
+           "Grupos no grabados: " & vErr & vbCrLf & vbCrLf & _
+           "Clic en una fila para ver el detalle del log.", _
+           IIf(Val(vErr) > 0, vbExclamation, vbInformation), Me.Caption
+    Exit Sub
+oraerror:
+    Screen.MousePointer = vbDefault
+    lblLoad.Visible = False
+    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
+    SystemMsg = "Problemas al grabar los cierres en la base (PKG_F8_GRABA_MASIVA_YZ.prc_graba, carga " & mCarga & ")"
+    frmLogOraError.Show 1
+    'Muestra como quedo cada grupo (los ya grabados quedan GRABADO)
+    Call LlenaGrillaResumen(mCarga)
+End Sub
+'---FIN---- xintec-nruz 04-11-2026 FCDVT-14: boton Cargar ----
 '---FIN----
 
 '---INI---- xintec-nruz 20-10-2026 FSCC-12901: PRUEBA cierre diario desde Salir (temporal) ----

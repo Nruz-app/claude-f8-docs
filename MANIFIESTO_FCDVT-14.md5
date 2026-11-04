@@ -17,8 +17,10 @@
 # 2026-11-03: estado CARGADO y PKG_F8_CARGA_MASIVA_YZ multipais (02-06, INSTALAR, 99); respaldo anterior_2026-11-03/; Form174/Form175 con pais (.bak_FCDVT-14_Multipais). Sin compilar ni ejecutar.
 # 2026-11-03: agrega el respaldo docs/sql/FCDVT-14/anterior_2026-11-03/.
 # 2026-11-03: estado congelado (documenta todo): README_FCDVT-14 2 y 8, CLAUDE.md 3; respaldo docs/respaldos/FCDVT-14_2026-11-03_multipais-cargado.zip
-2d2b126881113750de671a879e897c2e *CLAUDE.md
-e5728c84115595076d460500e3de8bcb *FTEPROD/Form174.frm
+# 2026-11-04: estado congelado antes de pasar a test el boton Cargar (prc_graba, estado GRABADO; Form174 Command4_Click, Form175 log GRABADO, 98_limpia_prueba.sql, 99 parte D, anterior_2026-11-04/). Manifiesto recalculado completo. Sin ejecutar en la base ni compilar. Respaldo docs/respaldos/FCDVT-14_2026-11-04_cargar-grabado.zip
+# 2026-11-04 (2): packages separados (PKG_F8_CARGA_MASIVA_YZ Buscar / PKG_F8_GRABA_MASIVA_YZ Cargar, 04b y 04c), pruebas_cargar/ (c00 a c05) y ajustes de revision. Manifiesto recalculado completo. Sin ejecutar en la base ni compilar. Respaldo docs/respaldos/FCDVT-14_2026-11-04_packages-separados.zip
+7b1d8676876e056b5e1c236308102017 *CLAUDE.md
+423711b951fd0f99a8fe609822c2d1ea *FTEPROD/Form174.frm
 59a9ff73f64a47f89a9498057518d08f *FTEPROD/Form174.frm.bak_FCDVT-14
 4327b27755c00edfffd0e2ccde98c4c1 *FTEPROD/Form174.frm.bak_FCDVT-14_Buscar
 e9432ce51bd668ce2dee620648d97ebd *FTEPROD/Form174.frm.bak_FCDVT-14_Exportar
@@ -32,22 +34,22 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 0d7ba0705cc619a0d2742177831d4405 *FTEPROD/MDIForm1.frm.bak_FCDVT-14_Form174
 5dc1e839b3153014247ee4c8e822b7a3 *FTEPROD/MDIForm1.frx
 3b78c88571822f42ad31e77e50af4f39 *FTEPROD/recaudacion.vbp
-0f831d509c1e4c40e2bcc71b4921ee5e *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+edd1fa4b6f35d3f0fac476794d6b0e1e *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
 8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
-7d08da6071e96467c679b0418752b046 *docs/README_FCDVT-14.md
+f1bd9975679381ec803ba212e7180ce7 *docs/README_FCDVT-14.md
 5f7e07fb70d8b10d5322fd0dc1fb1385 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
-7dff708ce50630da98f5a70a8729bca7 *docs/sql/CLAUDE.md
-fe0954671adf9a40a64538a4378a45d4 *docs/sql/FCDVT-14/00_LEEME.md
+0c73ea11ffc6b18b73eceacf8c57acda *docs/sql/CLAUDE.md
+7a8f355500955a84161952170f9a7d95 *docs/sql/FCDVT-14/00_LEEME.md
 c4a6958cb3e7eaa0b3379f09aadc3431 *docs/sql/FCDVT-14/00_prechecks.sql
 4623a236daee4abb03e753c738f94130 *docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql
-7e8278b1a46a94da86220b25d9f427ab *docs/sql/FCDVT-14/02_tablas_carga_yz.sql
-7561324b4aaacdb42cdcda47c0b232a0 *docs/sql/FCDVT-14/03_pkg_carga_masiva_yz_spec.sql
-ccc85966cb6d8adcce8bb032d5947d30 *docs/sql/FCDVT-14/04_pkg_carga_masiva_yz_body.sql
-8981423921720308c39b457f8eaf212b *docs/sql/FCDVT-14/05_grants_sinonimos.sql
-73db7db3da1f929d09a5faf9c32399dd *docs/sql/FCDVT-14/06_pruebas.sql
-5ca29a2d360210911ab660d5f90021fb *docs/sql/FCDVT-14/99_rollback.sql
-0f831d509c1e4c40e2bcc71b4921ee5e *docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md
-c139967f5b568d6ea881f89c2b17f6de *docs/sql/FCDVT-14/INSTALAR.sql
+da056490025f8b27f2c7d322e6013ec1 *docs/sql/FCDVT-14/02_tablas_carga_yz.sql
+6b45625779c1f26d25254970a9bc932e *docs/sql/FCDVT-14/03_pkg_carga_masiva_yz_spec.sql
+bbcb5df7bc7f30b90ca310d2c4016aec *docs/sql/FCDVT-14/04_pkg_carga_masiva_yz_body.sql
+a5f49197fd462aa3fcd634446b18b637 *docs/sql/FCDVT-14/05_grants_sinonimos.sql
+9500ec91d1530e352749084f6a1c715d *docs/sql/FCDVT-14/06_pruebas.sql
+16c96856661d9996a32e2be570492801 *docs/sql/FCDVT-14/99_rollback.sql
+edd1fa4b6f35d3f0fac476794d6b0e1e *docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md
+71d3a7ad383914805e57443fbbbe42e9 *docs/sql/FCDVT-14/INSTALAR.sql
 c5cbd86aef2efa155d2ffbc71acdd859 *docs/sql/FCDVT-14/ejemplo_carga_YZ_FACO_errores.csv
 5ef88bd2dfe394a84b25003d3d7a835f *docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv
 4f63e770a650d3bc4080b5b3469fb574 *docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv.bak_FCDVT-14_Z
@@ -61,7 +63,7 @@ d095a81868a5e87a7f8f6574bb02a048 *docs/sql/FCDVT-14/pruebas/p05_estructura.csv
 17020dc0bcb8000cd9fe02853bf2f1de *docs/sql/FCDVT-14/pruebas/p06_encabezado_54.csv
 fedf2da87682602ca09feeea820da418 *docs/sql/FCDVT-14/pruebas/p07_solo_encabezado.csv
 f578b8d66660796cabea2fdd5e656693 *docs/sql/FCDVT-14/pruebas/p08_volumen.csv
-edb0b993d8de5eaeb090878e1cd512c8 *FTEPROD/Form175.frm
+b5e227e7322f097cbf2bf3634edd39b9 *FTEPROD/Form175.frm
 cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form175.frx
 76e9746e380e341756fd909c77c46bdc *FTEPROD/Form174.frm.bak_FCDVT-14_Log
 692a13fa336a9d91f8412cf03753ee05 *FTEPROD/recaudacion.vbp.bak_FCDVT-14_Form175
@@ -78,3 +80,33 @@ f8667f9764df1e86eebacd4421dfc1db *docs/sql/FCDVT-14/anterior_2026-11-03/04_pkg_c
 d4b197f88fb5fe8ada290524a7502f50 *docs/sql/FCDVT-14/anterior_2026-11-03/06_pruebas.sql
 83294c25611bd13f19cf1cd127f4dbc3 *docs/sql/FCDVT-14/anterior_2026-11-03/99_rollback.sql
 896cdcc56323705b1f0c7e4d9cbaa50a *docs/sql/FCDVT-14/anterior_2026-11-03/INSTALAR.sql
+c5d9892122ae3db6c3a58b7133e2877a *docs/sql/FCDVT-14/98_limpia_prueba.sql
+e5728c84115595076d460500e3de8bcb *FTEPROD/Form174.frm.bak_FCDVT-14_Cargar
+edb0b993d8de5eaeb090878e1cd512c8 *FTEPROD/Form175.frm.bak_FCDVT-14_Cargar
+fe0954671adf9a40a64538a4378a45d4 *docs/sql/FCDVT-14/anterior_2026-11-04/00_LEEME.md
+c4a6958cb3e7eaa0b3379f09aadc3431 *docs/sql/FCDVT-14/anterior_2026-11-04/00_prechecks.sql
+7e8278b1a46a94da86220b25d9f427ab *docs/sql/FCDVT-14/anterior_2026-11-04/02_tablas_carga_yz.sql
+7561324b4aaacdb42cdcda47c0b232a0 *docs/sql/FCDVT-14/anterior_2026-11-04/03_pkg_carga_masiva_yz_spec.sql
+ccc85966cb6d8adcce8bb032d5947d30 *docs/sql/FCDVT-14/anterior_2026-11-04/04_pkg_carga_masiva_yz_body.sql
+8981423921720308c39b457f8eaf212b *docs/sql/FCDVT-14/anterior_2026-11-04/05_grants_sinonimos.sql
+73db7db3da1f929d09a5faf9c32399dd *docs/sql/FCDVT-14/anterior_2026-11-04/06_pruebas.sql
+5ca29a2d360210911ab660d5f90021fb *docs/sql/FCDVT-14/anterior_2026-11-04/99_rollback.sql
+c139967f5b568d6ea881f89c2b17f6de *docs/sql/FCDVT-14/anterior_2026-11-04/INSTALAR.sql
+e6d676e3bedbb7cef504109432957bdc *docs/sql/FCDVT-14/04b_pkg_f8_graba_masiva_yz_spec.sql
+deee7b44ec0f45f1a8607bc39d84484e *docs/sql/FCDVT-14/04c_pkg_f8_graba_masiva_yz_body.sql
+f3ad05fc452ffd1c7d4f56d8e540a685 *FTEPROD/Form174.frm.bak_FCDVT-14_Paquete
+263de25e074adc17744609ed2cf14c3d *docs/sql/FCDVT-14/anterior_2026-11-04b/00_LEEME.md
+9df323d52c86f4b96545fd8a7fe5404c *docs/sql/FCDVT-14/anterior_2026-11-04b/03_pkg_carga_masiva_yz_spec.sql
+d51bf6fbe51d12a92eee4ebff0e73bd3 *docs/sql/FCDVT-14/anterior_2026-11-04b/04_pkg_carga_masiva_yz_body.sql
+8981423921720308c39b457f8eaf212b *docs/sql/FCDVT-14/anterior_2026-11-04b/05_grants_sinonimos.sql
+1fa45e4c4db6eeb2f082617ffd233793 *docs/sql/FCDVT-14/anterior_2026-11-04b/06_pruebas.sql
+27a3e1215017547b4b364ff221a64f5a *docs/sql/FCDVT-14/anterior_2026-11-04b/98_limpia_prueba.sql
+f2580276ba771712098afb955e45d1b4 *docs/sql/FCDVT-14/anterior_2026-11-04b/99_rollback.sql
+eef2b19d132fc0ffbaf033362f0652f6 *docs/sql/FCDVT-14/anterior_2026-11-04b/INSTALAR.sql
+bf4e84432e3da9f69c0f0482fd21fc76 *docs/sql/FCDVT-14/pruebas_cargar/README.md
+01cd91900b243b44c7a5e931ab07cd1a *docs/sql/FCDVT-14/pruebas_cargar/c00_prechecks.sql
+25da5e9219e4d34922136ad418e1b701 *docs/sql/FCDVT-14/pruebas_cargar/c01_ok.csv
+ca0f9969d3e9fe867310111d300fc718 *docs/sql/FCDVT-14/pruebas_cargar/c02_mixto.csv
+7f020d4416877e85ddbb2c2644a0cec6 *docs/sql/FCDVT-14/pruebas_cargar/c03_reemplazo.csv
+5ed99e668908ebccb07e72746f8f3194 *docs/sql/FCDVT-14/pruebas_cargar/c04_numeracion.csv
+84c4ed17db79711e2c8d74604ae44b4e *docs/sql/FCDVT-14/pruebas_cargar/c05_y_cerrada.sql

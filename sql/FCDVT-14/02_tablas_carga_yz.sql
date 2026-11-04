@@ -6,7 +6,7 @@
 --   anterior_2026-11-03/02_tablas_carga_yz.sql
 --
 -- Las usa PKG_F8_CARGA_MASIVA_YZ (pasos 03 y 04), llamado desde
--- Form174 (boton Buscar). Para el prefijo <P> crea:
+-- Form174 (botones Buscar y Cargar). Para el prefijo <P> crea:
 --   VTA_<P>CARGA_YZ_DET : una fila por linea del CSV, ya separada y tipada
 --   VTA_<P>CARGA_YZ_RES : resumen por fecha / local / terminal (grilla)
 --   VTA_<P>CARGA_YZ_LOG : log por carga (INICIO, errores por fila/campo, FIN)
@@ -16,7 +16,8 @@
 --
 -- Solo crea lo que NO existe: en test, con FACO ya instalado, no hace nada
 -- y se puede volver a ejecutar. Formato del CSV: FORMATO_CARGA_Y_FACO.md.
--- Esta etapa NO graba libvta / zzz / termstat(y): eso lo hara Cargar.
+-- Buscar no graba cierres; Cargar (prc_graba, 04-11-2026) graba en
+-- libvta / zzz / termstat(y) los grupos CARGADO. Este script no cambia.
 --
 -- Columnas de DET: los montos tienen el nombre de vta_paint_z.vta_cmp_asoc
 -- de FACO (columnas 12 a 56 del CSV). Antes de habilitar otro pais hay que
@@ -27,8 +28,11 @@
 --   ERROR     : no cuadra o tiene filas con error (motivo en res_mensaje)
 --   CARGADO   : 1 Z, al menos 1 Y, sin errores y total Z = suma total Y
 --               (hasta el 03-11-2026 se llamaba PROCESADO)
+--   GRABADO   : Cargar ya lo grabo (desde el 04-11-2026); si Cargar no
+--               pudo, el grupo pasa a ERROR con el motivo
 -- log_etapa: INICIO, LECTURA (formato de la linea), VALIDACION (contra la
---   base), RESUMEN (grupo en ERROR), FIN, ERROR (el proceso se cayo)
+--   base), RESUMEN (grupo en ERROR), FIN, ERROR (el proceso se cayo),
+--   GRABADO (Cargar: inicio, resultado de cada grupo y fin)
 -- =====================================================================
 set serveroutput on
 

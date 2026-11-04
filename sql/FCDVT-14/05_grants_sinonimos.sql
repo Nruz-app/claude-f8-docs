@@ -2,6 +2,7 @@
 -- FCDVT-14 - Paso 05: permisos y sinonimos para el usuario del exe F8
 -- MULTIPAIS: por prefijo de pais
 -- xintec-nruz 30-10-2026 / 03-11-2026 (multipais)
+-- xintec-nruz 04-11-2026: tambien PKG_F8_GRABA_MASIVA_YZ (boton Cargar)
 -- Version anterior (solo FACO): anterior_2026-11-03/05_grants_sinonimos.sql
 --
 -- Si el exe (Setup.ini, [CONNECT]) se conecta como el duenio de las
@@ -19,6 +20,7 @@ declare
   v_p       varchar2(10) := upper(trim(v_prefijo));
 begin
   execute immediate 'grant execute on PKG_F8_CARGA_MASIVA_YZ to ' || v_usuario;
+  execute immediate 'grant execute on PKG_F8_GRABA_MASIVA_YZ to ' || v_usuario;
   execute immediate 'grant select on VTA_' || v_p || 'CARGA_YZ_RES to ' || v_usuario;
   execute immediate 'grant select on VTA_' || v_p || 'CARGA_YZ_DET to ' || v_usuario;
   execute immediate 'grant select on VTA_' || v_p || 'CARGA_YZ_LOG to ' || v_usuario;
@@ -40,6 +42,7 @@ declare
   end sin;
 begin
   sin('PKG_F8_CARGA_MASIVA_YZ');
+  sin('PKG_F8_GRABA_MASIVA_YZ');
   sin('VTA_' || v_p || 'CARGA_YZ_RES');
   sin('VTA_' || v_p || 'CARGA_YZ_DET');
   sin('VTA_' || v_p || 'CARGA_YZ_LOG');
@@ -49,5 +52,5 @@ end;
 -- Verificacion (ESPERADO: el package y las 3 tablas de cada prefijo instalado)
 select owner, synonym_name, table_owner, table_name
   from all_synonyms
- where table_name = 'PKG_F8_CARGA_MASIVA_YZ'
+ where table_name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ')
     or table_name like 'VTA\_%CARGA\_YZ\_%' escape '\';

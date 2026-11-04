@@ -3,6 +3,12 @@
 -- Cuerpo de PKG_F8_CARGA_MASIVA_YZ   (Oracle 10.2)
 -- MULTIPAIS (habilitado: FACO)
 -- xintec-nruz 30-10-2026 / 03-11-2026 (multipais y estado CARGADO)
+-- xintec-nruz 04-11-2026: cambios sobre la version del 03-11, solo dos
+--   controles de LECTURA para que no falle recien Cargar: VENDEDOR de mas de
+--   10 digitos (vta_vendedor NUMBER(10)) y montos de mas de 12 digitos
+--   (NUMBER(15,2); 12 deja margen para la suma det_total y la Z). El
+--   grabado (boton Cargar) va en PKG_F8_GRABA_MASIVA_YZ (pasos 04b y 04c).
+--   Version con prc_graba dentro (descartada): anterior_2026-11-04b/
 -- Version anterior (solo FACO, SQL estatico, la instalada en test el 30-10):
 --   anterior_2026-11-03/04_pkg_carga_masiva_yz_body.sql
 --
@@ -37,8 +43,9 @@
 --   ERROR si tiene filas con error, si no tiene exactamente 1 Z, si no tiene
 --   Y o si el TOTAL de la Z (BOLETAS + N.CREDITO + FACTURA) es distinto de la
 --   suma de los TOTALES de las Y. En otro caso, CARGADO.
--- Fuera de alcance (lo hara Cargar): Z cerrada (Est_TermStat), NRO_Y ya
--- existente en la base y el grabado en libvta / zzz / termstat(y).
+-- Fuera de alcance: el grabado en libvta / zzz / termstat(y) y sus
+-- validaciones contra la base (Z o Y cerradas) los hace el boton Cargar con
+-- PKG_F8_GRABA_MASIVA_YZ.prc_graba (pasos 04b y 04c).
 --
 -- Para habilitar otro pais ver 00_LEEME.md ("Multipais").
 -- =====================================================================
@@ -360,6 +367,14 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ as
     v_vend   := fn_entero(p_carga, p_linea, 8, fn_campo(v_txt, 8), true,  null, v_err);
     v_crepo  := fn_entero(p_carga, p_linea, 9, fn_campo(v_txt, 9), true,  null, v_err);
 
+    -- xintec-nruz 04-11-2026: vta_<pfx>libvta.vta_vendedor es NUMBER(10); sin
+    -- este control la linea pasaba Buscar y fallaba recien en Cargar (ORA-01438)
+    if v_vend is not null and abs(v_vend) > 9999999999 then
+      prc_log(p_carga, p_linea, 'LECTURA', 'VENDEDOR', to_char(v_vend),
+              'Maximo 10 digitos (vta_vendedor es NUMBER(10))');
+      v_err := true;
+    end if;
+
     v_tipo := upper(fn_campo(v_txt, 10));
     if v_tipo is null or v_tipo not in ('Y', 'Z') then
       prc_log(p_carga, p_linea, 'LECTURA', 'TIPO', v_tipo, 'Debe ser Y o Z');
@@ -382,6 +397,13 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ as
     -- Montos (columnas 12 a 56): enteros, vacio = 0
     for i in 1 .. 45 loop
       m(i) := fn_entero(p_carga, p_linea, i + 11, fn_campo(v_txt, i + 11), false, 0, v_err);
+      -- xintec-nruz 04-11-2026: los montos van a columnas NUMBER(15,2) de
+      -- libvta / zzz (13 digitos enteros); mas largos fallaban recien en Cargar
+      if m(i) is not null and abs(m(i)) > 999999999999 then
+        prc_log(p_carga, p_linea, 'LECTURA', fn_nombre(i + 11), to_char(m(i)),
+                'Monto demasiado grande (maximo 12 digitos)');
+        v_err := true;
+      end if;
     end loop;
 
     if m(1) is not null and m(2) is not null and m(3) is not null then

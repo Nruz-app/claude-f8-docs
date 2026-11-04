@@ -209,6 +209,7 @@ Private Sub LlenaGrillaLog()
         .LockType = adLockReadOnly
     End With
     'xintec-nruz 03-11-2026 FCDVT-14: multipais, prefijo del pais con Chile sin prefijo (antes "vta_" & Flg_Pais$)
+    'xintec-nruz 04-11-2026 FCDVT-14: tambien el resultado de Cargar del grupo (antes solo log_etapa = 'RESUMEN')
     sq = "select l.log_linea, d.det_tipo, d.det_nro_y, l.log_etapa, l.log_campo, l.log_valor, l.log_motivo " & _
          "from   vta_" & PrefijoCargaYZ() & "carga_yz_log l, vta_" & PrefijoCargaYZ() & "carga_yz_det d " & _
          "where  l.log_carga = " & CStr(mCarga) & " " & _
@@ -219,7 +220,7 @@ Private Sub LlenaGrillaLog()
          "                        and   x.det_fecha = to_date('" & mFecha & "', 'dd-mm-yyyy') " & _
          "                        and   x.det_local = " & Val(mLocal) & " " & _
          "                        and   x.det_terminal = " & Val(mTerminal) & ") " & _
-         "    or (l.log_etapa = 'RESUMEN' and l.log_valor = '" & mFecha & " L" & Val(mLocal) & " T" & Val(mTerminal) & "')) " & _
+         "    or (l.log_etapa in ('RESUMEN', 'GRABADO') and l.log_valor = '" & mFecha & " L" & Val(mLocal) & " T" & Val(mTerminal) & "')) " & _
          "order by l.log_linea nulls last, l.log_id"
     On Error GoTo oraerror
     Call Consulta.Open(sq)

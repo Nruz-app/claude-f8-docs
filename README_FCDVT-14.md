@@ -43,6 +43,8 @@
 
 **Al 03-11-2026 (congelado, manifiesto y ZIP en §9):** primera subtarea, **carga masiva de Y y Z para FACO**, etapa Buscar terminada. El usuario la probó en test con la versión del 30-10 y "funciona bien". Lo que se hizo después del 30-10 está **sin compilar ni ejecutar**.
 
+**04-11-2026:** el botón **Cargar** está programado (§5.9): `Command4_Click` en Form174 llama a `PKG_F8_GRABA_MASIVA_YZ.prc_graba`, un package propio separado del de Buscar. Hay pruebas en `docs/sql/FCDVT-14/pruebas_cargar/`. Está sin compilar ni ejecutar.
+
 | Pieza | Estado |
 |---|---|
 | Submenú del botón Y (`MDIForm1.frm`, §5.2) | Implementado. Solo FACO: `INGY` → Form19Y con el permiso 15; `INGYMA` → Form174 con el permiso 460. El usuario lo compiló y lo vio funcionar en test |
@@ -51,12 +53,12 @@
 | `Form174` clic en la grilla (§5.6) | Un **solo clic** en una fila abre `Form175` con el log del grupo |
 | `Form175` (nuevo, §5.6) | Detalle del log de un grupo. Está en el `.vbp`. Sin compilar |
 | `Form174` Exportar Excel (§5.7) | Genera una plantilla `.xlsx` con formato: hojas Carga, Instrucciones y Listas (oculta). El usuario la completa y la **guarda como CSV**; Buscar solo lee CSV, por decisión del usuario. Sin compilar |
-| `Form174` Cargar (`Command4`) | **Sin código** (diseño en §5.4). Debe grabar los grupos CARGADO |
+| `Form174` Cargar (`Command4`) | **Programado el 04-11** (§5.9), sin compilar. Llama a `PKG_F8_GRABA_MASIVA_YZ.prc_graba` (package propio, `04b`/`04c`), que graba cada grupo CARGADO (Z como Form19, Y como Form19Y), **reemplaza** lo que el terminal-día ya tenga, hace commit por grupo y lo deja en **GRABADO** (o ERROR con el motivo) |
 | `Form174` Salir | Ejecuta la **prueba temporal** del cierre diario (`EjecutaCierreDiario`, FSCC-12901, fecha fija `vFechaPrueba`). La copia de producción (`docs/Cambios/`) es idéntica, por decisión del usuario; está marcada como riesgo |
-| Package y tablas (`docs/sql/FCDVT-14/02`-`06`, §5.8) | **Multipaís** con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`, solo FACO habilitado. En test está instalada la **versión del 30-10** (solo FACO, respaldada en `anterior_2026-11-03/`). Falta ejecutar `INSTALAR.sql` con la multipaís: el exe nuevo la necesita |
+| Packages y tablas (`docs/sql/FCDVT-14/02`-`06`, §5.8, §5.9) | **Multipaís** con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`, solo FACO habilitado. Son dos packages: `PKG_F8_CARGA_MASIVA_YZ` (Buscar, `03`/`04`) y, desde el 04-11, `PKG_F8_GRABA_MASIVA_YZ` (Cargar, `04b`/`04c`). En test está instalada la **versión del 30-10** (solo FACO, respaldada en `anterior_2026-11-03/`). La multipaís sin `prc_graba` está respaldada en `anterior_2026-11-04/`. Falta ejecutar `INSTALAR.sql`, porque el exe nuevo lo necesita |
 | Archivos de prueba (`docs/sql/FCDVT-14/pruebas/`) | 8 CSV (`p01`-`p08`) con el resultado esperado en su `README.md` |
 | Cuadratura | Total Z = suma de los totales de las Y (§5.5). "Documentos = formas de pago" por Y, pendiente de negocio |
-| Grabado (Cargar), update (`MODIFICAR`), SFCL y Chile | Pendientes (§5.4, §7). Para otro país, ver "Multipaís" en `docs/sql/FCDVT-14/00_LEEME.md` |
+| Update (`MODIFICAR`), SFCL y Chile | Pendientes (§7). Cargar ya reemplaza los cierres existentes. Para otro país, ver "Multipaís" en `docs/sql/FCDVT-14/00_LEEME.md` |
 | Paso a producción | `docs/Cambios/` está sincronizado con `FTEPROD` (regla permanente de CLAUDE.md §9). Falta subir `Gversion` |
 
 ## 3. Artefactos
@@ -490,6 +492,71 @@ ERROR si el grupo tiene líneas con error, si no tiene exactamente 1 Z, si no ti
 
 **Para probar:** `INSTALAR.sql` en test → compilar → Buscar con `pruebas/p02_falta_z.csv` → 3 CARGADO y 3 ERROR → clic en un grupo → Form175 con su log.
 
+### 5.9 Botón Cargar: `PKG_F8_GRABA_MASIVA_YZ.prc_graba` (04-11-2026, sin compilar ni ejecutar)
+
+> **04-11, más tarde:** a pedido del usuario, el grabado se **separó** en su propio package, `PKG_F8_GRABA_MASIVA_YZ` (`04b` spec y `04c` body), con el mismo código. `PKG_F8_CARGA_MASIVA_YZ` (`03`/`04`) volvió a la versión del 03-11, que solo valida y llena la grilla, con dos controles de LECTURA nuevos, para que el error no aparezca recién al grabar: VENDEDOR de más de 10 dígitos y montos de más de 12 dígitos (columnas `NUMBER(15,2)`). En el rollback, la parte C (volver a solo FACO) exige ejecutar antes la D, que borra el package de grabado. La versión con `prc_graba` dentro del package de carga quedó en `anterior_2026-11-04b/`. Form174 llama al package nuevo (respaldo `Form174.frm.bak_FCDVT-14_Paquete`). Las pruebas están en `docs/sql/FCDVT-14/pruebas_cargar/`, con el resultado esperado en su `README.md`.
+
+**Decisiones del usuario (04-11):**
+- la fila Z se graba como en `Form19`: libvta `'F8'`/99 + zzz, y termstat en −1 solo si no existe;
+- el grabado va en la base, en un package propio (`PKG_F8_GRABA_MASIVA_YZ`), con commit o rollback **por grupo**;
+- si el terminal-día ya tiene una Z o unas Y, se **reemplazan** como hace `Form19`;
+- la glosa de `ter_notas` es propia: `CARGA MASIVA DE CIERRE Z - CARGA <n>` y `CARGA MASIVA DE CIERRE Y - CARGA <n>`.
+
+**Package** `PKG_F8_GRABA_MASIVA_YZ` (`docs/sql/FCDVT-14/04b` y `04c`). Tiene sus copias privadas de `pr_config` (la misma lista blanca), `fn_r` y `prc_log` (escribe en `VTA_{P}CARGA_YZ_LOG`), y toma `c_estado_ok` de la spec de `PKG_F8_CARGA_MASIVA_YZ`:
+
+`prc_graba(p_flg_pais, p_carga, p_usuario, o_grupos_ok, o_grupos_error)` lee los grupos CARGADO de `VTA_{P}CARGA_YZ_RES` antes del bucle y, para cada uno, ejecuta `pr_graba_grupo`:
+
+1. **Revalida:**
+   - la Z (`termstat`) no está en estado 1 ni 2, como `Est_TermStat`;
+   - ninguna `termstaty` del día está cerrada. Esta guarda no está en Form19, que borra las Y igual;
+   - el N° de cada Y queda entre 1 y 98. Una Y sin `NRO_Y` recibe el siguiente al mayor informado del grupo.
+2. Lee `vta_bolinicial` y `vta_nrollo` de la Z y de las Y anteriores (`LeeZactual` de Form19 y Form19Y).
+3. **Borra**, en este orden:
+   - la zzz de los techkeys de la libvta `'F8'`/`'Y'`;
+   - esa libvta;
+   - todas las termstaty del día (`Func_Eliminar_TermStatY` con `vcierrey` vacío, como lo llama Form19).
+4. **Inserta la Z** con `pr_ins_libvta` (columnas de `Form19.GrabarTerceraZZZ`, rama FACO, con cada campo en su columna) y `pr_ins_zzz` (columnas 15 a 56 + `rec_mtotatrf`). Si no existe la termstat, la inserta en −1.
+5. **Inserta cada Y**: libvta `'Y'`/N, zzz y termstaty en −1. El N° asignado queda en `det_nro_y`.
+6. Pasa el grupo a **GRABADO** (`c_estado_grabado`) con commit. Antes de grabarlo lo toma con un `update` de su fila de RES condicionado a CARGADO: si dos ejecuciones de Cargar coinciden, la segunda espera y después lo omite, dejándolo en el log. Ante cualquier error, hace rollback del grupo, lo deja en ERROR con el motivo (`res_mensaje`) y sigue con el siguiente.
+
+Cada grupo deja su fila en el log (etapa `GRABADO`), además de INICIO y FIN. Una carga sin grupos CARGADO devuelve 0/0.
+
+Ajustes de la revisión de `f8-revisor` (04-11):
+- Buscar rechaza VENDEDOR de más de 10 dígitos (`vta_vendedor NUMBER(10)`). Antes la línea pasaba Buscar y fallaba recién en Cargar.
+- Se agregó la toma del grupo contra la doble ejecución.
+- Se corrigieron textos (FORMATO §3.1 `NRO_Y`, encabezados de `INSTALAR` y `02`, `00_LEEME`, `06` y `docs/Cambios/README.md` §3).
+
+Verificado en el clon de test:
+- no hay triggers sobre `VTA_FACOLIBVTA` ni sobre `termstat(y)`;
+- los triggers de `VTA_FACOZZZ` solo completan `REC_MCMRREVCMP` y `REC_TARJEXTERNA`;
+- las 42 columnas `REC_*` existen;
+- `vta_secuencia` es `NUMBER(2)`;
+- la PK de libvta es (`fecha`, `local`, `terminal`, `tiporeg`, `secuencia`, `fecha_venta`).
+
+**Exe** (marcas `xintec-nruz 04-11-2026 FCDVT-14`; respaldos `.bak_FCDVT-14_Cargar`):
+- **`Form174`:**
+  - `Command4_Click` es nuevo: exige un Buscar previo con grupos CARGADO, pide confirmación avisando que reemplaza, llama a `PKG_F8_GRABA_MASIVA_YZ.prc_graba` con `ADODB.Command` y refresca la grilla;
+  - Cargar se habilita solo después de un Buscar con grupos CARGADO (`Form_Load` y `CargaGrillaCsv`);
+  - en la grilla, GRABADO va en verde.
+- **`Form175`:** el log del grupo incluye la etapa GRABADO (antes solo RESUMEN).
+
+**Scripts:**
+- `06_pruebas.sql`, consultas 6 a 9: lo grabado en libvta, zzz y termstat(y), y las zzz huérfanas;
+- `98_limpia_prueba.sql`, nuevo y **solo para test**: borra lo grabado por una carga;
+- `99_rollback.sql`, parte D: `drop package PKG_F8_GRABA_MASIVA_YZ`;
+- `pruebas_cargar/` (c00 a c05): prechecks, 4 CSV (correcto, mixto, reemplazo y numeración), una Y cerrada y el `README.md` con el resultado esperado.
+
+**Riesgo:** el reemplazo borra las Y abiertas del día. Si tenían compensaciones (`movdet` con `mov_cierrey`), estas quedan apuntando al número de Y del archivo. Hay que probarlo en test con un caso así.
+
+**Para probar en test:**
+1. `INSTALAR.sql` y compilar.
+2. Buscar con `ejemplo_carga_Y_FACO_20.csv` → 3 CARGADO → Cargar → 3 GRABADO.
+3. `06_pruebas.sql`, consultas 6 a 9: 3 libvta `'F8'`/99, 20 `'Y'`, 23 zzz, 20 termstaty en −1 con la glosa y 0 zzz huérfanas.
+4. En la F8 (`Form3Y`) se ven las Y. En `Form19Y`, la columna "Valor Z" muestra la Z.
+5. Repetir Buscar + Cargar: los conteos quedan iguales.
+6. Cerrar una Y y volver a cargar ese terminal: el grupo queda en ERROR y no cambia nada.
+7. `98_limpia_prueba.sql`.
+
 ## 6. Hechos verificados en la base de test
 
 Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-12901): `VTA_PAINT_Z` de FACO tiene 53 filas en test, 47 campos, signo siempre `+`, grupos ZZZ 1, 2, 3, 6 y 7.
@@ -534,7 +601,13 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
    3. probar con `pruebas/p02_falta_z.csv` (3 CARGADO, 3 ERROR), el clic que abre Form175 y Exportar Excel → CSV → Buscar.
    
    Si el multipaís falla: `99_rollback.sql` parte C y `FTEPROD/Form17[45].frm.bak_FCDVT-14_Multipais`.
-4. Siguiente desarrollo: **Cargar** (`Command4`, §5.4). Debe grabar en libvta, zzz y termstat(y) los grupos CARGADO de `VTA_<pfx>CARGA_YZ_DET` (`mCarga`), sin volver a leer el archivo. Falta definir qué se graba con la fila Z y la glosa de `ter_notas` (`FORMATO` §7-8).
+4. ~~Siguiente desarrollo: **Cargar**~~: programado el 04-11 (§5.9). Pendiente del usuario en test:
+   - `INSTALAR.sql`, que ahora instala los dos packages;
+   - compilar;
+   - la prueba de `docs/sql/FCDVT-14/pruebas_cargar/README.md`;
+   - `98_limpia_prueba.sql`.
+
+   Si falla: `99_rollback.sql` parte D y `FTEPROD/Form17[45].frm.bak_FCDVT-14_Cargar`.
 5. Antes de producción: decidir qué hacer con la prueba del cierre diario en Salir (§2), subir `Gversion` y ejecutar `01` junto con el exe.
 
 ## 9. Historial
@@ -566,3 +639,7 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 03-11-2026 | Form174: **Exportar Excel genera una plantilla `.xlsx` con formato** (§5.7): hojas Carga (encabezado con comentarios, FECHA y HORA texto, enteros validados, listas en TIPO y TIPO_CARGA), Instrucciones y Listas oculta. El usuario la guarda como CSV para Buscar, que no cambia. Respaldo `Form174.frm.bak_FCDVT-14_Plantilla`. `FORMATO` §5 actualizado (2 copias). Sin compilar. `docs/Cambios/` sincronizado. |
 | 03-11-2026 | **Estado CARGADO y package multipaís** (§5.8). El estado de un grupo correcto pasa de PROCESADO a CARGADO. `PKG_F8_CARGA_MASIVA_YZ` recibe el país (lista blanca, solo FACO; SQL `{P}`) con tablas por prefijo `VTA_<pfx>CARGA_YZ_*`; FACO conserva sus nombres. `02`, `03`, `04`, `05`, `06`, `INSTALAR` y `99` (parte C: volver a la versión anterior) actualizados; respaldo en `anterior_2026-11-03/`. Form174/Form175 pasan el país y usan `PrefijoCargaYZ()` (respaldos `.bak_FCDVT-14_Multipais`). Pruebas y `FORMATO` con CARGADO. Sin compilar ni ejecutar. `docs/Cambios/` sincronizado. |
 | 03-11-2026 | **Estado congelado** ("documenta todo"): §2 Estado y §8 Cómo retomar al día; memoria del proyecto; `docs/MANIFIESTO_FCDVT-14.md5` verificado; respaldo `docs/respaldos/FCDVT-14_2026-11-03_multipais-cargado.zip`. Nada ejecutado en la base ni compilado después del 30-10. |
+| 04-11-2026 | **Botón Cargar** (§5.9). `PKG_F8_CARGA_MASIVA_YZ.prc_graba` graba los grupos CARGADO: Z como Form19 (libvta `'F8'`/99 + zzz, termstat −1 si falta) e Y como Form19Y (libvta + zzz + termstaty −1), con los campos en su columna. Antes de grabar revalida que la Z y las Y no estén cerradas y que el N° de Y quede entre 1 y 98; después **reemplaza** lo que el terminal-día tenía (sin dejar zzz huérfanas). Hace commit o rollback por grupo y deja el estado nuevo GRABADO. Glosas `CARGA MASIVA DE CIERRE Z/Y - CARGA <n>`. Form174: `Command4_Click`. Form175: log de la etapa GRABADO. `06` (consultas 6 a 9), `98_limpia_prueba.sql` nuevo, `99` parte D, `00_LEEME`, `FORMATO` §7-8 (2 copias), `CLAUDE.md` y `docs/sql/CLAUDE.md`. Respaldos en `anterior_2026-11-04/` y `.bak_FCDVT-14_Cargar`. `docs/Cambios/` sincronizado. Sin compilar ni ejecutar. |
+| 04-11-2026 | **Estado congelado** antes de pasar a test el botón Cargar: `docs/MANIFIESTO_FCDVT-14.md5` regenerado (agrega `98_limpia_prueba.sql`, `anterior_2026-11-04/` y los `.bak_FCDVT-14_Cargar` de Form174 y Form175) y respaldo `docs/respaldos/FCDVT-14_2026-11-04_cargar-grabado.zip`. Nada ejecutado en la base ni compilado después del 30-10. |
+| 04-11-2026 | **Grabado separado en su propio package**, a pedido del usuario. `PKG_F8_GRABA_MASIVA_YZ` (`04b` spec y `04c` body nuevos) tiene el mismo código de `prc_graba`, con copias privadas de `pr_config`, `fn_r` y `prc_log`. `PKG_F8_CARGA_MASIVA_YZ` vuelve a la del 03-11 más el control de VENDEDOR (se verificó con un diff). `INSTALAR`, `05`, `99` parte D (`drop package`), `06` y `98` actualizados. Form174 llama al package nuevo (respaldo `.bak_FCDVT-14_Paquete`; `docs/Cambios` sincronizado). Carpeta nueva `pruebas_cargar/` (c00 a c05 + `README.md`). Después de la revisión de `f8-revisor`: tope de montos de 12 dígitos en Buscar, aviso en la parte C del rollback, sinónimos en las partes B y D, y la parte 2 de `c05` reabre la Y aunque se haya cerrado desde la F8. La versión anterior quedó en `anterior_2026-11-04b/`. Sin compilar ni ejecutar. |
+| 04-11-2026 | **Estado congelado** con los packages separados (`PKG_F8_CARGA_MASIVA_YZ` para Buscar y `PKG_F8_GRABA_MASIVA_YZ` para Cargar) y la carpeta `pruebas_cargar/`. `docs/MANIFIESTO_FCDVT-14.md5` regenerado (agrega `04b`, `04c`, `anterior_2026-11-04b/`, `pruebas_cargar/` y `Form174.frm.bak_FCDVT-14_Paquete`) y respaldo `docs/respaldos/FCDVT-14_2026-11-04_packages-separados.zip`. Nada ejecutado en la base ni compilado después del 30-10. |

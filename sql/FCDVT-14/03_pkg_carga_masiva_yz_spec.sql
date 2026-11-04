@@ -3,6 +3,10 @@
 -- Especificacion de PKG_F8_CARGA_MASIVA_YZ   (Oracle 10.2)
 -- MULTIPAIS (habilitado: FACO)
 -- xintec-nruz 30-10-2026 / 03-11-2026 (multipais y estado CARGADO)
+-- xintec-nruz 04-11-2026: el grabado (boton Cargar) NO esta aqui: va en su
+--   propio package, PKG_F8_GRABA_MASIVA_YZ (pasos 04b y 04c), que usa
+--   c_estado_ok de esta spec. Esta spec es la del 03-11 sin cambios.
+--   Version con prc_graba dentro (descartada): anterior_2026-11-04b/
 -- Version anterior (solo FACO, la instalada en test el 30-10):
 --   anterior_2026-11-03/03_pkg_carga_masiva_yz_spec.sql
 --

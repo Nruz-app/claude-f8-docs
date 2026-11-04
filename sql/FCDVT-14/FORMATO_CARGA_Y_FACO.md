@@ -41,7 +41,7 @@ El CSV propuesto contiene **lo mismo que la pantalla `Form19Y`** (identificació
 | 1 | `FECHA` | Sí | FECHA | `vta_fecha`, `vta_fecha_venta`, `rec_fechaproceso`, `ter_fecha`. Debe ser anterior a hoy |
 | 2 | `LOCAL` | Sí | LOCAL | `vta_local`, `ter_local` |
 | 3 | `TERMINAL` | Sí | TERMINAL | `vta_terminal`, `ter_terminal` |
-| 4 | `NRO_Y` | No | N° DE CIERRE DE Y | **Vacío:** la carga asigna `max(vta_secuencia)+1` del terminal-día, en el orden del archivo, igual que Form19Y. **Informado:** ese número no debe existir; si existe, se rechaza la fila (esta carga no modifica) |
+| 4 | `NRO_Y` | No | N° DE CIERRE DE Y | **Informado:** se usa ese número (1 a 98). **Vacío:** Cargar asigna el siguiente al mayor `NRO_Y` informado del grupo, recorriendo las Y vacías en el orden del archivo. Por ejemplo, con [vacío, vacío, 1] quedan las Y 2, 3 y 1. Como Cargar **reemplaza** las Y que ya tenga el terminal-día (§7), un número que ya existe en la base no rechaza la fila (desde el 04-11-2026; antes se rechazaba) |
 | 5 | `HORA` | Sí | HORA | `vta_hora` como HHMM |
 | 6 | `SECUENCIA` | Sí | SECUENCIA | `vta_secuencia_srx` |
 | 7 | `NUM_BOLETA` | Sí | N° BOLETA | `vta_bolfinal` (y cálculo de `vta_cantbol`) |
@@ -165,7 +165,7 @@ Son las mismas que hace hoy Form19Y, más las que pide el requerimiento. La fila
 2. `FECHA` válida y anterior a la fecha del servidor (`LeeFechaServidor`).
 3. Local y terminal vigentes en `vta_FACOterminales` (como `Oklt`).
 4. La Z del terminal-día no está cerrada: `vta_FACOtermstat.ter_estado` distinto de 1 y 2 (`Est_TermStat`).
-5. Si viene `NRO_Y`, que esa Y no exista (`FuncValidNumY`), porque esta carga solo inserta.
+5. ~~Si viene `NRO_Y`, que esa Y no exista (`FuncValidNumY`)~~: desde el 04-11-2026 no aplica, porque Cargar reemplaza las Y del terminal-día (§7). Ninguna Y del día debe estar cerrada.
 6. Campos obligatorios presentes; `HORA` en `HH:MM`; números enteros.
 7. **Cuadratura** (pedida por el requerimiento; Form19Y no la hace en FACO). **Definida el 30-10-2026:** por terminal-día, el TOTAL de la Z (BOLETAS + N.CREDITO + FACTURA) debe ser igual a la suma de los TOTALES de las Y. La regla "documentos = formas de pago" de cada Y (o la fórmula ZZZ por grupos `vta_validadorzzz`) sigue pendiente de negocio.
 8. Sin duplicados dentro del archivo: misma fecha, local, terminal y `NRO_Y` informado.
@@ -182,7 +182,7 @@ Form174 envía cada línea a `PKG_F8_CARGA_MASIVA_YZ` (`docs/sql/FCDVT-14/02` a 
 | ERROR | Hay filas con error, no hay exactamente 1 Z, no hay Y, o el total de la Z es distinto de la suma de las Y. El motivo queda en `res_mensaje` (doble clic en la grilla) |
 | CARGADO | 1 Z, al menos 1 Y, sin errores y total Z = suma total Y (hasta el 03-11-2026 se llamaba PROCESADO) |
 
-Cada error queda en `VTA_FACOCARGA_YZ_LOG` con su línea, campo, valor y motivo. Las validaciones 4 (Z no cerrada) y 5 (`NRO_Y` ya existente) dependen del estado de la base al grabar y quedan para Cargar.
+Cada error queda en `VTA_FACOCARGA_YZ_LOG` con su línea, campo, valor y motivo. Las validaciones que dependen del estado de la base al grabar las hace Cargar (§7, desde el 04-11-2026): la 4 (Z no cerrada) y, además, que ninguna Y del terminal-día esté cerrada. La 5 (`NRO_Y` ya existente) ya no aplica, porque Cargar **reemplaza** lo que el terminal-día tenga.
 
 ### 6.1 Diferencias con Form19Y (revisado el 20-10-2026)
 
@@ -196,25 +196,35 @@ Cada error queda en `VTA_FACOCARGA_YZ_LOG` con su línea, campo, valor y motivo.
 | Cuadratura | No valida en FACO | Total Z = suma de los totales de las Y del terminal-día (§6.7) |
 | Obligatorios, fecha < servidor, Z no cerrada | Sí | Igual |
 
-## 7. Qué inserta la carga por cada fila Y (referencia para el desarrollo)
+## 7. Qué graba Cargar (`PKG_F8_GRABA_MASIVA_YZ.prc_graba`, 04-11-2026)
 
-> Pendiente para Cargar: qué se graba con la fila Z (la Z de FACO se precrea en `vta_FACOtermstat` con −1 y no se gestiona; ver `CLAUDE.md` §4.4).
+Por cada grupo CARGADO (terminal-día), en una sola transacción: si algo falla, no queda nada a medias y el grupo pasa a ERROR con el motivo.
 
-Mismo efecto que Form19Y en una Y nueva, con los campos en su columna correcta:
-
-1. Techkey: `SEQ_VTA_FACOTEC.nextval`.
-2. `insert vta_FACOlibvta`:
-   - `tiporeg 'Y'`, `vta_secuencia = NRO_Y`, `estado 'A'`, `tipof8 'N'`;
-   - columnas 12-14 y `VTA_TOTALVTA` calculado;
-   - identificación según la §3.1;
-   - techkey.
-3. `insert vta_FACOzzz`: `rec_techkey`, `rec_fechaproceso`, columnas 15-56 y `REC_MTOTATRF` calculado.
-4. `insert vta_FACOtermstaty`: `ter_cierrey = NRO_Y`, `ter_estado = -1`, `ter_notas` = glosa de carga masiva (por definir; Form19Y usa 'INGRESO MANUAL POR CIERRE DE Y'), `ter_cerradopor = LOGINUSER`. Solo si no existe la fila.
+1. **Revalida:**
+   - la Z (`vta_FACOtermstat`) no está cerrada (estado 1/2);
+   - ninguna Y del día (`vta_FACOtermstaty`) está cerrada;
+   - el N° de cada Y queda entre 1 y 98, porque `vta_secuencia` es `NUMBER(2)` y el 99 es la Z. Una Y sin `NRO_Y` recibe el siguiente al mayor informado del grupo, en el orden del archivo.
+2. **Reemplaza, como Form19:** borra la zzz de los techkeys de la libvta `'F8'`/`'Y'` del terminal-día (Form19 la deja huérfana), esa libvta y **todas** las termstaty del día. La termstat no se borra.
+3. **Z**, con la rama FACO de `Form19.GrabarTerceraZZZ`:
+   - techkey `SEQ_VTA_FACOTEC.nextval`;
+   - `insert vta_FACOlibvta`:
+     - `tiporeg 'F8'`, `vta_secuencia 99`, `estado 'A'`, `tipof8 'N'`;
+     - columnas 12-14 y `VTA_TOTALVTA` calculado;
+     - identificación según la §3.1;
+     - `vta_bolinicial` y `vta_nrollo` de la Z anterior (0 si no había), y `vta_cantbol` = NUM_BOLETA − bolinicial + 1;
+   - `insert vta_FACOzzz`: `rec_techkey`, `rec_fechaproceso`, columnas 15-56 y `REC_MTOTATRF` = Σ 35-39;
+   - `insert vta_FACOtermstat` solo si no existe, con `ter_estado = -1`, `ter_notas = 'CARGA MASIVA DE CIERRE Z - CARGA <n>'` y el usuario.
+4. **Cada Y**, igual que Form19Y en una Y nueva pero con los campos en su columna:
+   - `insert vta_FACOlibvta`: `tiporeg 'Y'`, `vta_secuencia` = N° de Y, mismas columnas que la Z. VENDEDOR admite hasta 10 dígitos (`vta_vendedor NUMBER(10)`) y Buscar ya lo valida;
+   - `insert vta_FACOzzz`;
+   - `insert vta_FACOtermstaty` con `ter_cierrey` = N° de Y, `ter_estado = -1`, `ter_notas = 'CARGA MASIVA DE CIERRE Y - CARGA <n>'` y `ter_cerradopor = LOGINUSER`.
+   - El N° asignado queda en `det_nro_y`, y Form175 lo muestra.
+5. El grupo pasa a **GRABADO** (`res_mensaje`: cantidad de Y, rango de números y lo que reemplazó), con commit, y una fila en el log en la etapa GRABADO.
 
 ## 8. Pendientes
 
 - ~~Confirmar las columnas 50 a 54 en test~~: confirmadas el 20-10-2026 (§3.2).
 - ~~`REC_MREVATOTTRF` informada o calculada~~: se informa (§3.2).
-- ~~Definir la regla de cuadratura (§6.7)~~: total Z = suma de las Y (30-10-2026). Falta la glosa de `ter_notas`.
-- Definir qué graba Cargar con la fila Z.
+- ~~Definir la regla de cuadratura (§6.7)~~: total Z = suma de las Y (30-10-2026).
+- ~~Glosa de `ter_notas` y qué graba Cargar con la fila Z~~: definidos el 04-11-2026 (§7).
 - Confirmar el nombre y la ubicación del archivo, y si se acepta más de un local por archivo.

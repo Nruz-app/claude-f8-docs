@@ -1,7 +1,10 @@
 -- =====================================================================
 -- FCDVT-14 - Rollback, por partes (ejecutar solo la parte que corresponda)
 -- xintec-nruz 20-10-2026 / 30-10-2026 / 03-11-2026 (multipais: partes B y C)
--- Version anterior: anterior_2026-11-03/99_rollback.sql
+-- xintec-nruz 04-11-2026: parte D (quitar PKG_F8_GRABA_MASIVA_YZ, boton Cargar)
+-- Versiones anteriores: anterior_2026-11-04b/99_rollback.sql,
+--   anterior_2026-11-04/99_rollback.sql, anterior_2026-11-03/99_rollback.sql
+-- Para deshacer lo que grabo Cargar en un local y fecha: 98_limpia_prueba.sql
 -- =====================================================================
 set feedback on serveroutput on
 
@@ -22,11 +25,15 @@ select count(*) quedan_rel from VTA_FACORELPERMEN where mnu_codigo = 460;
 -- PARTE B - Desinstala la carga masiva Y/Z de UN prefijo (paso 02)
 --      Borra las tablas (con sus cargas y log) y las secuencias del
 --      prefijo del bloque EDITAR. El package queda (lo usan los demas
---      paises); para borrarlo tambien: drop package PKG_F8_CARGA_MASIVA_YZ;
+--      paises); para borrarlos tambien (primero el de grabado):
+--        drop package PKG_F8_GRABA_MASIVA_YZ;
+--        drop package PKG_F8_CARGA_MASIVA_YZ;
 --      Si se ejecuto 05, borrar tambien los sinonimos (como DBA):
 --        drop synonym UINTRANETTS.VTA_FACOCARGA_YZ_RES;     -- EDITAR
 --        drop synonym UINTRANETTS.VTA_FACOCARGA_YZ_DET;     -- EDITAR
 --        drop synonym UINTRANETTS.VTA_FACOCARGA_YZ_LOG;     -- EDITAR
+--        drop synonym UINTRANETTS.PKG_F8_CARGA_MASIVA_YZ;   -- EDITAR (si se borra el package)
+--        drop synonym UINTRANETTS.PKG_F8_GRABA_MASIVA_YZ;   -- EDITAR (si se borra el package)
 --      Un exe con el Buscar nuevo de Form174 da error al buscar un archivo
 --      de ese pais hasta que se vuelva a instalar.
 -- ---------------------------------------------------------------------
@@ -53,10 +60,13 @@ end;
 select object_name, object_type from user_objects
  where object_name like 'VTA\_%CARGA\_YZ%' escape '\'
     or object_name like 'SEQ\_VTA\_%CARGA\_YZ%' escape '\'
-    or object_name = 'PKG_F8_CARGA_MASIVA_YZ';
+    or object_name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ');
 
 -- ---------------------------------------------------------------------
 -- PARTE C - Volver a la version solo FACO (la del 30-10-2026)
+--      ANTES ejecutar la PARTE D: la spec del 30-10 no tiene c_estado_ok
+--      (usa PROCESADO), asi que PKG_F8_GRABA_MASIVA_YZ quedaria INVALID
+--      (PLS-00302) y ademas nunca habria grupos CARGADO que grabar.
 --      Si el package multipais no funciona: recompila la version anterior,
 --      que usa VTA_FACOCARGA_YZ_* con SQL estatico. Las tablas FACO no
 --      cambian (son las mismas en las dos versiones).
@@ -69,3 +79,19 @@ select object_name, object_type from user_objects
 -- @anterior_2026-11-03/03_pkg_carga_masiva_yz_spec.sql
 -- @anterior_2026-11-03/04_pkg_carga_masiva_yz_body.sql
 -- select object_name, object_type, status from user_objects where object_name = 'PKG_F8_CARGA_MASIVA_YZ';
+
+-- ---------------------------------------------------------------------
+-- PARTE D - Quitar el boton Cargar de la base (PKG_F8_GRABA_MASIVA_YZ)
+--      Si Cargar no funciona: borra el package de grabado. Buscar
+--      (PKG_F8_CARGA_MASIVA_YZ) y las tablas no cambian. Los grupos que ya
+--      quedaron GRABADO conservan ese estado y sus cierres en libvta / zzz /
+--      termstat(y) (para borrarlos: 98_limpia_prueba.sql).
+--      En el exe, Cargar dara error de Oracle hasta volver atras
+--      FTEPROD/Form174.frm.bak_FCDVT-14_Cargar y
+--      FTEPROD/Form175.frm.bak_FCDVT-14_Cargar (y sincronizar docs/Cambios).
+-- ---------------------------------------------------------------------
+-- drop package PKG_F8_GRABA_MASIVA_YZ;
+-- Si se ejecuto 05 (como DBA):
+--   drop synonym UINTRANETTS.PKG_F8_GRABA_MASIVA_YZ;      -- EDITAR
+-- select object_name, object_type, status from user_objects
+--  where object_name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ');
