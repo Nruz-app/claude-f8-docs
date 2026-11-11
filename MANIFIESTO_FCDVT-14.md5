@@ -1,4 +1,4 @@
-# MANIFIESTO FCDVT-14 - estado congelado: insercion masiva de Y FACO. Submenu Y (MDIForm1) + permiso 460 (ejecutado en test) + Form174 con Buscar (con grilla Local/Terminal/Fecha/Monto Total del CSV) y Exportar Excel; Cargar pendiente (22-10)
+﻿# MANIFIESTO FCDVT-14 - estado congelado: insercion masiva de Y FACO. Submenu Y (MDIForm1) + permiso 460 (ejecutado en test) + Form174 con Buscar (con grilla Local/Terminal/Fecha/Monto Total del CSV) y Exportar Excel; Cargar pendiente (22-10)
 # Fecha: 2026-10-22. Exe sin compilar despues de los ultimos cambios de Form174 (grilla FCDVT-14; fecha de Salir FCDVT-56). Retomar por docs/README_FCDVT-14.md S8.
 # Verificar desde C:\Repositorio-f8\F8 (Git Bash):  grep -v '^#' docs/MANIFIESTO_FCDVT-14.md5 | md5sum -c
 # 2026-10-26: CLAUDE.md revisado con /init (sin cambios en FTEPROD ni en la base); actualizados solo los MD5 de CLAUDE.md y del indice del requerimiento. Respaldo docs/respaldos/FSCC-12901_2026-10-26_claude-md.zip
@@ -110,3 +110,30 @@ ca0f9969d3e9fe867310111d300fc718 *docs/sql/FCDVT-14/pruebas_cargar/c02_mixto.csv
 7f020d4416877e85ddbb2c2644a0cec6 *docs/sql/FCDVT-14/pruebas_cargar/c03_reemplazo.csv
 5ed99e668908ebccb07e72746f8f3194 *docs/sql/FCDVT-14/pruebas_cargar/c04_numeracion.csv
 84c4ed17db79711e2c8d74604ae44b4e *docs/sql/FCDVT-14/pruebas_cargar/c05_y_cerrada.sql
+# 2026-11-10: nueva carpeta docs/sql/FCDVT-14/estres_carga_masiva/ (prueba de estres de la carga masiva: 6 CSV del volumen 1.000/2.000/5.000 en dos series A/B generados de montos reales de test, generador y validador py, scripts e0/e2/e9 y README de corrida). Solo lectura validado en test (e0/e2) y e9 con v_ejecutar N. Sin cambios en FTEPROD.
+da974d29858dda1ddcb99c0cc20dbc45 *docs/sql/FCDVT-14/estres_carga_masiva/a01_1000.csv
+db255b6a538363c9b514a6377889b991 *docs/sql/FCDVT-14/estres_carga_masiva/a02_2000.csv
+212a5e53b46df1b1f26f489b83321123 *docs/sql/FCDVT-14/estres_carga_masiva/a03_5000.csv
+ea0be5489baf7fd2c43ef456817c65c3 *docs/sql/FCDVT-14/estres_carga_masiva/b01_1000.csv
+730ec37edb377488c95d8efc89e112cb *docs/sql/FCDVT-14/estres_carga_masiva/b02_2000.csv
+238397f39e6fc3e05517b8cdd104e403 *docs/sql/FCDVT-14/estres_carga_masiva/b03_5000.csv
+9755274196efc76b6e7b13b54e6b7b50 *docs/sql/FCDVT-14/estres_carga_masiva/e0_prechecks.sql
+29fd2aabd8cb7c8b8189ca65a3203314 *docs/sql/FCDVT-14/estres_carga_masiva/e2_resultados.sql
+9e3e83e494070dbb0782f57bca4f3e5a *docs/sql/FCDVT-14/estres_carga_masiva/e9_limpia.sql
+a36cf9e6c667baf030d87f4a9ce896fd *docs/sql/FCDVT-14/estres_carga_masiva/genera_csv.py
+707cb7dc9a7de49a67672ef0f86df4f8 *docs/sql/FCDVT-14/estres_carga_masiva/montos_reales_test.csv
+3650168bcfc1373f2037f2b17b858616 *docs/sql/FCDVT-14/estres_carga_masiva/README.md
+b94f1c57bde723cb9a16587603057833 *docs/sql/FCDVT-14/estres_carga_masiva/valida_csv.py
+
+
+# 2026-11-11: nueva carpeta docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/ (sesion de prueba 6: replica de la s5 con la fecha 10-11-2026 y sobres MMDD 1110; sin verificar en test). Sin cambios en FTEPROD ni en el exe.
+c1d14c495292eac9a357df4395be7dc1 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/LEEME.md
+668e1b7eaa4fc8420ed938ca822a24fe *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/Prueba-1-OK-DINegativa_L5T1.xlsx
+abc93f4393ee5cac2d1d70686cc5d261 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/Prueba-2-OK-DIPositiva_L5T2.xlsx
+2533f74773521f041e33a7a0651fd567 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/Prueba-3-NoOK-SinDI_L5T3.xlsx
+93cace7b1cacd5acf5e2f46f8e82c2b1 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/Prueba-4-Normal-Cuadre_L5T4.xlsx
+b596a80f43cad38c0eb35d15c0372dea *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/Prueba-Y-DI_Resumen.xlsx
+4e7ea676125d98ab58c75c88fb396ec9 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/py0_prechecks.sql
+adee07016f1942a97b55cebe8aad3813 *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/py2_resultados.sql
+756fc6e2d7a09b6ef4cb7c44ae7e251a *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/py9_limpiar.sql
+4ae0586efb5bdf713a0c0067db3b4c3f *docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s6/carga_Y_compensa.csv
