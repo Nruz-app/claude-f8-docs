@@ -22,12 +22,14 @@
           EndProperty
           BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
              Object.Visible         =   0   'False
-@@ -1448,6 +1463,14 @@
+@@ -1448,6 +1463,16 @@
     ElseIf ((Flg_Pais$ = "") And numero = 453) Then
          Me.Toolbar1.Buttons(27).Visible = valor
          Me.Toolbar1.Buttons(27).ButtonMenus(20).Visible = valor
 +   '---INI---- xintec-nruz 20-10-2026 FCDVT-14: permiso 460 Ingreso de Y masivo (submenu del boton Y, solo FACO) ----
-+   ElseIf (Flg_Pais$ = "FACO" And numero = 460) Then
++   'xintec-nruz 11-11-2026 FCDVT-10: el permiso 460 tambien en Tottus (SFCL) (antes solo FACO)
++   'ElseIf (Flg_Pais$ = "FACO" And numero = 460) Then
++   ElseIf ((Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL") And numero = 460) Then
 +        If valor Then
 +           Me.Toolbar1.Buttons(15).Visible = True
 +           Me.Toolbar1.Buttons(15).Style = tbrDropdown
@@ -37,12 +39,14 @@
     'MM: GDD9770
     ElseIf (numero = 422) Then
          If Flg_Pais$ = "FACO" Then
-@@ -1470,6 +1493,12 @@
+@@ -1470,6 +1495,14 @@
            Me.Toolbar1.Buttons(numero).ButtonMenus(1).Visible = valor
          End If
        End If
 +      '---INI---- xintec-nruz 20-10-2026 FCDVT-14: en FACO el boton Y (15) pasa a submenu ----
-+      If numero = 15 And Flg_Pais$ = "FACO" Then
++      'xintec-nruz 11-11-2026 FCDVT-10: tambien en Tottus (SFCL) el boton Y pasa a submenu (antes solo FACO)
++      'If numero = 15 And Flg_Pais$ = "FACO" Then
++      If numero = 15 And (Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL") Then
 +         Me.Toolbar1.Buttons(numero).Style = tbrDropdown
 +         Me.Toolbar1.Buttons(numero).ButtonMenus(1).Visible = valor   'INGY: Ingreso de cierre de terminal Y
 +      End If
@@ -50,12 +54,14 @@
        'CK: 162715 Fin
     End If
     If Flg_Pais$ = "SFCL" And numero = 27 Then
-@@ -1631,6 +1660,14 @@
+@@ -1631,6 +1664,16 @@
             Glocal = FormVariable.Combo1
             Form33.SetFocus
        Case "YYYY"
 +           '---INI---- xintec-nruz 20-10-2026 FCDVT-14: en FACO sin permiso 15 (solo masivo) el boton no abre Form19Y ----
-+           If Flg_Pais$ = "FACO" Then
++           'xintec-nruz 11-11-2026 FCDVT-10: tambien en Tottus (SFCL) (antes solo FACO)
++           'If Flg_Pais$ = "FACO" Then
++           If Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL" Then
 +              If Not Me.Toolbar1.Buttons(15).ButtonMenus(1).Visible Then
 +                 MsgBox "Use la flecha del botón para elegir la opción.", vbInformation
 +                 Exit Sub
@@ -65,7 +71,7 @@
             If Flg_Pais$ = "ARG" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE" Or Flg_Pais$ = "HTPE" Then
                Form19Y.Show 1
             End If
-@@ -1879,6 +1916,21 @@
+@@ -1879,6 +1922,23 @@
              If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then
                FormVariable.ProcesoConsulta
             End If
@@ -77,7 +83,9 @@
 +            End If
 +      Case "INGYMA"
 +            'MsgBox "Ingreso de cierre de terminal Y masivo: opción en construcción.", vbInformation
-+            If Flg_Pais$ = "FACO" Then
++            'xintec-nruz 11-11-2026 FCDVT-10: Form174 tambien para Tottus (SFCL) (antes solo FACO)
++            'If Flg_Pais$ = "FACO" Then
++            If Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL" Then
 +               Form174.Show 1   'xintec-nruz 20-10-2026 FCDVT-14: carga masiva de Y
 +            End If
 +            If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then

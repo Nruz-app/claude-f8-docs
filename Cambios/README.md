@@ -1,6 +1,6 @@
-# Cambios para producción: FSCC-12901, FCDVT-14 y FCDVT-56
+# Cambios para producción: FSCC-12901, FCDVT-14, FCDVT-56 y FCDVT-10
 
-Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11). Actualizado el 03-11-2026: `Form174.frm` (fecha de prueba de Salir 02-11-2026 y clic en la grilla que abre Form175), `Form175.frm` + `.frx` nuevos y la línea `Form=Form175.frm` del `.vbp`. Más tarde el mismo día, `Form174.frm` con Exportar Excel como plantilla `.xlsx` (§2.4), y `Form174.frm` / `Form175.frm` con el estado CARGADO y el package multipaís. Actualizado el 04-11-2026: `Form174.frm` con el botón **Cargar** (`Command4_Click` → `PKG_F8_GRABA_MASIVA_YZ.prc_graba`, package propio, estado GRABADO) y `Form175.frm` con el log de la etapa GRABADO.
+Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11). Actualizado el 03-11-2026: `Form174.frm` (fecha de prueba de Salir 02-11-2026 y clic en la grilla que abre Form175), `Form175.frm` + `.frx` nuevos y la línea `Form=Form175.frm` del `.vbp`. Más tarde el mismo día, `Form174.frm` con Exportar Excel como plantilla `.xlsx` (§2.4), y `Form174.frm` / `Form175.frm` con el estado CARGADO y el package multipaís. Actualizado el 04-11-2026: `Form174.frm` con el botón **Cargar** (`Command4_Click` → `PKG_F8_GRABA_MASIVA_YZ.prc_graba`, package propio, estado GRABADO) y `Form175.frm` con el log de la etapa GRABADO. Actualizado el 11-11-2026 (FCDVT-10): `MDIForm1.frm` y `Form174.frm` habilitan la carga masiva también para Tottus Chile (`SFCL`), con sus propios packages `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GRABA_MASIVA_YZ_SFCL` (§2.3 y §2.4).
 
 **Regla:** esta carpeta siempre refleja `FTEPROD/`. Todo cambio en un fuente de `FTEPROD/` se lleva aquí en la misma tarea (copia en `archivos/`, diff, este README y `MANIFIESTO.md5`). Ver CLAUDE.md §9.
 
@@ -20,8 +20,8 @@ Contenido de esta carpeta:
 |---|---|---|---|---|---|---|
 | 1 | `Form133.frm` | FSCC-12901 | Modificado | +120 / −10 | `26eeeb01…` | `ed11df46…` |
 | 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `07270ede…` |
-| 3 | `MDIForm1.frm` | FCDVT-14 | Modificado | +52 / −0 | `ee06d78d…` | `9d032f55…` |
-| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 | **Nuevo** | +1022 | — | `423711b9…` / `cc816b30…` |
+| 3 | `MDIForm1.frm` | FCDVT-14 + FCDVT-10 | Modificado | +60 / −0 | `ee06d78d…` | `f2fcdefb…` |
+| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 + FCDVT-10 | **Nuevo** | +1178 | — | `8027c571…` / `cc816b30…` |
 | 4b | `Form175.frm` + `Form175.frx` | FCDVT-14 | **Nuevo** | +260 | — | `b5e227e7…` / `cc816b30…` (el `.frx` es copia de `Form174.frx`) |
 | 5 | `recaudacion.vbp` | FCDVT-14 | Agregar dos líneas (`Form174`, `Form175`) | +2 útiles | `d986352f…` | (no se copia, §2.5) |
 | — | `Módulo1.bas` | Versión | **Falta hacerlo** | — | — | Subir `Gversion` (§3) |
@@ -93,6 +93,7 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 - **Prerrequisitos en la base:** `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`, que crea el menú 460 para los perfiles 10 y 11. **Hay que ejecutarlo en producción solo junto con el exe nuevo.** Un exe anterior no ignora las filas 460: corta la carga de los permisos siguientes (ver `docs/sql/FCDVT-14/00_LEEME.md`).
 - **Dependencia:** `Form174` tiene que estar en el proyecto (§2.4 y §2.5). Si no, no compila.
 - **Qué probar:** en FACO el botón Y muestra la flecha, con "Ingreso" (permiso 15) y "Masivo" (permiso 460). En otro país el botón Y no cambia.
+- **FCDVT-10 (11-11-2026):** los cuatro bloques de FACO (permiso 460, botón Y a submenú, botón Y sin permiso 15 e `INGYMA` → `Form174`) valen también para **Tottus Chile (`SFCL`)**: cada condición `Flg_Pais$ = "FACO"` pasa a `FACO Or SFCL`, con la línea anterior comentada. Prerrequisito en la base de SFCL: `docs/sql/FCDVT-10/01_menu_ingreso_masivo_y_sfcl.sql` (permiso 460 en `VTA_SFCLMENU` / `VTA_SFCLRELPERMEN`), **solo junto con este exe**, por la misma razón que en FACO. Qué probar: en SFCL el botón Y muestra la flecha con "Ingreso" y "Masivo"; "Ingreso" sigue abriendo `Form19Y`. Respaldo: `FTEPROD/MDIForm1.frm.bak_FCDVT-10`.
 
 ### 2.4 `Form174.frm` + `Form174.frx`: Ingreso de Cierres de Terminal Y Masivo (FCDVT-14), nuevo
 
@@ -107,9 +108,22 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 - **Prerrequisitos en la base:**
   - Buscar y Cargar: `docs/sql/FCDVT-14/` 02, 03, 04, 04b, 04c y 05 (tablas `VTA_FACOCARGA_YZ_*`, `PKG_F8_CARGA_MASIVA_YZ` para Buscar, `PKG_F8_GRABA_MASIVA_YZ` para Cargar y grants; o `INSTALAR.sql`), en su versión **del 04-11**. Sin `PKG_F8_GRABA_MASIVA_YZ`, Buscar funciona pero Cargar da error de Oracle. Si el package no está, Buscar muestra el error de Oracle. **Este Form174 necesita el package multipaís**, porque llama a las firmas con país. Con el package anterior (`anterior_2026-11-03/`), Buscar da "número o tipos de argumentos erróneos". Al revés sí funciona: el package nuevo mantiene las firmas anteriores, así que acepta también el exe anterior.
   - Salir: `PKG_F8_CIERRE_DIARIO` (`docs/sql/FSCC-12901_CIERRE_DIARIO/`).
-- **Riesgo:** tal como está, en producción **cada vez que se cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 02-11-2026**. Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
+- **Riesgo:** tal como está, en producción **cada vez que un usuario de FACO cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 02-11-2026** (desde el 11-11, FCDVT-10, solo con `Flg_Pais$ = "FACO"`: un usuario de Tottus no lo ejecuta). Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
 - **Riesgo de Cargar:** reemplaza las Y **abiertas** del terminal-día (las cerradas lo bloquean). Si alguna tenía compensaciones (`movdet` con `mov_cierrey`), quedan apuntando al número de Y del archivo. Probar en test con un caso así antes de producción.
 - **Qué probar (Cargar):** Buscar con `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv` → 3 CARGADO → Cargar → 3 GRABADO; revisar con `06_pruebas.sql` (consultas 6 a 9) y limpiar con `98_limpia_prueba.sql`.
+- **FCDVT-10 (11-11-2026), Tottus Chile (`SFCL`):** respaldo previo `FTEPROD/Form174.frm.bak_FCDVT-10`.
+
+  | Bloque | Qué hace |
+  |---|---|
+  | `PaqueteCargaYZ()` / `PaqueteGrabaYZ()` (nuevas) | Devuelven el package del país: en SFCL `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GRABA_MASIVA_YZ_SFCL` y en el resto los de FACO. Buscar (`prc_inicia`, `prc_inserta_linea`, `prc_procesa`), Cargar (`prc_graba`) y sus `SystemMsg` los usan en vez del nombre fijo. Las firmas son las mismas |
+  | `EncabezadoCsvY` + `EncabezadoBase()` (nueva) | En SFCL el encabezado se lee de la base (`fn_encabezado`, conceptos de `VTA_PAINT_Z`); en FACO sigue fijo |
+  | Exportar Excel | Nombre `plantilla_carga_YZ_<pfx>.xlsx`; rangos hasta la última columna del país (`ColumnaExcel`, antes `BD` fijo); en SFCL la glosa de cada monto sale de `VTA_PAINT_Z` (`GlosaPaintZ`), la lista TIPO_CARGA agrega MODIFICAR, los textos de Instrucciones explican la cuadratura de Tottus, la Y1 automática y MODIFICAR, y el ejemplo usa sus columnas (`EjemploSFCL`) |
+  | Cargar | El aviso de confirmación en SFCL explica INGRESAR (reemplaza; sin Y crea la Y1) y MODIFICAR (solo los montos informados) |
+  | Salir | `EjecutaCierreDiario` (prueba de FACO) solo corre con `Flg_Pais$ = "FACO"`; antes corría para cualquier país |
+
+  FACO no cambia de comportamiento: todas las ramas nuevas están condicionadas a `Flg_Pais$ = "SFCL"` y las funciones nuevas devuelven para FACO lo mismo que antes.
+  - **Prerrequisitos en la base de SFCL:** `docs/sql/FCDVT-10/` (`INSTALAR.sql`: 02, 03, 04, 04b y 04c; `05` si corresponde; `01` junto con el exe).
+  - **Qué probar:** en SFCL, Exportar Excel genera la plantilla con las columnas de `VTA_PAINT_Z`; Buscar y Cargar con los casos de `docs/sql/FCDVT-10/00_LEEME.md`. Regresión FACO: Exportar, Buscar y Cargar con `docs/sql/FCDVT-14/pruebas_cargar/c01_ok.csv` dan lo mismo que antes.
 
 ### 2.5 `recaudacion.vbp`
 
@@ -141,6 +155,7 @@ Se abre con un clic en una fila de la grilla de `Form174` (`Grid1_Click`; el cli
 1. **Base de producción, antes del exe:**
    - FSCC-12901: `docs/sql/FSCC-12901_COMPENSA_DI/` (02 a 06). Lo requiere `Form133`.
    - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4. Además 02, 03, 04, 04b, 04c y 05 (carga Y/Z, versión del 04-11: `PKG_F8_CARGA_MASIVA_YZ` y `PKG_F8_GRABA_MASIVA_YZ`), que los usan Buscar y Cargar de `Form174`. Para FACO, `02` no crea nada si las tablas ya existen.
+   - FCDVT-10 (Tottus Chile, base de SFCL): `docs/sql/FCDVT-10/INSTALAR.sql` (02, 03, 04, 04b y 04c), `05` si el exe usa otro usuario y `01_menu_ingreso_masivo_y_sfcl.sql` **junto con** el exe nuevo.
    - El cron de cierre diario (`docs/sql/FSCC-12901_CIERRE_DIARIO/`, que con FCDVT-56 incluye la etapa sin venta). Mientras `Form174` llame a `EjecutaCierreDiario` desde Salir (§2.4), el exe **sí** depende de él.
 2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm`, `Form174.frx`, `Form175.frm` y `Form175.frx`, y agregar `Form=Form174.frm` y `Form=Form175.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
 3. **Versión:** subir `Global Const Gversion` en `Módulo1.bas` (hoy `"3.4.9"`) y `vta_parametros.vta_ultversion` de cada país (CLAUDE.md §2). Si no se hace, el exe no arranca o se autoactualiza a otra versión.

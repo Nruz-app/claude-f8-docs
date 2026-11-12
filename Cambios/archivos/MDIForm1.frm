@@ -1464,7 +1464,9 @@ While Not BuscarPerfiles.EOF
         Me.Toolbar1.Buttons(27).Visible = valor
         Me.Toolbar1.Buttons(27).ButtonMenus(20).Visible = valor
    '---INI---- xintec-nruz 20-10-2026 FCDVT-14: permiso 460 Ingreso de Y masivo (submenu del boton Y, solo FACO) ----
-   ElseIf (Flg_Pais$ = "FACO" And numero = 460) Then
+   'xintec-nruz 11-11-2026 FCDVT-10: el permiso 460 tambien en Tottus (SFCL) (antes solo FACO)
+   'ElseIf (Flg_Pais$ = "FACO" And numero = 460) Then
+   ElseIf ((Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL") And numero = 460) Then
         If valor Then
            Me.Toolbar1.Buttons(15).Visible = True
            Me.Toolbar1.Buttons(15).Style = tbrDropdown
@@ -1494,7 +1496,9 @@ While Not BuscarPerfiles.EOF
         End If
       End If
       '---INI---- xintec-nruz 20-10-2026 FCDVT-14: en FACO el boton Y (15) pasa a submenu ----
-      If numero = 15 And Flg_Pais$ = "FACO" Then
+      'xintec-nruz 11-11-2026 FCDVT-10: tambien en Tottus (SFCL) el boton Y pasa a submenu (antes solo FACO)
+      'If numero = 15 And Flg_Pais$ = "FACO" Then
+      If numero = 15 And (Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL") Then
          Me.Toolbar1.Buttons(numero).Style = tbrDropdown
          Me.Toolbar1.Buttons(numero).ButtonMenus(1).Visible = valor   'INGY: Ingreso de cierre de terminal Y
       End If
@@ -1661,7 +1665,9 @@ Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
            Form33.SetFocus
       Case "YYYY"
            '---INI---- xintec-nruz 20-10-2026 FCDVT-14: en FACO sin permiso 15 (solo masivo) el boton no abre Form19Y ----
-           If Flg_Pais$ = "FACO" Then
+           'xintec-nruz 11-11-2026 FCDVT-10: tambien en Tottus (SFCL) (antes solo FACO)
+           'If Flg_Pais$ = "FACO" Then
+           If Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL" Then
               If Not Me.Toolbar1.Buttons(15).ButtonMenus(1).Visible Then
                  MsgBox "Use la flecha del botón para elegir la opción.", vbInformation
                  Exit Sub
@@ -1924,7 +1930,9 @@ Private Sub Toolbar1_ButtonMenuClick(ByVal ButtonMenu As MSComctlLib.ButtonMenu)
             End If
       Case "INGYMA"
             'MsgBox "Ingreso de cierre de terminal Y masivo: opción en construcción.", vbInformation
-            If Flg_Pais$ = "FACO" Then
+            'xintec-nruz 11-11-2026 FCDVT-10: Form174 tambien para Tottus (SFCL) (antes solo FACO)
+            'If Flg_Pais$ = "FACO" Then
+            If Flg_Pais$ = "FACO" Or Flg_Pais$ = "SFCL" Then
                Form174.Show 1   'xintec-nruz 20-10-2026 FCDVT-14: carga masiva de Y
             End If
             If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then

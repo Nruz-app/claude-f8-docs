@@ -6,27 +6,31 @@
 # 2026-11-04: 04-11-2026: FCDVT-14 boton Cargar (Form174, Form175)
 # 2026-11-04: 04-11-2026: FCDVT-14 boton Cargar (Form174, Form175) + ajustes de revision
 # 2026-11-04: 04-11-2026: Cargar llama a PKG_F8_GRABA_MASIVA_YZ (package propio)
+# 2026-11-11: FCDVT-10: Form174 y MDIForm1 para Tottus (SFCL)
+# 2026-11-11: FCDVT-10: README actualizado (MDIForm1 y Form174 para SFCL)
+# 2026-11-11: FCDVT-10: Salir ejecuta el cierre diario de prueba solo en FACO
+# 2026-11-11: FCDVT-10: correcciones de la revision
 26eeeb01e993eece2440ed9739a94562 *PROD/Form133.frm
 0e1bfd0ce9c86e18f8913dbf2876c35d *PROD/Form43.frm
 ee06d78d2d8afd28fa67a146643563e3 *PROD/MDIForm1.frm
 1f17838b52350b69ec28715cb3f267f5 *PROD/otros/Form172.frm
 2218417ba4b2ea3b8565a6158322004d *PROD/otros/Form173.frm
 d986352ffb4d9d10a509a8b6c0d83ed8 *PROD/recaudacion.vbp
-3d6bd0d7c9df427eed8c2681af69f9ba *README.md
+bed7fb0784bb74903b936b3ba4c0c446 *README.md
 ed11df46050aa6909ecc3590bedc639b *archivos/Form133.frm
-423711b951fd0f99a8fe609822c2d1ea *archivos/Form174.frm
+8027c5715b201f73568b41e3c155a1e9 *archivos/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form174.frx
 b5e227e7322f097cbf2bf3634edd39b9 *archivos/Form175.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form175.frx
 07270edec5550b04491ae977bc70f1b4 *archivos/Form43.frm
-9d032f555cb47a4fca38b6284919fe69 *archivos/MDIForm1.frm
+f2fcdefb13ac2aa57ce3a923b32239d5 *archivos/MDIForm1.frm
 27b61539585f68206cd8f42c3bbe9f67 *archivos/otros/Form172.frm
 ba54fb8660f25dede87d49e53eee00e7 *archivos/otros/Form173.frm
 90ce46567e69d5ca536f89590ea6020e *diffs/Form133.frm.diff
-7aded81ce5dd38ee754375cb47ad6c53 *diffs/Form174.frm.diff
+5c235e92fbd74ec55a04ef3838109c20 *diffs/Form174.frm.diff
 3413d4903d9b6f5fed48c1425b99cc7b *diffs/Form175.frm.diff
 395ae16bf61748254ccd288e42465832 *diffs/Form43.frm.diff
-1073b6f32c781a2c74664c2c9401f93a *diffs/MDIForm1.frm.diff
+45709410b5783dcd6ac51ce9664833e3 *diffs/MDIForm1.frm.diff
 31245db39f26275f44e5385276ee30c4 *diffs/otros/Form172.frm.diff
 8b3b12eb6d477767c8cf5c2a1a86ae5d *diffs/otros/Form173.frm.diff
 72224d2b00e5bf09b7b3a4b3ecb2d036 *diffs/recaudacion.vbp.diff

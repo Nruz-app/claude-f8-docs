@@ -1,6 +1,6 @@
 --- PROD/Form174.frm
 +++ NUEVO/Form174.frm
-@@ -0,0 +1,1022 @@
+@@ -0,0 +1,1178 @@
 +VERSION 5.00
 +Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 +Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
@@ -263,6 +263,11 @@
 +'Lo usa Exportar Excel y lo usara Cargar para validar el archivo.
 +Private Function EncabezadoCsvY() As String
 +    Dim s As String
++    'xintec-nruz 11-11-2026 FCDVT-10: en Tottus (SFCL) el encabezado sale de VTA_PAINT_Z (PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado)
++    If Flg_Pais$ = "SFCL" Then
++        EncabezadoCsvY = EncabezadoBase()
++        Exit Function
++    End If
 +    's = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION"
 +    s = "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA"
 +    s = s & ";VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;REC_MEFECTIVO;REC_MRECAUDAEFEC;REC_MCHKDIA"
@@ -340,7 +345,9 @@
 +    CmDlog.FilterIndex = 1
 +    CmDlog.DefaultExt = "xlsx"
 +    CmDlog.Flags = cdlOFNOverwritePrompt Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
-+    CmDlog.filename = "plantilla_carga_YZ_FACO.xlsx"
++    'xintec-nruz 11-11-2026 FCDVT-10: nombre con el prefijo del pais (antes plantilla_carga_YZ_FACO.xlsx fijo)
++    'CmDlog.filename = "plantilla_carga_YZ_FACO.xlsx"
++    CmDlog.filename = "plantilla_carga_YZ_" & PrefijoCargaYZ() & ".xlsx"
 +    CmDlog.ShowSave
 +    ruta = Trim(CmDlog.filename)
 +    On Error GoTo errExcel
@@ -349,6 +356,14 @@
 +
 +    Screen.MousePointer = vbHourglass
 +    vCols = Split(EncabezadoCsvY(), ";")
++    'xintec-nruz 11-11-2026 FCDVT-10: sin encabezado (Tottus: no se pudo leer de la base) no se genera la plantilla;
++    'vUltCol = ultima columna de la hoja Carga (FACO: BD, 56 columnas; Tottus: segun VTA_PAINT_Z)
++    Dim vUltCol As String
++    If UBound(vCols) < 11 Then
++        Screen.MousePointer = vbDefault
++        Exit Sub
++    End If
++    vUltCol = ColumnaExcel(UBound(vCols) + 1)
 +    vFecha = Format(DateAdd("d", -1, CDate(LeeFechaServidor)), "dd-mm-yyyy")
 +
 +    Set xlApp = CreateObject("Excel.Application")
@@ -372,14 +387,29 @@
 +    xlLis.Cells(2, 1).Value = "Z"
 +    xlLis.Cells(1, 2).Value = "INGRESAR"
 +    xlBook.Names.Add "ListaTipo", "=Listas!$A$1:$A$2"
-+    xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
++    'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes solo INGRESAR)
++    'xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
++    If Flg_Pais$ = "SFCL" Then
++        xlLis.Cells(2, 2).Value = "MODIFICAR"
++        xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$2"
++    Else
++        xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
++    End If
 +
 +    'Hoja Carga, fila 1: encabezado tecnico (no se cambia) con la glosa en un comentario
 +    For i = 0 To UBound(vCols)
 +        xlHoja.Cells(1, i + 1).Value = vCols(i)
-+        xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
++        'xintec-nruz 11-11-2026 FCDVT-10: en Tottus (SFCL) la glosa de los montos sale de VTA_PAINT_Z
++        'xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
++        If Flg_Pais$ = "SFCL" And i >= 11 Then
++            xlHoja.Cells(1, i + 1).AddComment GlosaPaintZ(vCols(i)) & ". Monto entero, sin separador de miles. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
++        Else
++            xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
++        End If
 +    Next i
-+    With xlHoja.Range("A1:BD1")
++    'xintec-nruz 11-11-2026 FCDVT-10: hasta la ultima columna del pais (antes A1:BD1 fijo)
++    'With xlHoja.Range("A1:BD1")
++    With xlHoja.Range("A1:" & vUltCol & "1")
 +        .Font.Bold = True
 +        .Font.Color = 3560496
 +        .Interior.Color = 10807499          'mismo fondo que el encabezado de la grilla
@@ -403,7 +433,9 @@
 +
 +    'Identificacion numerica y montos: solo enteros
 +    For r = 1 To 3
-+        With xlHoja.Range(Choose(r, "B2:D2000", "F2:I2000", "L2:BD2000")).Validation
++        'xintec-nruz 11-11-2026 FCDVT-10: montos hasta la ultima columna del pais (antes L2:BD2000 fijo)
++        'With xlHoja.Range(Choose(r, "B2:D2000", "F2:I2000", "L2:BD2000")).Validation
++        With xlHoja.Range(Choose(r, "B2:D2000", "F2:I2000", "L2:" & vUltCol & "2000")).Validation
 +            .Delete
 +            .Add 1, 1, 1, "-999999999999", "999999999999"
 +            .ErrorTitle = "Solo números enteros"
@@ -422,9 +454,12 @@
 +        .Delete
 +        .Add 3, 1, 1, "=ListaTipoCarga"
 +        .ErrorTitle = "TIPO_CARGA"
-+        .ErrorMessage = "Debe ser INGRESAR."
++        'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes "Debe ser INGRESAR.")
++        .ErrorMessage = IIf(Flg_Pais$ = "SFCL", "Debe ser INGRESAR o MODIFICAR.", "Debe ser INGRESAR.")
 +    End With
-+    xlHoja.Range("A1:BD1").EntireColumn.AutoFit
++    'xintec-nruz 11-11-2026 FCDVT-10: hasta la ultima columna del pais (antes A1:BD1 fijo)
++    'xlHoja.Range("A1:BD1").EntireColumn.AutoFit
++    xlHoja.Range("A1:" & vUltCol & "1").EntireColumn.AutoFit
 +
 +    'Hoja Instrucciones
 +    ReDim vTexto(12)
@@ -441,17 +476,29 @@
 +    vTexto(10) = "9. En F8 > botón Y > Ingreso del YYY Masivo > Buscar, elija ese archivo .csv."
 +    vTexto(11) = ""
 +    vTexto(12) = "Ejemplo (no se carga; solo muestra cómo se llena un terminal y fecha con su Z y dos Y):"
++    'xintec-nruz 11-11-2026 FCDVT-10: textos de Tottus (SFCL): cuadratura con N.DEBITO y GUIA, Y1 automatica y MODIFICAR
++    If Flg_Pais$ = "SFCL" Then
++        vTexto(0) = "Plantilla de carga masiva de cierres Y y Z (Tottus Chile) - Ingreso del YYY Masivo"
++        vTexto(3) = "2. INGRESAR: el total de venta de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de sus Y. Una Z sin Y crea la Y1 automática (copia de la Z)."
++        vTexto(5) = "4. Números y montos: enteros, sin decimales ni separador de miles; negativos con el signo menos. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
++        vTexto(6) = "5. TIPO (Y o Z) y TIPO_CARGA (INGRESAR o MODIFICAR) se eligen de la lista. En la fila Z, NRO_Y va vacío. MODIFICAR cambia solo los montos informados de una Z o Y (con su NRO_Y) que ya existe."
++    End If
 +    For i = 0 To 12
 +        xlInst.Cells(i + 1, 1).Value = vTexto(i)
 +    Next i
 +    xlInst.Cells(1, 1).Font.Bold = True
 +    xlInst.Range("A14:O17").NumberFormat = "@"
 +    For r = 0 To 3
++        'xintec-nruz 11-11-2026 FCDVT-10: ejemplo de Tottus (SFCL) con sus columnas; FACO sigue con el ejemplo fijo
++        If Flg_Pais$ = "SFCL" Then
++            vFila = Split(EjemploSFCL(r, vCols, vFecha), ";")
++        Else
 +        vFila = Split(Choose(r + 1, _
 +            "FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA;VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;REC_MEFECTIVO", _
 +            vFecha & ";5;1;;21:00;102;5002;93343;2918;Z;INGRESAR;300000;0;0;300000", _
 +            vFecha & ";5;1;1;12:00;101;5001;93343;2918;Y;INGRESAR;100000;0;0;100000", _
 +            vFecha & ";5;1;2;18:00;102;5002;93343;2918;Y;INGRESAR;200000;0;0;200000"), ";")
++        End If
 +        For i = 0 To UBound(vFila)
 +            xlInst.Cells(14 + r, i + 1).Value = vFila(i)
 +        Next i
@@ -520,7 +567,8 @@
 +        Case 8: GlosaColumnaCsv = "VENDEDOR. Obligatorio. Número entero."
 +        Case 9: GlosaColumnaCsv = "CONT. REPOSICION. Obligatorio. Número entero."
 +        Case 10: GlosaColumnaCsv = "TIPO. Y = cierre Y; Z = cierre Z del terminal y fecha (una sola)."
-+        Case 11: GlosaColumnaCsv = "TIPO_CARGA. INGRESAR."
++        'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes solo "TIPO_CARGA. INGRESAR.")
++        Case 11: GlosaColumnaCsv = IIf(Flg_Pais$ = "SFCL", "TIPO_CARGA. INGRESAR (reemplaza la Z y las Y del día) o MODIFICAR (cambia solo los montos informados; la Y con su NRO_Y).", "TIPO_CARGA. INGRESAR.")
 +        Case 12 To 56
 +            s = "BOLETAS|N.CREDITO (va en negativo)|FACTURA|EFECTIVO|EFECT.RECAUDACION|CHEQUES AL DIA|CHEQUE POSFECHADO"
 +            s = s & "|TARJETA CREDITO|TARJETA DEBITO|CMR|GIFT CARD|TARJETA EMPRESA / GIFT CARD EMPRESA|TDE|RENUEVA CMR"
@@ -707,7 +755,9 @@
 +    Set cmd.ActiveConnection = Ado_Conn
 +    With cmd
 +        .CommandType = adCmdText
-+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inicia(?, ?, ?, ?); END;"
++        'xintec-nruz 11-11-2026 FCDVT-10: package del pais (Tottus: PKG_F8_CARGA_MASIVA_YZ_SFCL; antes PKG_F8_CARGA_MASIVA_YZ fijo)
++        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inicia(?, ?, ?, ?); END;"
++        .CommandText = "BEGIN " & PaqueteCargaYZ() & ".prc_inicia(?, ?, ?, ?); END;"
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 1000, Left(ruta, 1000))
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, LOGINUSER)
@@ -725,7 +775,9 @@
 +        .CommandType = adCmdText
 +        'xintec-nruz 03-11-2026 FCDVT-14: multipais, el pais va primero (antes prc_inserta_linea(carga, linea, texto))
 +        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?); END;"
-+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?, ?); END;"
++        'xintec-nruz 11-11-2026 FCDVT-10: package del pais (antes PKG_F8_CARGA_MASIVA_YZ fijo)
++        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_inserta_linea(?, ?, ?, ?); END;"
++        .CommandText = "BEGIN " & PaqueteCargaYZ() & ".prc_inserta_linea(?, ?, ?, ?); END;"
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
 +        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
 +        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , 0)
@@ -750,7 +802,9 @@
 +        .CommandType = adCmdText
 +        'xintec-nruz 03-11-2026 FCDVT-14: multipais, el pais va primero (antes prc_procesa(carga, ok, err, lin))
 +        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?); END;"
-+        .CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?, ?); END;"
++        'xintec-nruz 11-11-2026 FCDVT-10: package del pais (antes PKG_F8_CARGA_MASIVA_YZ fijo)
++        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_procesa(?, ?, ?, ?, ?); END;"
++        .CommandText = "BEGIN " & PaqueteCargaYZ() & ".prc_procesa(?, ?, ?, ?, ?); END;"
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
 +        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
 +        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
@@ -799,7 +853,8 @@
 +    Screen.MousePointer = vbDefault
 +    lblLoad.Visible = False
 +    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
-+    SystemMsg = "Problemas al validar el archivo en la base (PKG_F8_CARGA_MASIVA_YZ, carga " & mCarga & ")"
++    'xintec-nruz 11-11-2026 FCDVT-10: package del pais (antes PKG_F8_CARGA_MASIVA_YZ fijo)
++    SystemMsg = "Problemas al validar el archivo en la base (" & PaqueteCargaYZ() & ", carga " & mCarga & ")"
 +    frmLogOraError.Show 1
 +    'Si el resumen alcanzo a crearse, muestra los grupos que quedaron PENDIENTE
 +    If mCarga > 0 Then Call LlenaGrillaResumen(mCarga)
@@ -809,6 +864,100 @@
 +Private Function PrefijoCargaYZ() As String
 +    PrefijoCargaYZ = UCase(IIf(Flg_Pais$ = "CHI", "", Flg_Pais$))
 +End Function
++
++'---INI---- xintec-nruz 11-11-2026 FCDVT-10: carga masiva de Tottus (SFCL) con sus propios packages ----
++'Package de Buscar del pais: FACO usa PKG_F8_CARGA_MASIVA_YZ y Tottus PKG_F8_CARGA_MASIVA_YZ_SFCL (mismas firmas)
++Private Function PaqueteCargaYZ() As String
++    If Flg_Pais$ = "SFCL" Then
++        PaqueteCargaYZ = "PKG_F8_CARGA_MASIVA_YZ_SFCL"
++    Else
++        PaqueteCargaYZ = "PKG_F8_CARGA_MASIVA_YZ"
++    End If
++End Function
++
++'Package de Cargar del pais: FACO usa PKG_F8_GRABA_MASIVA_YZ y Tottus PKG_F8_GRABA_MASIVA_YZ_SFCL (mismas firmas)
++Private Function PaqueteGrabaYZ() As String
++    If Flg_Pais$ = "SFCL" Then
++        PaqueteGrabaYZ = "PKG_F8_GRABA_MASIVA_YZ_SFCL"
++    Else
++        PaqueteGrabaYZ = "PKG_F8_GRABA_MASIVA_YZ"
++    End If
++End Function
++
++'Encabezado del CSV leido de la base (Tottus: conceptos de VTA_PAINT_Z). Vacio si no se pudo leer.
++Private Function EncabezadoBase() As String
++    Dim Consulta As Object
++    EncabezadoBase = ""
++    Set Consulta = CreateObject("ADODB.Recordset")
++    With Consulta
++        .ActiveConnection = Ado_Conn
++        .CursorLocation = adUseClient
++        .CursorType = adOpenForwardOnly
++        .LockType = adLockReadOnly
++    End With
++    On Error GoTo oraerror
++    Call Consulta.Open("select " & PaqueteCargaYZ() & ".fn_encabezado('" & Flg_Pais$ & "') encab from dual")
++    If Not Consulta.EOF Then EncabezadoBase = IIf(IsNull(Consulta!encab), "", Consulta!encab)
++    Set Consulta.ActiveConnection = Nothing
++    Exit Function
++oraerror:
++    Set Consulta.ActiveConnection = Nothing
++    SystemMsg = "Problemas al leer el encabezado de la plantilla (" & PaqueteCargaYZ() & ".fn_encabezado)"
++    frmLogOraError.Show 1
++End Function
++
++'Glosa de VTA_PAINT_Z de una columna de monto del CSV (Tottus); la columna si no la encuentra
++Private Function GlosaPaintZ(ByVal vColumna As String) As String
++    Dim Consulta As Object
++    GlosaPaintZ = vColumna
++    Set Consulta = CreateObject("ADODB.Recordset")
++    With Consulta
++        .ActiveConnection = Ado_Conn
++        .CursorLocation = adUseClient
++        .CursorType = adOpenForwardOnly
++        .LockType = adLockReadOnly
++    End With
++    On Error GoTo oraerror
++    Call Consulta.Open("select max(vtaglosa_z) glosa from vta_paint_z " & _
++                       "where vta_localiz = '" & Flg_Pais$ & "' " & _
++                       "and upper(trim(vta_cmp_asoc)) = '" & UCase(Replace(vColumna, "'", "")) & "'")
++    If Not Consulta.EOF Then
++        If Not IsNull(Consulta!glosa) Then GlosaPaintZ = Trim(Consulta!glosa)
++    End If
++    Set Consulta.ActiveConnection = Nothing
++    Exit Function
++oraerror:
++    Set Consulta.ActiveConnection = Nothing
++End Function
++
++'Letra de una columna de Excel (1 = A, 27 = AA); el encabezado de Tottus tiene mas columnas que el de FACO (BD)
++Private Function ColumnaExcel(ByVal n As Integer) As String
++    If n > 26 Then
++        ColumnaExcel = Chr(64 + (n - 1) \ 26) & Chr(65 + (n - 1) Mod 26)
++    Else
++        ColumnaExcel = Chr(64 + n)
++    End If
++End Function
++
++'Filas del ejemplo de la hoja Instrucciones para Tottus: encabezado (primeras 15 columnas), la Z y dos Y
++Private Function EjemploSFCL(ByVal r As Integer, vCols() As String, ByVal vFecha As String) As String
++    Dim i As Integer, s As String
++    Select Case r
++        Case 0
++            s = vCols(0)
++            For i = 1 To 14
++                If i <= UBound(vCols) Then s = s & ";" & vCols(i)
++            Next i
++        Case 1
++            s = vFecha & ";216;6;;21:00;102;5002;93343;2918;Z;INGRESAR;300000;0;0;0"
++        Case 2
++            s = vFecha & ";216;6;1;12:00;101;5001;93343;2918;Y;INGRESAR;100000;0;0;0"
++        Case Else
++            s = vFecha & ";216;6;2;18:00;102;5002;93343;2918;Y;INGRESAR;200000;0;0;0"
++    End Select
++    EjemploSFCL = s
++End Function
++'---FIN---- xintec-nruz 11-11-2026 FCDVT-10 ----
 +
 +'Llena Grid1 con el resumen de la carga (VTA_<pfx>CARGA_YZ_RES). ERROR en rojo, PENDIENTE en amarillo, GRABADO en verde (xintec-nruz 04-11-2026 FCDVT-14).
 +Private Sub LlenaGrillaResumen(ByVal vCarga As Double)
@@ -906,8 +1055,10 @@
 +        Command4.Enabled = False
 +        Exit Sub
 +    End If
++    'xintec-nruz 11-11-2026 FCDVT-10: en Tottus (SFCL) el aviso incluye MODIFICAR
 +    If MsgBox("Se grabarán " & nCargados & " cierre(s) de terminal (Z y sus Y) de la carga N° " & mCarga & "." & vbCrLf & vbCrLf & _
-+              "Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo." & vbCrLf & _
++              IIf(Flg_Pais$ = "SFCL", "INGRESAR: si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo (sin Y en el archivo, se crea la Y1)." & vbCrLf & "MODIFICAR: solo cambian los montos informados.", _
++                  "Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo.") & vbCrLf & _
 +              "Los grupos con error no se graban." & vbCrLf & vbCrLf & _
 +              "¿Desea continuar?", vbQuestion + vbYesNo + vbDefaultButton2, Me.Caption) <> vbYes Then
 +        Exit Sub
@@ -924,7 +1075,9 @@
 +        .CommandType = adCmdText
 +        'xintec-nruz 04-11-2026 FCDVT-14: grabado en package propio (antes PKG_F8_CARGA_MASIVA_YZ.prc_graba)
 +        '.CommandText = "BEGIN PKG_F8_CARGA_MASIVA_YZ.prc_graba(?, ?, ?, ?, ?); END;"
-+        .CommandText = "BEGIN PKG_F8_GRABA_MASIVA_YZ.prc_graba(?, ?, ?, ?, ?); END;"
++        'xintec-nruz 11-11-2026 FCDVT-10: package del pais (Tottus: PKG_F8_GRABA_MASIVA_YZ_SFCL; antes PKG_F8_GRABA_MASIVA_YZ fijo)
++        '.CommandText = "BEGIN PKG_F8_GRABA_MASIVA_YZ.prc_graba(?, ?, ?, ?, ?); END;"
++        .CommandText = "BEGIN " & PaqueteGrabaYZ() & ".prc_graba(?, ?, ?, ?, ?); END;"
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, Flg_Pais$)
 +        .Parameters.Append .CreateParameter(, adDouble, adParamInput, , mCarga)
 +        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, LOGINUSER)
@@ -951,7 +1104,8 @@
 +    Screen.MousePointer = vbDefault
 +    lblLoad.Visible = False
 +    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
-+    SystemMsg = "Problemas al grabar los cierres en la base (PKG_F8_GRABA_MASIVA_YZ.prc_graba, carga " & mCarga & ")"
++    'xintec-nruz 11-11-2026 FCDVT-10: package del pais (antes PKG_F8_GRABA_MASIVA_YZ fijo)
++    SystemMsg = "Problemas al grabar los cierres en la base (" & PaqueteGrabaYZ() & ".prc_graba, carga " & mCarga & ")"
 +    frmLogOraError.Show 1
 +    'Muestra como quedo cada grupo (los ya grabados quedan GRABADO)
 +    Call LlenaGrillaResumen(mCarga)
@@ -963,7 +1117,9 @@
 +'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
 +'de prueba fija (vFechaPrueba = 02-11-2026 desde el 03-11, COMPENSA_DI prueba_test7; antes 14-10-2026 prueba_test6, 15-09-2026 prueba_test5, 20-08-2026 prueba_test4, 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
 +Private Sub Command3_Click()
-+    Call EjecutaCierreDiario
++    'xintec-nruz 11-11-2026 FCDVT-10: la prueba del cierre diario es de FACO; un usuario de Tottus (SFCL) no la ejecuta (antes Call EjecutaCierreDiario sin condicion)
++    'Call EjecutaCierreDiario
++    If Flg_Pais$ = "FACO" Then Call EjecutaCierreDiario
 +    Unload Me
 +End Sub
 +
