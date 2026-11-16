@@ -1,11 +1,11 @@
 --- PROD/MDIForm1.frm
 +++ NUEVO/MDIForm1.frm
-@@ -525,6 +525,21 @@
+@@ -525,6 +525,27 @@
              Description     =   "YYYY"
              Object.ToolTipText     =   "Ingreso del  YYY"
              Object.Width           =   1e-4
 +            BeginProperty ButtonMenus {66833FEC-8583-11D1-B16A-00C0F0283628} 
-+               NumButtonMenus  =   2
++               NumButtonMenus  =   3
 +               BeginProperty ButtonMenu1 {66833FEE-8583-11D1-B16A-00C0F0283628} 
 +                  Object.Visible         =   0   'False
 +                  Key             =   "INGY"
@@ -18,11 +18,17 @@
 +                  Object.Tag             =   "INGYMA"
 +                  Text            =   "Ingreso del  YYY Masivo"
 +               EndProperty
++               BeginProperty ButtonMenu3 {66833FEE-8583-11D1-B16A-00C0F0283628} 
++                  Object.Visible         =   0   'False
++                  Key             =   "EXPYZ"
++                  Object.Tag             =   "EXPYZ"
++                  Text            =   "Exportar Cierres Y y Z"
++               EndProperty
 +            EndProperty
           EndProperty
           BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
              Object.Visible         =   0   'False
-@@ -1448,6 +1463,16 @@
+@@ -1448,6 +1469,24 @@
     ElseIf ((Flg_Pais$ = "") And numero = 453) Then
          Me.Toolbar1.Buttons(27).Visible = valor
          Me.Toolbar1.Buttons(27).ButtonMenus(20).Visible = valor
@@ -36,10 +42,18 @@
 +           Me.Toolbar1.Buttons(15).ButtonMenus(2).Visible = True
 +        End If
 +   '---FIN----
++   '---INI---- xintec-nruz 16-11-2026 FCDVT-259: permiso 461 Exportar Cierres Y y Z (submenu del boton Y, solo FACO) ----
++   ElseIf (Flg_Pais$ = "FACO" And numero = 461) Then
++        If valor Then
++           Me.Toolbar1.Buttons(15).Visible = True
++           Me.Toolbar1.Buttons(15).Style = tbrDropdown
++           Me.Toolbar1.Buttons(15).ButtonMenus(3).Visible = True
++        End If
++   '---FIN----
     'MM: GDD9770
     ElseIf (numero = 422) Then
          If Flg_Pais$ = "FACO" Then
-@@ -1470,6 +1495,14 @@
+@@ -1470,6 +1509,14 @@
            Me.Toolbar1.Buttons(numero).ButtonMenus(1).Visible = valor
          End If
        End If
@@ -54,7 +68,7 @@
        'CK: 162715 Fin
     End If
     If Flg_Pais$ = "SFCL" And numero = 27 Then
-@@ -1631,6 +1664,16 @@
+@@ -1631,6 +1678,16 @@
             Glocal = FormVariable.Combo1
             Form33.SetFocus
        Case "YYYY"
@@ -71,7 +85,7 @@
             If Flg_Pais$ = "ARG" Or Flg_Pais$ = "SFCL" Or Flg_Pais$ = "FACO" Or Flg_Pais$ = "HTPE" Or Flg_Pais$ = "HTPE" Then
                Form19Y.Show 1
             End If
-@@ -1879,6 +1922,23 @@
+@@ -1879,6 +1936,29 @@
              If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then
                FormVariable.ProcesoConsulta
             End If
@@ -90,6 +104,12 @@
 +            End If
 +            If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then
 +              FormVariable.ProcesoConsulta
++            End If
++      '---FIN----
++      '---INI---- xintec-nruz 16-11-2026 FCDVT-259: submenu EXPYZ del boton Y -> Form176 (solo FACO) ----
++      Case "EXPYZ"
++            If Flg_Pais$ = "FACO" Then
++               Form176.Show 1
 +            End If
 +      '---FIN----
  

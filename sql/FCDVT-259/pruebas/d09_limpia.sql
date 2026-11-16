@@ -1,6 +1,6 @@
 -- =====================================================================
--- FCDVT-14 - pruebas_descargar/d09: SOLO TEST. Limpia lo que dejo la
--- prueba de Descargar en el local 5 del 27-10-2026 (terminales 1 a 3)
+-- FCDVT-259 - pruebas/d09: SOLO TEST. Limpia lo que dejo la
+-- prueba de Exportar (Form176) en el local 5 del 27-10-2026 (terminales 1 a 3)
 -- xintec-nruz 16-11-2026
 --
 -- Borra:

@@ -1,12 +1,12 @@
 -- =====================================================================
--- FCDVT-14 - pruebas_descargar/d02: SOLO TEST. Deja el terminal 2 del
+-- FCDVT-259 - pruebas/d02: SOLO TEST. Deja el terminal 2 del
 -- 27-10-2026 (local 5) como un terminal FACO cerrado solo con Y
 -- xintec-nruz 16-11-2026
 --
 -- Despues de grabar d01_carga_27-10.csv (Buscar + Cargar), borra la Z de
 -- la libvta del terminal 2 ('F8') y su zzz. Las tres Y quedan y la termstat
 -- de la Z queda en -1, como en un terminal FACO que se cierra solo con Y
--- (la Z precreada y sin fila 'F8'). Asi Descargar Excel debe ARMAR la Z
+-- (la Z precreada y sin fila 'F8'). Asi Form176 (Exportar) debe ARMAR la Z
 -- del terminal 2 con la suma de sus Y.
 --
 -- Primero con v_ejecutar = 'N' (solo cuenta) y despues con 'S'.

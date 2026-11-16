@@ -1,16 +1,18 @@
 -- =====================================================================
--- FCDVT-14 - pruebas_descargar/d00: prechecks de SOLO LECTURA
--- xintec-nruz 16-11-2026
+-- FCDVT-259 - pruebas/d00: prechecks de SOLO LECTURA
+-- xintec-nruz 16-11-2026 (antes FCDVT-14/pruebas_descargar, Descargar Excel)
 --
--- Antes de probar Descargar Excel (Form174 + PKG_F8_EXPORTA_MASIVA_YZ,
--- pasos 04d / 04e) con los datos de esta carpeta:
+-- Antes de probar Exportar de Form176 (PKG_F8_EXPORTA_MASIVA_YZ, pasos
+-- 02 / 03) con los datos de esta carpeta:
 --   - 27-10-2026, local 5, terminales 1 a 3: dia CON cierres (d01 los carga);
---   - 28-10-2026, local 5: dia SIN cierres (prueba de la plantilla vacia).
+--   - 28-10-2026, local 5: dia SIN cierres.
+-- OJO: Form176 solo deja exportar de hoy - 2 a ayer. Para probar la
+-- pantalla, reemplazar 27-10-2026 por ANTEAYER y 28-10-2026 por AYER en el CSV
+-- (columna FECHA) y en d00, d02, d03 y d09 (ver README.md). El package
+-- no tiene esa regla: con las fechas originales las consultas igual sirven.
 -- 1) los terminales 1, 2 y 3 deben estar vigentes;
 -- 2) esas fechas NO deben tener cierres en el local 5 (libvta F8/Y): d01 los
---    REEMPLAZARIA y el dia vacio dejaria de estarlo. Si hay datos, elegir
---    otras fechas (cambiar la columna FECHA del CSV y las fechas EDITAR de
---    d02, d03 y d09);
+--    REEMPLAZARIA y el dia vacio dejaria de estarlo;
 -- 3) ninguna Z ni Y cerrada (estado 1/2);
 -- 4) los tres packages VALID y sin user_errors.
 -- =====================================================================
@@ -60,4 +62,4 @@ select name, type, line, position, text
  order by type, sequence;
 
 prompt === 6. El package responde (ESPERADO: el encabezado de 56 columnas que empieza con FECHA;LOCAL;TERMINAL)
-select PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado('FACO') encabezado from dual;
+select PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado encabezado from dual;

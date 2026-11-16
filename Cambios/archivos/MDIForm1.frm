@@ -526,7 +526,7 @@ Begin VB.MDIForm MDIForm1
             Object.ToolTipText     =   "Ingreso del  YYY"
             Object.Width           =   1e-4
             BeginProperty ButtonMenus {66833FEC-8583-11D1-B16A-00C0F0283628} 
-               NumButtonMenus  =   2
+               NumButtonMenus  =   3
                BeginProperty ButtonMenu1 {66833FEE-8583-11D1-B16A-00C0F0283628} 
                   Object.Visible         =   0   'False
                   Key             =   "INGY"
@@ -538,6 +538,12 @@ Begin VB.MDIForm MDIForm1
                   Key             =   "INGYMA"
                   Object.Tag             =   "INGYMA"
                   Text            =   "Ingreso del  YYY Masivo"
+               EndProperty
+               BeginProperty ButtonMenu3 {66833FEE-8583-11D1-B16A-00C0F0283628} 
+                  Object.Visible         =   0   'False
+                  Key             =   "EXPYZ"
+                  Object.Tag             =   "EXPYZ"
+                  Text            =   "Exportar Cierres Y y Z"
                EndProperty
             EndProperty
          EndProperty
@@ -1473,6 +1479,14 @@ While Not BuscarPerfiles.EOF
            Me.Toolbar1.Buttons(15).ButtonMenus(2).Visible = True
         End If
    '---FIN----
+   '---INI---- xintec-nruz 16-11-2026 FCDVT-259: permiso 461 Exportar Cierres Y y Z (submenu del boton Y, solo FACO) ----
+   ElseIf (Flg_Pais$ = "FACO" And numero = 461) Then
+        If valor Then
+           Me.Toolbar1.Buttons(15).Visible = True
+           Me.Toolbar1.Buttons(15).Style = tbrDropdown
+           Me.Toolbar1.Buttons(15).ButtonMenus(3).Visible = True
+        End If
+   '---FIN----
    'MM: GDD9770
    ElseIf (numero = 422) Then
         If Flg_Pais$ = "FACO" Then
@@ -1937,6 +1951,12 @@ Private Sub Toolbar1_ButtonMenuClick(ByVal ButtonMenu As MSComctlLib.ButtonMenu)
             End If
             If FormVariable.lblEstado.Tag <> 1 And (ActiveForm Is Form3 Or ActiveForm Is Form3Y) Then
               FormVariable.ProcesoConsulta
+            End If
+      '---FIN----
+      '---INI---- xintec-nruz 16-11-2026 FCDVT-259: submenu EXPYZ del boton Y -> Form176 (solo FACO) ----
+      Case "EXPYZ"
+            If Flg_Pais$ = "FACO" Then
+               Form176.Show 1
             End If
       '---FIN----
 

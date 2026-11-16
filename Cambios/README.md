@@ -1,6 +1,6 @@
-# Cambios para producción: FSCC-12901, FCDVT-14, FCDVT-56 y FCDVT-10
+# Cambios para producción: FSCC-12901, FCDVT-14, FCDVT-56, FCDVT-10 y FCDVT-259
 
-Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11). Actualizado el 03-11-2026: `Form174.frm` (fecha de prueba de Salir 02-11-2026 y clic en la grilla que abre Form175), `Form175.frm` + `.frx` nuevos y la línea `Form=Form175.frm` del `.vbp`. Más tarde el mismo día, `Form174.frm` con Exportar Excel como plantilla `.xlsx` (§2.4), y `Form174.frm` / `Form175.frm` con el estado CARGADO y el package multipaís. Actualizado el 04-11-2026: `Form174.frm` con el botón **Cargar** (`Command4_Click` → `PKG_F8_GRABA_MASIVA_YZ.prc_graba`, package propio, estado GRABADO) y `Form175.frm` con el log de la etapa GRABADO. Actualizado el 11-11-2026 (FCDVT-10): `MDIForm1.frm` y `Form174.frm` habilitan la carga masiva también para Tottus Chile (`SFCL`), con sus propios packages `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GRABA_MASIVA_YZ_SFCL` (§2.3 y §2.4). Actualizado el 16-11-2026 (FCDVT-14): `Form174.frm` con **local, fecha y Descargar Excel** en la franja superior (antes Exportar Excel abajo), que descarga la Z y las Y grabadas con `PKG_F8_EXPORTA_MASIVA_YZ` (§2.4).
+Generado el 22-10-2026, comparando la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` (**PROD**) con `D:\Fala\F8\FTEPROD` (**LOCAL**). Actualizado el 02-11-2026: `Form43.frm`, `Form133.frm` y `Form174.frm` se sincronizaron con LOCAL (cambios del 30-10 y 02-11). Actualizado el 03-11-2026: `Form174.frm` (fecha de prueba de Salir 02-11-2026 y clic en la grilla que abre Form175), `Form175.frm` + `.frx` nuevos y la línea `Form=Form175.frm` del `.vbp`. Más tarde el mismo día, `Form174.frm` con Exportar Excel como plantilla `.xlsx` (§2.4), y `Form174.frm` / `Form175.frm` con el estado CARGADO y el package multipaís. Actualizado el 04-11-2026: `Form174.frm` con el botón **Cargar** (`Command4_Click` → `PKG_F8_GRABA_MASIVA_YZ.prc_graba`, package propio, estado GRABADO) y `Form175.frm` con el log de la etapa GRABADO. Actualizado el 11-11-2026 (FCDVT-10): `MDIForm1.frm` y `Form174.frm` habilitan la carga masiva también para Tottus Chile (`SFCL`), con sus propios packages `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GRABA_MASIVA_YZ_SFCL` (§2.3 y §2.4). Actualizado el 16-11-2026 (FCDVT-14): `Form174.frm` con **local, fecha y Descargar Excel** en la franja superior (antes Exportar Excel abajo), que descarga la Z y las Y grabadas con `PKG_F8_EXPORTA_MASIVA_YZ` (§2.4). Actualizado el 16-11-2026 (FCDVT-259): ese Descargar Excel **se revirtió** y `Form174.frm` volvió a la versión del 11-11 (`FTEPROD/Form174.frm.bak_FCDVT-14_Descargar`); la exportación pasa a **`Form176.frm` + `.frx`, nuevo** (Exportar Cierres Y y Z a CSV, solo FACO, §2.7), con el submenú `EXPYZ` del botón Y y el permiso 461 en `MDIForm1.frm` (§2.3) y la línea `Form=Form176.frm` del `.vbp` (§2.5).
 
 **Regla:** esta carpeta siempre refleja `FTEPROD/`. Todo cambio en un fuente de `FTEPROD/` se lleva aquí en la misma tarea (copia en `archivos/`, diff, este README y `MANIFIESTO.md5`). Ver CLAUDE.md §9.
 
@@ -20,10 +20,11 @@ Contenido de esta carpeta:
 |---|---|---|---|---|---|---|
 | 1 | `Form133.frm` | FSCC-12901 | Modificado | +120 / −10 | `26eeeb01…` | `ed11df46…` |
 | 2 | `Form43.frm` | FSCC-12901 + FCDVT-56 | Modificado | +113 / −27 | `0e1bfd0c…` | `07270ede…` |
-| 3 | `MDIForm1.frm` | FCDVT-14 + FCDVT-10 | Modificado | +60 / −0 | `ee06d78d…` | `f2fcdefb…` |
-| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 + FCDVT-10 | **Nuevo** | +1447 | — | `030476e7…` / `cc816b30…` |
+| 3 | `MDIForm1.frm` | FCDVT-14 + FCDVT-10 + FCDVT-259 | Modificado | +80 / −0 | `ee06d78d…` | `61c1c0de…` |
+| 4 | `Form174.frm` + `Form174.frx` | FCDVT-14 + FCDVT-10 | **Nuevo** | +1178 | — | `8027c571…` / `cc816b30…` |
 | 4b | `Form175.frm` + `Form175.frx` | FCDVT-14 | **Nuevo** | +260 | — | `b5e227e7…` / `cc816b30…` (el `.frx` es copia de `Form174.frx`) |
-| 5 | `recaudacion.vbp` | FCDVT-14 | Agregar dos líneas (`Form174`, `Form175`) | +2 útiles | `d986352f…` | (no se copia, §2.5) |
+| 4c | `Form176.frm` + `Form176.frx` | FCDVT-259 | **Nuevo** | +604 | — | `6d52d22b…` / `cc816b30…` (el `.frx` es copia de `Form174.frx`) |
+| 5 | `recaudacion.vbp` | FCDVT-14 + FCDVT-259 | Agregar tres líneas (`Form174`, `Form175`, `Form176`) | +3 útiles | `d986352f…` | (no se copia, §2.5) |
 | — | `Módulo1.bas` | Versión | **Falta hacerlo** | — | — | Subir `Gversion` (§3) |
 
 **No se llevan:**
@@ -85,35 +86,36 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 
 | Bloque | Dónde | Qué hace |
 |---|---|---|
-| Diseño | `Toolbar1`, `Button15` | Dos `ButtonMenus` ocultos: `INGY` "Ingreso del YYY" e `INGYMA` "Ingreso del YYY Masivo" |
+| Diseño | `Toolbar1`, `Button15` | `ButtonMenus` ocultos: `INGY` "Ingreso del YYY", `INGYMA` "Ingreso del YYY Masivo" y, desde el 16-11 (FCDVT-259), `EXPYZ` "Exportar Cierres Y y Z" (el tercero, al final: no desplaza índices) |
 | 20-10 · permiso 460 | `SubBuscarOpcionMenu` | En FACO, con el permiso 460, el botón 15 pasa a dropdown y muestra `INGYMA` |
 | 20-10 · botón Y a submenú | `SubBuscarOpcionMenu` | En FACO, el permiso 15 muestra `INGY` dentro del dropdown |
 | 20-10 · sin permiso 15 | `Toolbar1_ButtonClick` (`YYYY`) | En FACO, si solo tiene el masivo, pide usar la flecha en vez de abrir `Form19Y` |
 | 20-10 · `INGY` / `INGYMA` | `Toolbar1_ButtonMenuClick` | `INGY` abre `Form19Y`; `INGYMA` abre `Form174` (solo FACO). Después refresca la F8 activa |
+| 16-11 · permiso 461 (FCDVT-259) | `SubBuscarOpcionMenu` | Solo FACO: con el permiso 461 el botón 15 pasa a dropdown y muestra `EXPYZ` (`ButtonMenus(3)`) |
+| 16-11 · `EXPYZ` (FCDVT-259) | `Toolbar1_ButtonMenuClick` | Abre `Form176` (solo FACO). No refresca la F8: Form176 no graba |
 
 - **Prerrequisitos en la base:** `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`, que crea el menú 460 para los perfiles 10 y 11. **Hay que ejecutarlo en producción solo junto con el exe nuevo.** Un exe anterior no ignora las filas 460: corta la carga de los permisos siguientes (ver `docs/sql/FCDVT-14/00_LEEME.md`).
 - **Dependencia:** `Form174` tiene que estar en el proyecto (§2.4 y §2.5). Si no, no compila.
 - **Qué probar:** en FACO el botón Y muestra la flecha, con "Ingreso" (permiso 15) y "Masivo" (permiso 460). En otro país el botón Y no cambia.
 - **FCDVT-10 (11-11-2026):** los cuatro bloques de FACO (permiso 460, botón Y a submenú, botón Y sin permiso 15 e `INGYMA` → `Form174`) valen también para **Tottus Chile (`SFCL`)**: cada condición `Flg_Pais$ = "FACO"` pasa a `FACO Or SFCL`, con la línea anterior comentada. Prerrequisito en la base de SFCL: `docs/sql/FCDVT-10/01_menu_ingreso_masivo_y_sfcl.sql` (permiso 460 en `VTA_SFCLMENU` / `VTA_SFCLRELPERMEN`), **solo junto con este exe**, por la misma razón que en FACO. Qué probar: en SFCL el botón Y muestra la flecha con "Ingreso" y "Masivo"; "Ingreso" sigue abriendo `Form19Y`. Respaldo: `FTEPROD/MDIForm1.frm.bak_FCDVT-10`.
+- **FCDVT-259 (16-11-2026):** permiso 461 y submenú `EXPYZ` → `Form176`, **solo FACO** (en SFCL no se agrega). Un perfil con 461 y sin 15 ve el botón Y como menú; al hacer clic en el botón (no en la flecha) recibe el aviso "Use la flecha del botón…" del bloque `YYYY`, que no cambia. Prerrequisito en la base: `docs/sql/FCDVT-259/01_menu_exporta_yz.sql` (perfiles 10 y 11), **solo junto con este exe** (mismo motivo que el 460). Dependencia: `Form176` en el proyecto (§2.5 y §2.7). Qué probar: en FACO el botón Y muestra "Exportar Cierres Y y Z" a los perfiles con 461 y abre Form176; en SFCL y otros países no aparece. Respaldo: `FTEPROD/MDIForm1.frm.bak_FCDVT-259`.
 
 ### 2.4 `Form174.frm` + `Form174.frx`: Ingreso de Cierres de Terminal Y Masivo (FCDVT-14), nuevo
 
 | Control o rutina | Estado | Qué hace |
 |---|---|---|
 | Buscar (`Command1`) | Programado | Elige el CSV de cierres **Y y Z** y lo valida en la base (30-10 / 02-11): `PKG_F8_CARGA_MASIVA_YZ.prc_inicia` abre la carga, `prc_inserta_linea` envía cada línea con su número y `prc_procesa` valida y arma el resumen. La grilla (`LlenaGrillaResumen`) muestra el resumen por terminal-día desde `vta_<pfx>carga_yz_res`: Local, Terminal, Fecha, Cant. Y, Monto Total Y, Monto Total Z y Estado (ERROR en rojo, PENDIENTE en amarillo). Un clic en una fila abre **`Form175`** con el log del grupo (desde el 03-11; antes un `MsgBox` con doble clic, que queda comentado), ver §2.6. Al final avisa grupos cargados, grupos y líneas con error; el detalle queda en `VTA_<pfx>CARGA_YZ_LOG`. **Desde el 03-11:** el estado correcto de un grupo es **CARGADO** (antes PROCESADO) y las llamadas pasan `Flg_Pais$` como primer parámetro a `prc_inserta_linea` y `prc_procesa` (package multipaís). Las tablas se arman con `PrefijoCargaYZ()`, que usa el prefijo del país y deja a Chile sin prefijo |
-| Descargar Excel (`Command2`), antes Exportar Excel | Programado (16-11) | **Desde el 16-11** el botón está en un marco nuevo arriba (`Frame2`), junto a un combo de **local** (`Combo1`/`Combo2`, llenados con `ProLeeLocales` según el perfil; si el usuario tiene un solo local queda elegido) y un calendario de **fecha** (`DTPicker1`, por defecto el día anterior al del servidor). Antes de pedir la ruta lee de `PKG_F8_EXPORTA_MASIVA_YZ` el encabezado (`fn_encabezado`), una línea por cierre (`fn_lineas`: la Z y las Y de todos los terminales con cierres ese día, desde libvta + zzz) y el resumen por terminal (`fn_resumen`). Guarda `cierres_YZ_<pfx>_L<local>_<yyyymmdd>.xlsx` con la plantilla de siempre **ya llena desde la fila 2** (mismas columnas, así se puede corregir y volver a cargar con Buscar), una hoja nueva **Resumen** (cant. Y, total Y, total Z, diferencia, estado de la Z e Y cerradas, con totales) e Instrucciones con el local y la fecha. Sin cierres ese día sale vacía y sirve de plantilla. La grilla no cambia. Respaldo previo: `FTEPROD/Form174.frm.bak_FCDVT-14_Descargar`. Lo anterior: desde el 03-11 guarda una **plantilla Excel `.xlsx` con formato** (antes un CSV, que queda comentado). Tiene tres hojas: **Carga**, **Instrucciones** (pasos y un ejemplo de Z + 2 Y que no se carga) y **Listas**, oculta. En la hoja Carga:<br>• encabezado de 56 columnas (`EncabezadoCsvY`, igual a `PKG_F8_CARGA_MASIVA_YZ.c_encabezado`), con la glosa de Form19Y en un comentario;<br>• FECHA y HORA con formato texto;<br>• validación de número entero en las identificaciones y los montos;<br>• listas en TIPO (Y/Z) y TIPO_CARGA (INGRESAR);<br>• fila 1 y columnas A:C inmovilizadas.<br>El usuario la completa y la guarda como "CSV (delimitado por comas)" para elegirla en Buscar, que no cambia. Usa Excel por automatización (`CreateObject`, como `Form171`), así que **requiere Excel 2007 o posterior** en el equipo |
+| Exportar Excel (`Command2`) | Programado (03-11) | Desde el 03-11 guarda una **plantilla Excel `.xlsx` con formato** (antes un CSV, que queda comentado). Tiene tres hojas: **Carga**, **Instrucciones** (pasos y un ejemplo de Z + 2 Y que no se carga) y **Listas**, oculta. En la hoja Carga:<br>• encabezado de 56 columnas (`EncabezadoCsvY`, igual a `PKG_F8_CARGA_MASIVA_YZ.c_encabezado`), con la glosa de Form19Y en un comentario;<br>• FECHA y HORA con formato texto;<br>• validación de número entero en las identificaciones y los montos;<br>• listas en TIPO (Y/Z) y TIPO_CARGA (INGRESAR);<br>• fila 1 y columnas A:C inmovilizadas.<br>El usuario la completa y la guarda como "CSV (delimitado por comas)" para elegirla en Buscar, que no cambia. Usa Excel por automatización (`CreateObject`, como `Form171`), así que **requiere Excel 2007 o posterior** en el equipo |
 | Cargar (`Command4`) | Programado (04-11) | Solo se habilita después de un Buscar con grupos CARGADO. Pide confirmación (avisa que **reemplaza** la Z y las Y que el terminal-día ya tenga) y llama a `PKG_F8_GRABA_MASIVA_YZ.prc_graba(Flg_Pais$, mCarga, LOGINUSER, ok, error)`, un package propio separado del de Buscar desde el 04-11. El package graba cada grupo CARGADO como Form19 (Z: libvta `'F8'`/99 + zzz, termstat −1 si falta) y Form19Y (Y: libvta `'Y'` + zzz + termstaty −1), con los campos en su columna, commit por grupo y estado **GRABADO** (verde en la grilla). Un grupo con la Z o alguna Y cerrada, o que falla, queda en ERROR con el motivo y sin cambios. Detalle en `docs/README_FCDVT-14.md` §5.9 |
 | Salir (`Command3`) | **Prueba temporal** | Ejecuta `EjecutaCierreDiario` antes de `Unload Me`: llama a `PKG_F8_CIERRE_DIARIO` con la fecha fija de prueba `vFechaPrueba = 20261102` (desde el 03-11; antes 20261014). Desde el 02-11 la copia de `archivos/` es **idéntica** a `FTEPROD/Form174.frm` (antes la llamada iba comentada como "version prod"), por decisión del usuario |
 
-- **OCX:** `COMDLG32.OCX`, `MSFLXGRD.OCX` y, desde el 16-11, `mscomct2.ocx` (DTPicker, el mismo de Form59). Los tres ya están en el `.vbp` de producción.
+- **Descargar Excel (16-11), revertido:** el 16-11 se agregó arriba un local, una fecha y el botón Descargar Excel (`PKG_F8_EXPORTA_MASIVA_YZ`). Ese mismo día, a pedido del usuario, se revirtió: `Form174.frm` volvió **byte a byte** a `FTEPROD/Form174.frm.bak_FCDVT-14_Descargar` (11-11, con FCDVT-10) y la versión con Descargar quedó en `Form174.frm.bak_FCDVT-259_Descargar`. La exportación pasó a `Form176` (§2.7).
+- **OCX:** `COMDLG32.OCX` y `MSFLXGRD.OCX`, que ya están en el `.vbp` de producción.
 - **Prerrequisitos en la base:**
   - Buscar y Cargar: `docs/sql/FCDVT-14/` 02, 03, 04, 04b, 04c y 05 (tablas `VTA_FACOCARGA_YZ_*`, `PKG_F8_CARGA_MASIVA_YZ` para Buscar, `PKG_F8_GRABA_MASIVA_YZ` para Cargar y grants; o `INSTALAR.sql`), en su versión **del 04-11**. Sin `PKG_F8_GRABA_MASIVA_YZ`, Buscar funciona pero Cargar da error de Oracle. Si el package no está, Buscar muestra el error de Oracle. **Este Form174 necesita el package multipaís**, porque llama a las firmas con país. Con el package anterior (`anterior_2026-11-03/`), Buscar da "número o tipos de argumentos erróneos". Al revés sí funciona: el package nuevo mantiene las firmas anteriores, así que acepta también el exe anterior.
-  - Descargar Excel (16-11): `docs/sql/FCDVT-14/04d` y `04e` (`PKG_F8_EXPORTA_MASIVA_YZ`, solo lectura; FACO y SFCL) y su grant en `05`. Sin él, Buscar y Cargar funcionan y Descargar muestra el error de Oracle. En SFCL además necesita `PKG_F8_CARGA_MASIVA_YZ_SFCL` (FCDVT-10) para el encabezado.
   - Salir: `PKG_F8_CIERRE_DIARIO` (`docs/sql/FSCC-12901_CIERRE_DIARIO/`).
 - **Riesgo:** tal como está, en producción **cada vez que un usuario de FACO cierra la pantalla con Salir se ejecuta el cierre diario de la fecha 02-11-2026** (desde el 11-11, FCDVT-10, solo con `Flg_Pais$ = "FACO"`: un usuario de Tottus no lo ejecuta). Si `PKG_F8_CIERRE_DIARIO` no está instalado, Salir muestra un error de Oracle. Antes del paso a producción hay que decidir si se deja así o se vuelve a comentar la llamada en `FTEPROD/Form174.frm` (y se vuelve a sincronizar esta carpeta).
 - **Riesgo de Cargar:** reemplaza las Y **abiertas** del terminal-día (las cerradas lo bloquean). Si alguna tenía compensaciones (`movdet` con `mov_cierrey`), quedan apuntando al número de Y del archivo. Probar en test con un caso así antes de producción.
-- **Qué probar (Descargar, 16-11):** al abrir, el combo trae los locales del perfil y la fecha es ayer. Sin local elegido avisa. Local 5 y fecha 16-10-2026 (con `ejemplo_carga_Y_FACO_20.csv` grabado): hoja Carga con 23 filas (por terminal la Z y sus Y) y Resumen con 3 terminales, diferencia 0 y total Z 26.325.000 (comparar con las consultas 6, 9, 10 y 11 de `06_pruebas.sql`). Guardar la hoja Carga como CSV y elegirla con Buscar: 3 grupos CARGADO. Un día sin cierres: aviso y plantilla vacía. Probar también con un usuario de SFCL.
-- **Límites de Descargar (revisión del 16-11):** solo trae filas vigentes de libvta (`vta_estado = 'A'`). Un terminal FACO cerrado solo con Y (la Z precreada en termstat, sin fila `'F8'` en libvta) sale con una **Z armada con la suma de sus Y** (decisión del usuario, 16-11): montos sumados columna a columna e identificación de la última Y. En el Resumen la columna "Z en el Excel" dice ARMADA (fila en amarillo) y el total Z es el de la base (0). Montos con decimales (Buscar exige enteros) o campos de identificación nulos en libvta se descargan tal cual y no se pueden volver a cargar sin corregir.
 - **Qué probar (Cargar):** Buscar con `docs/sql/FCDVT-14/ejemplo_carga_Y_FACO_20.csv` → 3 CARGADO → Cargar → 3 GRABADO; revisar con `06_pruebas.sql` (consultas 6 a 9) y limpiar con `98_limpia_prueba.sql`.
 - **FCDVT-10 (11-11-2026), Tottus Chile (`SFCL`):** respaldo previo `FTEPROD/Form174.frm.bak_FCDVT-10`.
 
@@ -131,13 +133,13 @@ En FACO, la carga de sobres registra automáticamente la **DI** (diferencia no i
 
 ### 2.5 `recaudacion.vbp`
 
-Las únicas diferencias útiles son **dos líneas nuevas**, `Form=Form174.frm` y `Form=Form175.frm` (desde el 03-11). En LOCAL van después de `Form=Form173.frm` (ver `diffs/recaudacion.vbp.diff`).
+Las únicas diferencias útiles son **tres líneas nuevas**, `Form=Form174.frm`, `Form=Form175.frm` (desde el 03-11) y `Form=Form176.frm` (desde el 16-11, FCDVT-259). En LOCAL van después de `Form=Form173.frm` (ver `diffs/recaudacion.vbp.diff`). Respaldo antes de la de Form176: `FTEPROD/recaudacion.vbp.bak_FCDVT-259`.
 
 Las demás diferencias son de ambiente y **no se llevan**:
 - las rutas relativas de las 4 `Reference` (`..\Windows` contra `..\..\..\WINDOWS`);
 - `MSCOMCTL.OCX` en minúsculas.
 
-Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esas dos líneas**. También se pueden agregar los formularios desde el IDE con Proyecto → Agregar formulario.
+Por eso el `.vbp` no se copia entero: **en producción hay que agregar solo esas tres líneas**. También se pueden agregar los formularios desde el IDE con Proyecto → Agregar formulario.
 
 ### 2.6 `Form175.frm` + `Form175.frx`: Detalle del Log de la Carga Masiva de Y y Z (FCDVT-14), nuevo
 
@@ -154,20 +156,37 @@ Se abre con un clic en una fila de la grilla de `Form174` (`Grid1_Click`; el cli
 - **No muestra** las líneas que no pertenecen a ningún grupo (fecha, local o terminal ilegibles, o número de campos distinto de 56), porque no tienen fila en la grilla de Form174. Se ven en `VTA_FACOCARGA_YZ_LOG` (consulta 3 de `docs/sql/FCDVT-14/06_pruebas.sql`).
 - **Qué probar:** Buscar con `docs/sql/FCDVT-14/pruebas/p01_campos_malos.csv`, clic en 02-10 T2: línea 6, LECTURA, HORA, `25:00`, "Hora fuera de rango". En 09-10 T2: la línea del TIPO vacío y la fila RESUMEN. En 01-10 T1 (CARGADO): "Sin errores registrados para este grupo".
 
+### 2.7 `Form176.frm` + `Form176.frx`: Exportar Cierres Y y Z (plantilla de carga) (FCDVT-259), nuevo
+
+Se abre desde el botón Y ▸ "Exportar Cierres Y y Z" (`EXPYZ`, permiso 461, §2.3). Solo FACO: en otro país avisa y deja Exportar deshabilitado. Mismo aspecto que Form174: el `.frx` es una copia binaria de `Form174.frx` (mismas imágenes y offsets). Tiene `Option Explicit`.
+
+| Control o rutina | Qué hace |
+|---|---|
+| `Frame1` "Criterio" | `Combo1` Local (llenado con `ProLeeLocales` según el perfil; si ve más de un local, "0-TODOS LOS LOCALES" al comienzo, como Form43), `Combo3` Terminal (`LeeTerminales`: 0 + los vigentes del local a la Fecha Inicio; con local 0 solo 0), `DTPicker1` Fecha Inicio y `DTPicker2` Fecha Fin, y la ayuda "Local 0 = todos… · Terminal 0 = todos…" |
+| Fechas | Hoy = fecha del servidor (`LeeFechaServidor`; si falla, la del equipo). Por defecto ayer en las dos. Los calendarios no dejan elegir antes de hoy − 2 ni después de ayer (`MinDate`/`MaxDate`) |
+| Exportar (`Command1`) | Valida: local elegido; Fecha Fin ≥ Fecha Inicio ("La Fecha Fin no puede ser anterior a la Fecha Inicio"); Fecha Fin ≤ ayer ("La Fecha Fin debe ser anterior a hoy": Buscar no acepta cierres del día); Fecha Inicio ≥ hoy − 2 ("máximo 2 días hacia atrás"). Lee `PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado` y `fn_lineas(local, terminal, inicio, fin, grupo)` (`grupo` = `LOCALUSER` solo si el local es 0 y el perfil es de grupo, 1 o 5). Sin líneas: «No existen cierres Y/Z para los filtros seleccionados» y no pide ruta. Con líneas: "Guardar como" con `carga_Y_compensa_<ddmmyyyy>_<ddmmyyyy>.csv`, escribe el encabezado y una línea por cierre (`;`, CRLF) y muestra en `Frame2` el archivo y "N filas (T terminales · Y Y y Z Z)" |
+| Salir (`Command3`) | `Unload Me` |
+
+- **OCX:** `mscomct2.ocx` (DTPicker) y `COMDLG32.OCX`, que ya están en el `.vbp`. No usa Excel.
+- **Prerrequisitos en la base:** `docs/sql/FCDVT-259/INSTALAR.sql` (02/03 `PKG_F8_EXPORTA_MASIVA_YZ` solo FACO), `04` si el exe usa otro usuario y `01` (menú 461) junto con el exe. El package usa `PKG_F8_CARGA_MASIVA_YZ.c_encabezado` (FCDVT-14). Sin el package, Exportar muestra el error de Oracle.
+- **Qué probar:** `docs/sql/FCDVT-259/pruebas/README.md` (graba un día con Form174, exporta, Z armada, filtros sin cierres, validaciones de fechas y recarga del CSV en Form174 ▸ Buscar sin cambios: grupos CARGADO).
+- **Límites:** un terminal-día FACO con Y y sin Z en libvta sale con una **Z armada** con la suma de sus Y (identificación de la última Y), para que el CSV se pueda volver a cargar. Montos con decimales o identificación nula en libvta salen tal cual y Buscar los rechaza. Form176 no exporta cierres de hoy (Fecha Fin hasta ayer), porque Buscar rechaza las fechas de hoy.
+
 ## 3. Pasos sugeridos para el paso a producción
 
 1. **Base de producción, antes del exe:**
    - FSCC-12901: `docs/sql/FSCC-12901_COMPENSA_DI/` (02 a 06). Lo requiere `Form133`.
-   - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4. Además 02, 03, 04, 04b, 04c, 04d, 04e y 05 (carga Y/Z, versión del 04-11 más Descargar del 16-11: `PKG_F8_CARGA_MASIVA_YZ`, `PKG_F8_GRABA_MASIVA_YZ` y `PKG_F8_EXPORTA_MASIVA_YZ`), que los usan Buscar, Cargar y Descargar de `Form174`. Para FACO, `02` no crea nada si las tablas ya existen.
+   - FCDVT-14: `docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql`. Va **junto con** el exe nuevo; o se posterga, ver §2.4. Además 02, 03, 04, 04b, 04c y 05 (carga Y/Z, versión del 04-11: `PKG_F8_CARGA_MASIVA_YZ` y `PKG_F8_GRABA_MASIVA_YZ`), que los usan Buscar y Cargar de `Form174`. Para FACO, `02` no crea nada si las tablas ya existen.
+   - FCDVT-259 (FACO): `docs/sql/FCDVT-259/INSTALAR.sql` (02 y 03, `PKG_F8_EXPORTA_MASIVA_YZ`), después de FCDVT-14, y `04` si el exe usa otro usuario. Lo usa `Form176`. Aparte, **junto con** el exe nuevo, `01_menu_exporta_yz.sql` (permiso 461).
    - FCDVT-10 (Tottus Chile, base de SFCL): `docs/sql/FCDVT-10/INSTALAR.sql` (02, 03, 04, 04b y 04c), `05` si el exe usa otro usuario y `01_menu_ingreso_masivo_y_sfcl.sql` **junto con** el exe nuevo.
    - El cron de cierre diario (`docs/sql/FSCC-12901_CIERRE_DIARIO/`, que con FCDVT-56 incluye la etapa sin venta). Mientras `Form174` llame a `EjecutaCierreDiario` desde Salir (§2.4), el exe **sí** depende de él.
-2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm`, `Form174.frx`, `Form175.frm` y `Form175.frx`, y agregar `Form=Form174.frm` y `Form=Form175.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
+2. **Fuentes:** copiar desde `archivos/` a la carpeta del proyecto de producción `Form133.frm`, `Form43.frm`, `MDIForm1.frm`, `Form174.frm`, `Form174.frx`, `Form175.frm`, `Form175.frx`, `Form176.frm` y `Form176.frx`, y agregar `Form=Form174.frm`, `Form=Form175.frm` y `Form=Form176.frm` al `.vbp`. No convertir la codificación: los archivos van en Windows-1252 con CRLF.
 3. **Versión:** subir `Global Const Gversion` en `Módulo1.bas` (hoy `"3.4.9"`) y `vta_parametros.vta_ultversion` de cada país (CLAUDE.md §2). Si no se hace, el exe no arranca o se autoactualiza a otra versión.
 4. **Compilar** `f8a.exe`. El IDE no debe generar ningún `Form*.log`.
-5. **Probar en producción:** los puntos "Qué probar" de §2.1 a §2.4.
+5. **Probar en producción:** los puntos "Qué probar" de §2.1 a §2.4 y §2.7.
 6. **Rollback:**
    - volver a copiar los archivos de `PROD/`;
-   - quitar `Form174` y `Form175` del `.vbp`;
+   - quitar `Form174`, `Form175` y `Form176` del `.vbp`;
    - recompilar, o usar el exe anterior (`f8a <fecha>.exe`);
    - en la base, los `99_rollback.sql` de cada carpeta.
 

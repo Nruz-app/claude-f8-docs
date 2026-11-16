@@ -131,23 +131,5 @@ select vta_terminal,
  group by vta_terminal
  order by 1;
 
--- ---------------------------------------------------------------------
--- Descargar Excel de Form174 (PKG_F8_EXPORTA_MASIVA_YZ, 04d / 04e).
--- xintec-nruz 16-11-2026. EDITAR pais, local y fecha.
--- Con ejemplo_carga_Y_FACO_20.csv grabado (local 5, 16-10-2026): 23 lineas
--- (por terminal la Z y sus Y) y 3 filas de resumen con DIFERENCIA 0;
--- total de las Z = 26325000. Deben coincidir con las consultas 6 y 9.
--- ---------------------------------------------------------------------
-prompt === 10. Encabezado y lineas que descarga Form174
-select PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado('FACO') encabezado from dual;
-
-select column_value linea
-  from table(PKG_F8_EXPORTA_MASIVA_YZ.fn_lineas('FACO', 5,                   -- EDITAR pais y local
-                                                to_date('16-10-2026', 'dd-mm-yyyy')));   -- EDITAR fecha
-
-prompt === 11. Resumen por terminal (TERMINAL;CANT_Y;TOTAL_Y;TOTAL_Z;DIFERENCIA;ESTADO_Z;Y_CERRADAS;Z_ARMADA)
--- Z_ARMADA = S: el terminal no tiene Z en libvta (FACO cerrado solo con Y); la consulta 10
--- muestra una Z armada con la suma de sus Y antes de esas Y.
-select column_value resumen
-  from table(PKG_F8_EXPORTA_MASIVA_YZ.fn_resumen('FACO', 5,                  -- EDITAR pais y local
-                                                 to_date('16-10-2026', 'dd-mm-yyyy')));  -- EDITAR fecha
+-- (16-11-2026: las consultas 10 y 11 de Descargar Excel pasaron a
+--  docs/sql/FCDVT-259/05_pruebas.sql, Form176)

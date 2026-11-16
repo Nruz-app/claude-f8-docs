@@ -1,70 +1,39 @@
 -- =====================================================================
--- FCDVT-14 - Paso 04e
+-- FCDVT-259 - Paso 03
 -- Cuerpo de PKG_F8_EXPORTA_MASIVA_YZ   (Oracle 10.2)
--- MULTIPAIS (habilitado: FACO y SFCL)
+-- SOLO FALABELLA COLOMBIA (FACO)
 -- xintec-nruz 16-11-2026
 --
--- Boton "Descargar Excel" de Form174: Z y Y grabadas de un local y una
--- fecha, con el formato del CSV de carga (ver la spec, 04d). Solo lectura.
+-- Boton "Exportar" de Form176: Z y Y grabadas de un rango de fechas,
+-- local (0 = todos) y terminal (0 = todos), con el formato del CSV de
+-- carga de Form174 (ver la spec, 02). Solo lectura.
 --
--- SQL dinamico con la marca {P} (prefijo de tablas), que sale solo de la
--- lista blanca de pr_config (mismo patron que PKG_F8_GRABA_MASIVA_YZ).
--- Las columnas de montos del encabezado se validan contra user_tab_columns
--- de VTA_{P}LIBVTA y VTA_{P}ZZZ antes de concatenarlas: un nombre que no
--- existe en ninguna de las dos sale como 0 y nunca entra al SQL.
+-- Tablas fijas VTA_FACOLIBVTA, VTA_FACOZZZ y VTA_FACOLOCALES (ya no es
+-- multipais: sin lista blanca ni marcas {P}).
+-- El select se arma con SQL dinamico porque las columnas salen del
+-- encabezado de la plantilla: cada columna de montos se valida contra
+-- user_tab_columns de VTA_FACOLIBVTA y VTA_FACOZZZ antes de concatenarla;
+-- un nombre que no existe en ninguna de las dos sale como 0 y nunca entra
+-- al SQL. Los filtros van como binds.
 -- Mapeo de identificacion: inverso de PKG_F8_GRABA_MASIVA_YZ.pr_ins_libvta
--- (04c_pkg_f8_graba_masiva_yz_body.sql, "Inserta una fila de VTA_{P}LIBVTA").
--- Solo filas vigentes (vta_estado = 'A'), como el resto del F8 (Form19, Form3).
--- Terminal con Y y sin Z vigente (FACO cerrado solo con Y: Z precreada en
--- termstat, sin libvta 'F8'): fn_lineas agrega una Z armada con la suma de
--- sus Y (fn_z_armada, 16-11-2026). Limite conocido (README_FCDVT-14 5.10):
--- montos con decimales salen con decimales y Buscar los rechaza.
+-- (docs/sql/FCDVT-14/04c_pkg_f8_graba_masiva_yz_body.sql).
+-- Solo filas vigentes (vta_estado = 'A'), como el resto del F8.
+-- Terminal-dia con Y y sin Z vigente (FACO cerrado solo con Y: Z precreada
+-- en termstat, sin libvta 'F8'): fn_lineas agrega una Z armada con la suma
+-- de sus Y (fn_z_armada). Limite conocido: montos con decimales salen con
+-- decimales y Buscar de Form174 los rechaza.
+-- Origen: docs/sql/FCDVT-14/04e (16-11-2026, multipais, nunca instalado).
 -- =====================================================================
 
 create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
 
-  -- ------------------------------------------------------------------
-  -- Configuracion del pais (lista blanca: UNICA fuente del prefijo que se
-  -- concatena en el SQL dinamico; nunca se usa el texto recibido)
-  -- ------------------------------------------------------------------
-  type t_cfg is record (
-    pais    varchar2(10),     -- valor de Flg_Pais$ recibido (normalizado)
-    prefijo varchar2(10)      -- prefijo de tablas VTA_<prefijo>...
-  );
-  g_cfg t_cfg;
+  c_libvta constant varchar2(30) := 'VTA_FACOLIBVTA';
+  c_zzz    constant varchar2(30) := 'VTA_FACOZZZ';
 
   -- ORA-06548 (el SELECT dejo de pedir filas). NO_DATA_NEEDED es predefinida
   -- recien en 11g; en 10.2 se declara aqui para no depender de STANDARD.
   e_no_data_needed exception;
   pragma exception_init(e_no_data_needed, -6548);
-
-  procedure pr_config (p_flg_pais in varchar2) is
-    v_pais varchar2(10) := upper(trim(p_flg_pais));
-    v_cfg  t_cfg;
-  begin
-    if g_cfg.pais is not null and g_cfg.pais = v_pais then
-      return;   -- ya configurado
-    end if;
-
-    if v_pais = 'FACO' then
-      v_cfg.pais    := 'FACO';      -- Falabella Colombia (FCDVT-14)
-      v_cfg.prefijo := 'FACO';
-    elsif v_pais = 'SFCL' then
-      v_cfg.pais    := 'SFCL';      -- Tottus Chile (FCDVT-10)
-      v_cfg.prefijo := 'SFCL';
-    else
-      raise_application_error(-20001,
-        'PKG_F8_EXPORTA_MASIVA_YZ: pais no habilitado (' || nvl(p_flg_pais, '(nulo)') || ')');
-    end if;
-
-    g_cfg := v_cfg;
-  end pr_config;
-
-  -- Reemplaza la marca {P} con el prefijo del pais configurado
-  function fn_r (p_sql in varchar2) return varchar2 is
-  begin
-    return replace(p_sql, '{P}', g_cfg.prefijo);
-  end fn_r;
 
   -- true si la columna existe en la tabla (del duenio del package)
   function fn_existe_col (p_tabla in varchar2, p_col in varchar2) return boolean is
@@ -115,21 +84,21 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
     -- Montos: VTA_* primero en libvta; el resto primero en zzz
     if v_col is null or length(v_col) > 30 then
       return q'['0']';
-    elsif v_col like 'VTA\_%' escape '\' and fn_existe_col(fn_r('VTA_{P}LIBVTA'), v_col) then
+    elsif v_col like 'VTA\_%' escape '\' and fn_existe_col(c_libvta, v_col) then
       return fn_num('l.' || v_col);
-    elsif fn_existe_col(fn_r('VTA_{P}ZZZ'), v_col) then
+    elsif fn_existe_col(c_zzz, v_col) then
       return fn_num('z.' || v_col);
-    elsif fn_existe_col(fn_r('VTA_{P}LIBVTA'), v_col) then
+    elsif fn_existe_col(c_libvta, v_col) then
       return fn_num('l.' || v_col);
     end if;
     return q'['0']';
   end fn_expr;
 
   -- ------------------------------------------------------------------
-  -- Z armada con la suma de las Y (16-11-2026, pedido del usuario): un
-  -- terminal con Y vigentes y sin Z vigente en libvta (FACO cerrado solo
-  -- con Y: la Z esta precreada en termstat) sale en el Excel con una Z
-  -- armada, para que el archivo se pueda volver a cargar con Buscar.
+  -- Z armada con la suma de las Y: un terminal-dia con Y vigentes y sin Z
+  -- vigente en libvta (FACO cerrado solo con Y: la Z esta precreada en
+  -- termstat) sale con una Z armada, para que el archivo se pueda volver
+  -- a cargar con Buscar de Form174.
   --   - montos (columnas 12 en adelante): suma de las Y, columna a columna;
   --   - HORA, SECUENCIA, NUM_BOLETA, VENDEDOR y CONT_REPOSICION: los de la
   --     ultima Y (la de mayor numero), como el ejemplo de la plantilla;
@@ -168,6 +137,12 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
     end if;
     return substr(p_txt, v_ini, v_fin - v_ini);
   end fn_campo;
+
+  -- Clave terminal-dia de una linea: FECHA;LOCAL;TERMINAL (campos 1 a 3)
+  function fn_clave (p_txt in varchar2) return varchar2 is
+  begin
+    return fn_campo(p_txt, 1) || ';' || fn_campo(p_txt, 2) || ';' || fn_campo(p_txt, 3);
+  end fn_clave;
 
   -- Texto con punto decimal (salida de fn_num) a numero; vacio = 0
   function fn_a_num (p_txt in varchar2) return number is
@@ -211,52 +186,55 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
   end fn_z_armada;
 
   -- ------------------------------------------------------------------
-  -- Encabezado del CSV de carga del pais
+  -- Encabezado del CSV de carga de FACO
   -- ------------------------------------------------------------------
-  function fn_encabezado (p_flg_pais in varchar2) return varchar2 is
-    v_encab varchar2(4000);
+  function fn_encabezado return varchar2 is
   begin
-    pr_config(p_flg_pais);
-    if g_cfg.pais = 'SFCL' then
-      -- dinamico: compila aunque PKG_F8_CARGA_MASIVA_YZ_SFCL no este instalado
-      execute immediate 'begin :r := PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado(:p); end;'
-        using out v_encab, in g_cfg.pais;
-    else
-      v_encab := PKG_F8_CARGA_MASIVA_YZ.c_encabezado;
-    end if;
-    return v_encab;
+    return PKG_F8_CARGA_MASIVA_YZ.c_encabezado;
   end fn_encabezado;
 
   -- ------------------------------------------------------------------
-  -- Lineas de la Z y las Y del local y la fecha (formato del CSV)
+  -- Lineas de la Z y las Y de los filtros de Form176 (formato del CSV)
   -- ------------------------------------------------------------------
-  function fn_lineas (p_flg_pais in varchar2,
-                      p_local    in number,
-                      p_fecha    in date) return t_lineas pipelined is
-    v_encab varchar2(4000);
-    v_resto varchar2(4000);
-    v_col   varchar2(4000);
-    v_pos   pls_integer;
-    v_sel   varchar2(32767);
-    v_sql   varchar2(32767);
-    v_cur   sys_refcursor;
-    v_linea varchar2(4000);
-    v_buf   t_buf;                      -- Y de un terminal sin Z
-    v_nbuf  pls_integer := 0;
-    v_term  varchar2(100);              -- terminal en curso (campo 3)
-    v_t     varchar2(100);
-    v_con_z boolean := false;           -- el terminal en curso tiene Z vigente
+  function fn_lineas (p_local     in number,
+                      p_terminal  in number,
+                      p_fecha_ini in date,
+                      p_fecha_fin in date,
+                      p_grupo     in number default null) return t_lineas pipelined is
+    v_encab  varchar2(4000);
+    v_resto  varchar2(4000);
+    v_col    varchar2(4000);
+    v_pos    pls_integer;
+    v_sel    varchar2(32767);
+    v_sql    varchar2(32767);
+    v_cur    sys_refcursor;
+    v_linea  varchar2(4000);
+    v_buf    t_buf;                     -- Y de un terminal-dia sin Z
+    v_nbuf   pls_integer := 0;
+    v_clave  varchar2(200);             -- terminal-dia en curso (campos 1 a 3)
+    v_k      varchar2(200);
+    v_con_z  boolean := false;          -- el terminal-dia en curso tiene Z vigente
+    v_local  number := nvl(p_local, 0);
+    v_term   number := nvl(p_terminal, 0);
   begin
-    v_encab := fn_encabezado(p_flg_pais);   -- tambien configura el pais
+    if p_fecha_ini is null or p_fecha_fin is null then
+      raise_application_error(-20005,
+        'PKG_F8_EXPORTA_MASIVA_YZ: falta la fecha de inicio o la fecha de fin');
+    end if;
+    if trunc(p_fecha_fin) < trunc(p_fecha_ini) then
+      raise_application_error(-20004,
+        'PKG_F8_EXPORTA_MASIVA_YZ: la fecha fin no puede ser anterior a la fecha inicio');
+    end if;
+
+    v_encab := fn_encabezado;
     if v_encab is null then
       raise_application_error(-20002,
-        'PKG_F8_EXPORTA_MASIVA_YZ: no se pudo leer el encabezado de ' || g_cfg.pais);
+        'PKG_F8_EXPORTA_MASIVA_YZ: no se pudo leer el encabezado de FACO');
     end if;
     -- fn_z_armada supone las 11 columnas de identificacion al comienzo
     if upper(substr(v_encab, 1, length(c_id))) <> c_id then
       raise_application_error(-20003,
-        'PKG_F8_EXPORTA_MASIVA_YZ: el encabezado de ' || g_cfg.pais
-        || ' no empieza con ' || c_id);
+        'PKG_F8_EXPORTA_MASIVA_YZ: el encabezado de FACO no empieza con ' || c_id);
     end if;
 
     -- Una expresion por columna del encabezado, unidas con ;
@@ -278,25 +256,35 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
       exit when v_resto is null;
     end loop;
 
-    v_sql := fn_r(
+    -- Binds posicionales: cada marca recibe su propio valor (:3 y :4 son el
+    -- mismo local, :5 y :6 el mismo terminal, :7 y :8 el mismo grupo)
+    v_sql :=
       'select ' || v_sel || q'[
-         from VTA_{P}LIBVTA l, VTA_{P}ZZZ z
-        where l.vta_fecha_venta = :1
-          and l.vta_local = :2
+         from VTA_FACOLIBVTA l, VTA_FACOZZZ z
+        where l.vta_fecha_venta between :1 and :2
+          and (:3 = 0 or l.vta_local = :4)
+          and (:5 = 0 or l.vta_terminal = :6)
+          and (:7 is null
+               or l.vta_local in (select c.vta_cod_local
+                                    from VTA_FACOLOCALES c
+                                   where c.vta_grupo = :8))
           and l.vta_tiporeg in ('F8', 'Y')
           and l.vta_estado = 'A'
           and z.rec_techkey (+) = l.vta_techkey
-        order by l.vta_terminal, decode(l.vta_tiporeg, 'F8', 0, 1), l.vta_secuencia]');
+        order by l.vta_fecha_venta, l.vta_local, l.vta_terminal,
+                 decode(l.vta_tiporeg, 'F8', 0, 1), l.vta_secuencia]';
 
-    -- Por terminal llega primero la Z (si existe) y despues las Y. Si la
-    -- primera linea del terminal es una Y, no hay Z: se guardan sus Y y al
-    -- cambiar de terminal se emite la Z armada y despues las Y.
-    open v_cur for v_sql using trunc(p_fecha), p_local;
+    -- Por terminal-dia llega primero la Z (si existe) y despues las Y. Si la
+    -- primera linea del terminal-dia es una Y, no hay Z: se guardan sus Y y
+    -- al cambiar de terminal-dia se emite la Z armada y despues las Y.
+    open v_cur for v_sql
+      using trunc(p_fecha_ini), trunc(p_fecha_fin),
+            v_local, v_local, v_term, v_term, p_grupo, p_grupo;
     loop
       fetch v_cur into v_linea;
       exit when v_cur%notfound;
-      v_t := fn_campo(v_linea, 3);
-      if v_term is null or v_t <> v_term then
+      v_k := fn_clave(v_linea);
+      if v_clave is null or v_k <> v_clave then
         if v_nbuf > 0 then
           pipe row (fn_z_armada(v_buf, v_nbuf));
           for i in 1 .. v_nbuf loop
@@ -305,7 +293,7 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
           v_buf.delete;
           v_nbuf := 0;
         end if;
-        v_term  := v_t;
+        v_clave := v_k;
         v_con_z := (fn_campo(v_linea, 10) = 'Z');
       end if;
       if v_con_z then
@@ -335,70 +323,6 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
       end if;
       raise;
   end fn_lineas;
-
-  -- ------------------------------------------------------------------
-  -- Resumen por terminal del local y la fecha
-  -- ------------------------------------------------------------------
-  function fn_resumen (p_flg_pais in varchar2,
-                       p_local    in number,
-                       p_fecha    in date) return t_lineas pipelined is
-    v_sql   varchar2(32767);
-    v_cur   sys_refcursor;
-    v_linea varchar2(4000);
-  begin
-    pr_config(p_flg_pais);
-
-    v_sql := fn_r(
-      q'[select to_char(g.term)
-                || ';' || to_char(g.cant_y)
-                || ';' || ]' || fn_num('g.total_y') || q'[
-                || ';' || ]' || fn_num('g.total_z') || q'[
-                || ';' || ]' || fn_num('g.total_z - g.total_y') || q'[
-                || ';' || (select to_char(max(t.ter_estado))
-                             from VTA_{P}TERMSTAT t
-                            where t.ter_local = g.loc
-                              and t.ter_terminal = g.term
-                              and t.ter_fecha = g.fec)
-                || ';' || (select to_char(count(*))
-                             from VTA_{P}TERMSTATY t
-                            where t.ter_local = g.loc
-                              and t.ter_terminal = g.term
-                              and t.ter_fecha = g.fec
-                              and t.ter_estado in (1, 2))
-                || ';' || case when g.cant_z = 0 and g.cant_y > 0 then 'S' else 'N' end
-           from (select l.vta_local loc, l.vta_fecha_venta fec, l.vta_terminal term,
-                        sum(case when l.vta_tiporeg = 'Y' then 1 else 0 end) cant_y,
-                        sum(case when l.vta_tiporeg = 'F8' then 1 else 0 end) cant_z,
-                        sum(case when l.vta_tiporeg = 'Y' then nvl(l.vta_totalvta, 0) else 0 end) total_y,
-                        sum(case when l.vta_tiporeg = 'F8' then nvl(l.vta_totalvta, 0) else 0 end) total_z
-                   from VTA_{P}LIBVTA l
-                  where l.vta_fecha_venta = :1
-                    and l.vta_local = :2
-                    and l.vta_tiporeg in ('F8', 'Y')
-                    and l.vta_estado = 'A'
-                  group by l.vta_local, l.vta_fecha_venta, l.vta_terminal) g
-          order by g.term]');
-
-    open v_cur for v_sql using trunc(p_fecha), p_local;
-    loop
-      fetch v_cur into v_linea;
-      exit when v_cur%notfound;
-      pipe row (v_linea);
-    end loop;
-    close v_cur;
-    return;
-  exception
-    when e_no_data_needed then
-      if v_cur%isopen then
-        close v_cur;
-      end if;
-      return;
-    when others then
-      if v_cur%isopen then
-        close v_cur;
-      end if;
-      raise;
-  end fn_resumen;
 
 end PKG_F8_EXPORTA_MASIVA_YZ;
 /

@@ -1,0 +1,56 @@
+# Catálogo de formularios por dominio
+
+Movido desde `CLAUDE.md` §5 el 16-11-2026. El nombre `FormNNN` no indica la función. Para ubicar una pantalla conviene buscar su título (`Caption`) o la clave de toolbar en `MDIForm1.frm` (`python -I .claude/tools/f8.py buscar ...`). Entre corchetes va el archivo cuando difiere del nombre (tabla completa en `CLAUDE.md` §3; `f8.py vbname` la resuelve).
+
+- **Sesión y marco**:
+  - `Form1` login, `Form22` cambio de clave, `Form87` selección de perfil;
+  - `MDIForm1` contenedor, `frmwait` espera, `frmLogOraError` [Logoerr.frm] errores;
+  - `FrmFechaContable` selección de fecha contable.
+- **Cuadratura F8**:
+  - pantallas principales: `Form3` F8 por terminal (Z), `Form3Y` F8 con cierres Y, `Form8` F8 general/empresa (`Gopcion` G/E), `Form104` [V1.frm] cuadratura por operador (reglas y SQL del cierre de Y y Z para Colombia en `docs/CierreCaja_FACO_Reglas.md`; análisis de la HU de compensación DI automática en `docs/FSCC-12901_Analisis.md`);
+  - impresión y estado: `Form9` impresión F8, `Form2` estado general de terminales;
+  - detalles: `Form10` diferencia de caja, `Form11` cheques/vendedor, `Form12` dólares por terminal, `Form14` retiros por terminal, `Form97` transacciones de terminal;
+  - consultas: `Form43` consultas de cuadratura (análisis para Colombia en `docs/CC_ConsultaCuadratura_FACO.md`; cambios FACO de FSCC-12901 y FCDVT-56 en `docs/README_FSCC-12901.md` §5c y `docs/README_FCDVT-56.md`), `Form98` / `Form107` (SFCL) estado en línea, `Form105` antesala, `Form139` KPI local, `Form116` control de dinero acumulado.
+- **Cierres**:
+  - ingreso de Z: `Form19` (general), `Form19_2` (Perú; también "ZLV" con `Type_Ingreso_Z = "F8L"`), `Form19_3` (Argentina);
+  - `Form19Y` ingreso de cierres Y;
+  - `Form174` ingreso masivo de cierres Y y Z desde CSV (FCDVT-14 para FACO, FCDVT-10 para `SFCL`); botón Y ▸ submenú `INGYMA`, permiso 460. Buscar valida y muestra el resumen por terminal-día; Cargar graba en libvta, zzz y termstat(y). Detalle y estado en `docs/README_FCDVT-14.md` y `docs/README_FCDVT-10.md`;
+  - `Form175` detalle del log de un grupo de esa carga (clic en la grilla de `Form174`; `docs/README_FCDVT-14.md` §5.6);
+  - `Form176` exportar cierres Y y Z a CSV con el formato de la plantilla de carga, para volver a cargarlos en `Form174` (FCDVT-259, solo FACO); botón Y ▸ submenú `EXPYZ`, permiso 461. Filtros local/terminal (0 = todos) y rango de fechas (de hoy − 2 a ayer); usa `PKG_F8_EXPORTA_MASIVA_YZ`. Detalle en `docs/README_FCDVT-259.md`;
+  - `Form20` reapertura, `Form52` cierre general del local, `Form39` fecha histórica, `Form150` mantención de la fecha de actualización del libro de ventas.
+- **Compensaciones y regularizaciones**:
+  - diferencias de caja: `Form4` compensación de diferencia de caja, `Form17` compensación de cierre Y, `Form51`, `Form6` distribución de diferencias por VC, `Form59` compensación de cuadratura;
+  - vendedor/cajero: `Form13` datos vendedor/cajero, `Form53` compensación cajeros-vendedores, `Form37` interfaz diferencia vendedor-cajero;
+  - registros: `Form23` regularizaciones, `Form28` devolución de cheque, `Form29` billetes falsos, `Form30` NC publicidad, `Form31` / `Form35` dotaciones;
+  - diferencia no imputable: `Form38` diferencia no imputable / arqueo, `Form131` su detalle;
+  - otros: `Form45` / `Form42` [Form128.frm] observaciones, `Form112` / `Form120` / `Form111` sobrantes de vale de crédito, `Form54` ticket uniforme contado, `Form55`, `Form171` carga masiva de compensaciones, `Form71` interfaz de diferencia.
+- **Cartas aviso**: `Form16`, `Form18`, `Form56`, `Form60`, `Form63`, `Form93`; `Form63_2` transacciones Posnet / transferencia bancaria.
+- **Certificados, documentos y vales**:
+  - certificados: `Form61`, `Form64`, `Form64_2`, `Form94`, y `Form160` certificado por código de barra (Cornershop);
+  - documentos: `Form77`, `Form100`;
+  - vales y efectivo: `Form137` vales de alimentos, `Form99` [Form124.frm] efectivo.
+- **Cheques**: `Form49` gestión de cheques, `Form49_2` auditoría, `Form101`, `Form102`, `Form103` y `Form138` (cheques y su detalle), `Form96` cheque a depósito.
+- **Moneda extranjera**: `Form27` gestión de USD y euros, `Form46` tasa de cambio.
+- **Tarjetas y movimientos**: `Form34`, `Form34_2`, `Form34_3` detalle de tarjetas; `Form44` / `Form69` detalle de movimiento; `Form135`, `Form136`.
+- **Sobres y transportadora (Prosegur/LGS)**:
+  - ingreso: `Form21` sobres de depósito, `Form81` ingreso de sobres (SFCL), `Form66` por código de barra, `Form110` / `Form152` / `Form154` ingreso manual;
+  - ajustes y consultas: `Form5` conteo de sobres, `Form5_2` cambio de sobre de cajero, `Form68` consulta de cargas, `Form123` relacionar sobre;
+  - carga PRD: `Form32` borrar carga PRD, `Form133` / `Form155` carga manual (Excel), `Form134` errores de carga PRD, `Form130` interfaz de validación;
+  - pareo y grupos: `Form40` [Form41.frm] pareo de sobre no enviado, `Form80` grupos Prosegur;
+  - recaudación y depósitos: `Form88` recaudación de sobres, `Form89` envío de recaudación, `Form106` depósitos, `Form108` detalle de recuento;
+  - informes: `Form113` terminales pistoleados, `Form114` / `Form127` informe general de sobres, `Form126` sobres pendientes, `Form129` VC rechazados, `Form70` sobres pistoleados vs efectivo;
+  - detalles y control: `Form115` operador de caja, `Form117` / `Form118` / `Form119` / `Form121` detalles, `Form122` registro de transacciones.
+- **Banco y conciliación**:
+  - carga: `Form57` / `Form84` depósitos bancarios, `Form95` reproceso de cartola;
+  - conciliación: `Form58` conciliación de recaudación, `Form65` / `Form67` detalles, `Form82` depósitos emitidos por tesorería;
+  - pareo: `Form83` pareo manual, `Form85` proceso de pareo, `Form86` despareo, `Form90` consultas de pareo;
+  - `Form172` / `Form173` cuadratura de efectivo API vs cartola (depositaria Prosegur y rematch manual, ver `CLAUDE.md` §4.8).
+- **Recicladoras (SFCL)**: `Form162` recicladora, `Form163` depósito de máquina depositaria, `Form164` [Form164x.frm] dice contener, `Form164_2` [Form164.frm], `Form165` consulta de depósitos, `Form166` / `Form167` transacciones, `Form168` asociación manual de sobres, `Form169` sobres en proceso, `Form170` número de depósito.
+- **Validación de Z / Z virtual**: `Form74` fórmula de validación de Z (ZZZ), `Form78` estado de validación de Z, `Form140` / `Form141` / `Form142` Z virtual.
+- **Contabilidad**:
+  - Oracle Financials: `Form62` envío a FOSO (unas 15.500 líneas), `Form72` envío a FOSO para SOAR/SOUY (unas 18.700 líneas, casi copia de `Form62`), `Form132` resultado del envío;
+  - SAP: `Form159` envío contable;
+  - mantenedores: `Form156` centros de costo y cuentas, `Form156_2` mantenedor BP / transportadora, `Form157` BP tienda, `Form158` asociación de operaciones, `Form161` mantenedor de cuentas.
+- **Libro de ventas**: `Form33` consulta, `Form24` / `Form79` impresión, `Form25` impresora oficial.
+- **Informes**: `Form7` diferencias de compensaciones (unas 17.500 líneas), `Form15`, `Form26` y `Form36` (conceptos de compensación), `Form48` informes de diferencias.
+- **Administración**: `Form47` perfiles, `Form151` usuarios, `Form50` terminales POS Mobile / Autopago.

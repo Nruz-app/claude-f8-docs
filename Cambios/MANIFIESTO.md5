@@ -14,27 +14,36 @@
 # 2026-11-16: 16-11-2026: FCDVT-14 Form174 Descargar Excel, ajustes de la revision
 # 2026-11-16: 16-11-2026: FCDVT-14 Form174 Descargar Excel con Z armada
 # 2026-11-16: 16-11-2026: README nota sobre Form133/Form43/MDIForm1 .frx (no se llevan)
+# 2026-11-16: FCDVT-259: Form174 revertido al 11-11 (sin Descargar Excel, pasa a Form176)
+# 2026-11-16: FCDVT-259: Form176 nuevo, Exportar Cierres Y y Z (FACO)
+# 2026-11-16: FCDVT-259: submenu EXPYZ del boton Y, permiso 461
+# 2026-11-16: FCDVT-259: Form=Form176.frm
+# 2026-11-16: FCDVT-259: Form176 con las correcciones de la revision
+# 2026-11-16: FCDVT-259: Form176 Fecha Fin hasta ayer (correccion del revisor)
 26eeeb01e993eece2440ed9739a94562 *PROD/Form133.frm
 0e1bfd0ce9c86e18f8913dbf2876c35d *PROD/Form43.frm
 ee06d78d2d8afd28fa67a146643563e3 *PROD/MDIForm1.frm
 1f17838b52350b69ec28715cb3f267f5 *PROD/otros/Form172.frm
 2218417ba4b2ea3b8565a6158322004d *PROD/otros/Form173.frm
 d986352ffb4d9d10a509a8b6c0d83ed8 *PROD/recaudacion.vbp
-0881ab2592d78268530a08cc760d6688 *README.md
+eebd3f3e77b265c6bcf65e7515051875 *README.md
 ed11df46050aa6909ecc3590bedc639b *archivos/Form133.frm
-030476e77ef21efcb32ebd1f1a93d8e4 *archivos/Form174.frm
+8027c5715b201f73568b41e3c155a1e9 *archivos/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form174.frx
 b5e227e7322f097cbf2bf3634edd39b9 *archivos/Form175.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form175.frx
+6d52d22bedbc1e5009f58f5e50f49cb0 *archivos/Form176.frm
+cc816b30965b9897e284bdf47ef0e79c *archivos/Form176.frx
 07270edec5550b04491ae977bc70f1b4 *archivos/Form43.frm
-f2fcdefb13ac2aa57ce3a923b32239d5 *archivos/MDIForm1.frm
+61c1c0dea422a6a9fb76a05b241b7244 *archivos/MDIForm1.frm
 27b61539585f68206cd8f42c3bbe9f67 *archivos/otros/Form172.frm
 ba54fb8660f25dede87d49e53eee00e7 *archivos/otros/Form173.frm
 90ce46567e69d5ca536f89590ea6020e *diffs/Form133.frm.diff
-112b727a10003636b7083de92701b33a *diffs/Form174.frm.diff
+5c235e92fbd74ec55a04ef3838109c20 *diffs/Form174.frm.diff
 3413d4903d9b6f5fed48c1425b99cc7b *diffs/Form175.frm.diff
+e65bc509650c4ceece862dbbc81acd3d *diffs/Form176.frm.diff
 395ae16bf61748254ccd288e42465832 *diffs/Form43.frm.diff
-45709410b5783dcd6ac51ce9664833e3 *diffs/MDIForm1.frm.diff
+74eab31fa1e514a14862914a4046007f *diffs/MDIForm1.frm.diff
 31245db39f26275f44e5385276ee30c4 *diffs/otros/Form172.frm.diff
 8b3b12eb6d477767c8cf5c2a1a86ae5d *diffs/otros/Form173.frm.diff
-72224d2b00e5bf09b7b3a4b3ecb2d036 *diffs/recaudacion.vbp.diff
+ccf8f8b22e8cdb393216ef259aef70f6 *diffs/recaudacion.vbp.diff
