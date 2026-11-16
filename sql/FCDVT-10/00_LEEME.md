@@ -51,3 +51,7 @@ Lo que no se pudo cerrar sin conexión (no hay datos de `VTA_PAINT_Z` en el clon
 ## Prueba en test
 
 `00_prechecks.sql` → `INSTALAR.sql` → compilar el exe (Form174 y MDIForm1 de FCDVT-10) → `01_menu_ingreso_masivo_y_sfcl.sql` → Form174 con un usuario SFCL: Exportar Excel, Buscar y Cargar → `06_pruebas.sql` → `98_limpia_prueba.sql`.
+
+## Descargar Excel por local y fecha (16-11-2026)
+
+El botón **Descargar Excel** de Form174 (local + fecha) también funciona para SFCL. Usa `PKG_F8_EXPORTA_MASIVA_YZ`, que está en `docs/sql/FCDVT-14/04d` y `04e` (multipaís: FACO y SFCL), no en esta carpeta. Para SFCL toma el encabezado de `PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado` (columnas de `VTA_PAINT_Z`) y busca cada concepto en `VTA_SFCLLIBVTA` o `VTA_SFCLZZZ`. Instalar `04d`/`04e` después de los packages de esta carpeta (y de `PKG_F8_CARGA_MASIVA_YZ`, cuya spec usa). Detalle en `docs/README_FCDVT-14.md` §5.10.

@@ -1,11 +1,14 @@
 -- =====================================================================
--- FCDVT-14 - Instalacion de la carga masiva Y / Z, Buscar y Cargar
---   (02, 03, 04, 04b y 04c)
--- MULTIPAIS (habilitado: FACO)
+-- FCDVT-14 - Instalacion de la carga masiva Y / Z, Buscar, Cargar y Descargar
+--   (02, 03, 04, 04b, 04c, 04d y 04e)
+-- MULTIPAIS (habilitado: FACO; PKG_F8_EXPORTA_MASIVA_YZ tambien SFCL)
 -- xintec-nruz 30-10-2026 / 03-11-2026 (multipais y estado CARGADO)
 -- xintec-nruz 04-11-2026: dos packages: PKG_F8_CARGA_MASIVA_YZ (03 y 04,
 --   Buscar) y PKG_F8_GRABA_MASIVA_YZ (04b y 04c, Cargar; usa la spec del
 --   primero, por eso va despues)
+-- xintec-nruz 16-11-2026: 04d y 04e = PKG_F8_EXPORTA_MASIVA_YZ (boton
+--   Descargar Excel por local y fecha; solo lectura; usa la spec de
+--   PKG_F8_CARGA_MASIVA_YZ, por eso va despues de 03)
 -- Versiones anteriores: anterior_2026-11-04b/INSTALAR.sql (prc_graba dentro
 --   del package de carga, descartada), anterior_2026-11-04/INSTALAR.sql (sin
 --   Cargar), anterior_2026-11-03/INSTALAR.sql (solo FACO)
@@ -24,7 +27,7 @@
 -- Ejecutar desde esta carpeta, conectado como el duenio de las tablas
 -- VTA_* (test: INTRANETTS):
 --   sqlplus <usuario>@<base> @INSTALAR.sql
--- En DBeaver: ejecutar 02, 03, 04, 04b y 04c en ese orden (Alt+X).
+-- En DBeaver: ejecutar 02, 03, 04, 04b, 04c, 04d y 04e en ese orden (Alt+X).
 -- =====================================================================
 set echo on feedback on serveroutput on
 whenever sqlerror exit failure rollback
@@ -39,13 +42,18 @@ prompt ===== Paso 04b: especificacion PKG_F8_GRABA_MASIVA_YZ (boton Cargar) ====
 @04b_pkg_f8_graba_masiva_yz_spec.sql
 prompt ===== Paso 04c: cuerpo PKG_F8_GRABA_MASIVA_YZ (boton Cargar) =====
 @04c_pkg_f8_graba_masiva_yz_body.sql
+prompt ===== Paso 04d: especificacion PKG_F8_EXPORTA_MASIVA_YZ (boton Descargar Excel) =====
+@04d_pkg_f8_exporta_masiva_yz_spec.sql
+prompt ===== Paso 04e: cuerpo PKG_F8_EXPORTA_MASIVA_YZ (boton Descargar Excel) =====
+@04e_pkg_f8_exporta_masiva_yz_body.sql
 
-prompt ===== Estado de los objetos (esperado FACO: 3 tablas, 2 secuencias, 2 packages con spec y body VALID; sin user_errors) =====
+prompt ===== Estado de los objetos (esperado FACO: 3 tablas, 2 secuencias, 3 packages con spec y body VALID; sin user_errors) =====
 select object_name, object_type, status from user_objects
  where object_name in ('VTA_FACOCARGA_YZ_DET', 'VTA_FACOCARGA_YZ_RES', 'VTA_FACOCARGA_YZ_LOG',
                        'SEQ_VTA_FACOCARGA_YZ', 'SEQ_VTA_FACOCARGA_YZ_LOG',
-                       'PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ')
+                       'PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ',
+                       'PKG_F8_EXPORTA_MASIVA_YZ')
  order by object_type, object_name;
 select name, type, line, position, text from user_errors
- where name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ')
+ where name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ', 'PKG_F8_EXPORTA_MASIVA_YZ')
  order by type, sequence;

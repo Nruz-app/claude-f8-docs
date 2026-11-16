@@ -95,3 +95,16 @@ select object_name, object_type from user_objects
 --   drop synonym UINTRANETTS.PKG_F8_GRABA_MASIVA_YZ;      -- EDITAR
 -- select object_name, object_type, status from user_objects
 --  where object_name in ('PKG_F8_CARGA_MASIVA_YZ', 'PKG_F8_GRABA_MASIVA_YZ');
+
+-- ---------------------------------------------------------------------
+-- PARTE E - Quitar el boton Descargar Excel de la base (PKG_F8_EXPORTA_MASIVA_YZ)
+--      xintec-nruz 16-11-2026. Es solo lectura: borrarlo no cambia datos.
+--      Buscar, Cargar y las tablas no cambian. En el exe, Descargar Excel
+--      dara error de Oracle hasta volver atras
+--      FTEPROD/Form174.frm.bak_FCDVT-14_Descargar (y sincronizar docs/Cambios).
+-- ---------------------------------------------------------------------
+-- drop package PKG_F8_EXPORTA_MASIVA_YZ;
+-- Si se ejecuto 05 (como DBA):
+--   drop synonym UINTRANETTS.PKG_F8_EXPORTA_MASIVA_YZ;    -- EDITAR
+-- select object_name, object_type, status from user_objects
+--  where object_name = 'PKG_F8_EXPORTA_MASIVA_YZ';

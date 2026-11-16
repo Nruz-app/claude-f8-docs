@@ -560,6 +560,40 @@ Verificado en el clon de test:
 6. Cerrar una Y y volver a cargar ese terminal: el grupo queda en ERROR y no cambia nada.
 7. `98_limpia_prueba.sql`.
 
+### 5.10 Descargar Excel por local y fecha (16-11-2026, sin compilar ni ejecutar)
+
+Pedido del usuario: en la franja superior de Form174 (marcada en rojo en su captura) un combo de **locales** y un **calendario**, y el botón de exportar movido ahí, para descargar en Excel **todos los montos de Y y Z** de esa fecha para todos los terminales, con un package que haga la consulta.
+
+Decisiones del usuario (16-11):
+- **Un solo botón, Descargar Excel**, que mantiene el formato de la plantilla: el Excel trae las mismas columnas del CSV de carga, ya llenas, así que sirve para corregir y volver a cargar (Buscar + Cargar, `INGRESAR` reemplaza el terminal-día). Sin cierres ese día sale vacío y hace de plantilla (reemplaza al Exportar Excel de §5.7).
+- Solo terminales **con Z o Y grabadas** ese día (libvta `'F8'`/`'Y'`), vengan de la carga masiva o de Form19/Form19Y.
+- La **grilla no cambia**: sigue siendo la del resumen de Buscar/Cargar.
+
+Base: `PKG_F8_EXPORTA_MASIVA_YZ` (`docs/sql/FCDVT-14/04d` spec, `04e` body), package propio, solo lectura, lista blanca **FACO y SFCL** con SQL `{P}`:
+- `fn_encabezado(pais)`: FACO `PKG_F8_CARGA_MASIVA_YZ.c_encabezado`; SFCL `PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado` por SQL dinámico (compila sin él).
+- `fn_lineas(pais, local, fecha)` *pipelined*: una línea `;` por cierre (por terminal, la Z y luego las Y por número). Identificación al revés de `pr_ins_libvta` (`vta_bolfinal` → NUM_BOLETA, `vta_crepo_final` → CONT_REPOSICION, `vta_secuencia_srx` → SECUENCIA, `vta_hora` → HH:MM, `vta_secuencia` → NRO_Y, vacío en la Z). Montos: cada columna del encabezado se busca en `user_tab_columns` de libvta o zzz (si no está en ninguna, 0); números con punto decimal.
+- `fn_resumen(pais, local, fecha)` *pipelined*: por terminal `TERMINAL;CANT_Y;TOTAL_Y;TOTAL_Z;DIFERENCIA;ESTADO_Z;Y_CERRADAS` (`vta_totalvta`, `termstat`, `termstaty` estado 1/2).
+- Scripts tocados: `INSTALAR` (04d y 04e), `05` (grant y sinónimo), `06` (consultas 10 y 11), `99` parte E (`drop package`), `00_LEEME.md`.
+
+Exe (`Form174.frm`, respaldo `.bak_FCDVT-14_Descargar`; `docs/Cambios` sincronizado):
+- Diseño: `Frame2` nuevo arriba con `lblLocal` + `Combo1` (visible) / `Combo2` (códigos, oculto), `lblFecha` + `DTPicker1` (`mscomct2.ocx`) y `Command2` movido ahí con el caption "Descargar Excel". `Frame1`, Buscar, Cargar, la grilla y Salir bajan 720 twips. Sin cambios en el `.frx`.
+- `Form_Load`: `ProLeeLocales(Combo1, Combo2)` (filtra por perfil; si queda un local, lo elige) y fecha = día anterior al del servidor. `Combo1_Click` sincroniza `Combo2`.
+- `Command2_Click`: valida el local, lee `fn_encabezado`, `fn_lineas` y `fn_resumen` (funciones nuevas `EncabezadoExporta` y `LeeExporta`, patrón Recordset + `frmLogOraError`), pide la ruta (`cierres_YZ_<pfx>_L<local>_<yyyymmdd>.xlsx`) y arma el libro de siempre con 4 hojas: Carga (datos desde la fila 2 en un solo `Range.Value`, FECHA/HORA/TIPO/TIPO_CARGA como texto), **Resumen** (por terminal, con totales y estado de la Z), Instrucciones (con el local, la fecha y cuántos cierres) y Listas oculta.
+
+Pruebas (test): `04d`/`04e` (o `INSTALAR.sql`) → consultas 10 y 11 de `06_pruebas.sql` → compilar → Form174 con local 5 y 16-10-2026 → comparar con libvta → guardar la hoja Carga como CSV y Buscar (3 CARGADO). Repetir con un usuario SFCL.
+
+Revisión de `f8-revisor` (16-11), ya corregido: excepción propia para ORA-06548 (`NO_DATA_NEEDED` es predefinida recién en 11g), filtro `vta_estado = 'A'` como el resto del F8, el cursor de espera se repone antes de `frmLogOraError`, `Form_Load` no se cae si `LeeFechaServidor` falla (queda la fecha del equipo) y el encabezado de `INSTALAR`.
+
+**Z armada (decisión del usuario, 16-11):** un terminal con Y vigentes y sin Z vigente en libvta (FACO cerrado solo con Y: la Z está precreada en `termstat` en −1) sale en el Excel con una **Z armada con la suma de sus Y**, para que Buscar la acepte (exige una Z que cuadre con las Y). `fn_lineas` (`fn_z_armada`) suma cada monto columna a columna y toma HORA, SECUENCIA, NUM_BOLETA, VENDEDOR y CONT_REPOSICION de la última Y; NRO_Y va vacío, TIPO = Z, TIPO_CARGA = INGRESAR. `fn_resumen` agrega el campo 8 `Z_ARMADA` (S/N). En la hoja Resumen, la columna "Z en el Excel" dice ARMADA (SUMA DE LAS Y), con la fila en amarillo, o GRABADA. El total Z y la diferencia son los de la base (Z en 0). Instrucciones lo explica. Al cargar ese archivo, Cargar graba la Z en libvta/zzz como cualquier carga masiva.
+
+Límites conocidos (el Excel se descarga igual, pero no se puede volver a cargar sin corregir):
+- Las Y de Form19Y pueden traer `vta_bolfinal`/`vta_crepo_final` en 0 o el vendedor corrido (§6). El Excel los muestra tal cual.
+- Montos con decimales o identificación nula en libvta: Buscar los rechaza.
+
+Prueba en test: `docs/sql/FCDVT-14/pruebas_descargar/` (README con los 6 pasos: Z grabada, Z armada con `d02`, día vacío, recarga del Excel descargado y otros controles; `d03_valida.sql` compara automáticamente cada monto de la Z con la suma de sus Y).
+
+Pendiente: compilar el exe (VB6) e instalar `04d`/`04e` en test. Si la base de un país no tiene `ProLeeLocales` operativo (`vta_<pfx>locales`), Form174 cierra la aplicación al abrir (comportamiento de `ProLeeLocales`, que hace `End` ante un error de base).
+
 ## 6. Hechos verificados en la base de test
 
 Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-12901): `VTA_PAINT_Z` de FACO tiene 53 filas en test, 47 campos, signo siempre `+`, grupos ZZZ 1, 2, 3, 6 y 7.
@@ -650,3 +684,7 @@ Pendiente: correr `docs/sql/FCDVT-14/00_prechecks.sql`. Referencia previa (FSCC-
 | 04-11-2026 | **Estado congelado** con los packages separados (`PKG_F8_CARGA_MASIVA_YZ` para Buscar y `PKG_F8_GRABA_MASIVA_YZ` para Cargar) y la carpeta `pruebas_cargar/`. `docs/MANIFIESTO_FCDVT-14.md5` regenerado (agrega `04b`, `04c`, `anterior_2026-11-04b/`, `pruebas_cargar/` y `Form174.frm.bak_FCDVT-14_Paquete`) y respaldo `docs/respaldos/FCDVT-14_2026-11-04_packages-separados.zip`. Nada ejecutado en la base ni compilado después del 30-10. |
 | 12-11-2026 | **Sesión de prueba 7** (`docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s7/`): réplica de la sesión 6 con fecha 11-11-2026 y sobres `5TT1111nn`, más la **recarga v1/v2** pedida por el usuario: dos archivos con la misma fecha, local y terminal y otro monto que cuadra. Según `PKG_F8_GRABA_MASIVA_YZ` (reemplaza por terminal-día, no toca prd/movdet/compdes, la termstat de la Z conserva la glosa de v1), **queda el monto del último archivo**. T5 (v1 1.000.000 → v2 1.200.000 → sobres 1.199.500): DI −500 calculada con v2. T6 (v1 1.500.800 → sobres 1.500.000, DI −800 → v2 1.490.000): la DI de v1 queda, Dif. Real +10.800 (pregunta 10 de §7). `py2` parte C, hoja "Recarga v1-v2" del resumen. Sin ejecutar en test. La misma prueba para Tottus está en `docs/sql/FCDVT-10/prueba_recarga_v1_v2/`. |
 | 13-11-2026 | **Sesión de prueba 8** (`docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s8/`): a pedido del usuario, la sesión 7 repetida tal cual con fecha de venta 12-11-2026 (libre; el package exige fecha anterior a hoy) y sobres `5TT1211nn`. Mismas cajas (local 5, T1 a T6), montos, orden v1 → sobres → v2 → sobres de T5 y resultados esperados. Sin ejecutar en test. |
+| 16-11-2026 | **Descargar Excel por local y fecha** (§5.10). Form174: combo de locales, calendario y el botón Exportar Excel movido arriba como "Descargar Excel"; descarga la plantilla llena con la Z y las Y grabadas del local y la fecha (todos los terminales con cierres) y una hoja Resumen por terminal. Package nuevo `PKG_F8_EXPORTA_MASIVA_YZ` (`04d`/`04e`, solo lectura, FACO y SFCL). `INSTALAR`, `05`, `06` (consultas 10-11), `99` parte E y `00_LEEME` actualizados. Respaldo `Form174.frm.bak_FCDVT-14_Descargar`; `docs/Cambios` sincronizado. Sin compilar ni ejecutar. |
+| 16-11-2026 | Revisión de `f8-revisor` del Descargar Excel (§5.10), corregido: excepción propia para ORA-06548, filtro `vta_estado = 'A'`, cursor y fecha en Form174, encabezado de `INSTALAR`. Después, a pedido del usuario, **Z armada con la suma de las Y** para terminales sin Z en libvta (`fn_z_armada` en `04e`, campo `Z_ARMADA` en `fn_resumen`, columna "Z en el Excel" en la hoja Resumen). `docs/Cambios` sincronizado. Sin compilar ni ejecutar. |
+| 16-11-2026 | **Estado congelado** con Descargar Excel (§5.10: `PKG_F8_EXPORTA_MASIVA_YZ`, Z armada con la suma de las Y) y los cambios de FCDVT-10 desde el 04-11. `docs/MANIFIESTO_FCDVT-14.md5` regenerado (216 archivos: agrega `docs/sql/FCDVT-14` y `docs/sql/FCDVT-10` completas, `Form174.frm.bak_FCDVT-14_Descargar` y los `.bak_FCDVT-10` de Form174 y MDIForm1; ahora sin BOM) y respaldo `docs/respaldos/FCDVT-14_2026-11-16_descargar-excel-z-armada.zip`. Nada compilado ni ejecutado en la base. |
+| 16-11-2026 | Prueba de **Descargar Excel** para test: `docs/sql/FCDVT-14/pruebas_descargar/` (`d00` prechecks, `d01` CSV del 27-10-2026 local 5 T1-T3, `d02` deja el T2 solo con Y para la Z armada, `d03` validación automática, `d09` limpieza, `README.md` con pasos y resultado esperado). Sin ejecutar. |

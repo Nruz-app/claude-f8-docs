@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form Form174 
@@ -22,18 +23,7 @@ Begin VB.Form Form174
       MaskColor       =   &H00000080&
       Style           =   1  'Graphical
       TabIndex        =   10
-      Top             =   2040
-      Width           =   1695
-   End
-   Begin VB.CommandButton Command2 
-      BackColor       =   &H00A4E8CB&
-      Caption         =   "&Exportar Excel"
-      Height          =   375
-      Left            =   480
-      MaskColor       =   &H00000080&
-      Style           =   1  'Graphical
-      TabIndex        =   8
-      Top             =   5640
+      Top             =   2760
       Width           =   1695
    End
    Begin VB.CommandButton Command3 
@@ -44,7 +34,7 @@ Begin VB.Form Form174
       MaskColor       =   &H00000080&
       Style           =   1  'Graphical
       TabIndex        =   5
-      Top             =   5640
+      Top             =   6360
       Width           =   1500
    End
    Begin VB.PictureBox Picture1 
@@ -69,15 +59,104 @@ Begin VB.Form Form174
       MaskColor       =   &H00000080&
       Style           =   1  'Graphical
       TabIndex        =   0
-      Top             =   1440
+      Top             =   2160
       Width           =   1695
+   End
+   Begin VB.Frame Frame2 
+      BackColor       =   &H00E0E0E0&
+      Height          =   735
+      Left            =   480
+      TabIndex        =   12
+      Top             =   840
+      Width           =   9135
+      Begin VB.CommandButton Command2 
+         BackColor       =   &H00A4E8CB&
+         Caption         =   "&Descargar Excel"
+         Height          =   375
+         Left            =   6000
+         MaskColor       =   &H00000080&
+         Style           =   1  'Graphical
+         TabIndex        =   8
+         ToolTipText     =   "Descarga la Z y las Y grabadas del local y la fecha (formato de la plantilla de carga)"
+         Top             =   210
+         Width           =   1695
+      End
+      Begin VB.ComboBox Combo1 
+         BackColor       =   &H00F5F5F5&
+         ForeColor       =   &H00000080&
+         Height          =   315
+         Left            =   960
+         Style           =   2  'Dropdown List
+         TabIndex        =   13
+         Top             =   240
+         Width           =   2775
+      End
+      Begin VB.ComboBox Combo2 
+         Height          =   315
+         Left            =   1680
+         Style           =   2  'Dropdown List
+         TabIndex        =   14
+         Top             =   240
+         Visible         =   0   'False
+         Width           =   1215
+      End
+      Begin MSComCtl2.DTPicker DTPicker1 
+         Height          =   315
+         Left            =   4560
+         TabIndex        =   15
+         Top             =   240
+         Width           =   1335
+         _ExtentX        =   2355
+         _ExtentY        =   556
+         _Version        =   393216
+         Format          =   159514625
+         CurrentDate     =   37741
+      End
+      Begin VB.Label lblLocal 
+         BackColor       =   &H00E0E0E0&
+         Caption         =   "Local"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00000080&
+         Height          =   255
+         Left            =   240
+         TabIndex        =   16
+         Top             =   285
+         Width           =   615
+      End
+      Begin VB.Label lblFecha 
+         BackColor       =   &H00E0E0E0&
+         Caption         =   "Fecha"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00000080&
+         Height          =   255
+         Left            =   3960
+         TabIndex        =   17
+         Top             =   285
+         Width           =   615
+      End
    End
    Begin VB.Frame Frame1 
       BackColor       =   &H00E0E0E0&
       Height          =   2055
       Left            =   480
       TabIndex        =   4
-      Top             =   960
+      Top             =   1680
       Width           =   9135
       Begin VB.TextBox NombreArchivo 
          Height          =   285
@@ -133,7 +212,7 @@ Begin VB.Form Form174
       Height          =   2295
       Left            =   480
       TabIndex        =   11
-      Top             =   3120
+      Top             =   3840
       Width           =   9135
       _ExtentX        =   16113
       _ExtentY        =   4048
@@ -159,7 +238,7 @@ Begin VB.Form Form174
    End
    Begin MSComDlg.CommonDialog CmDlog 
       Left            =   9600
-      Top             =   6240
+      Top             =   6960
       _ExtentX        =   847
       _ExtentY        =   847
       _Version        =   393216
@@ -211,6 +290,23 @@ Private Sub Form_Load()
     mArchivoCsv = ""
     Call LimpiaGrilla      'xintec-nruz 22-10-2026 FCDVT-14: encabezados de la grilla del CSV
     Command4.Enabled = False   'xintec-nruz 04-11-2026 FCDVT-14: Cargar se habilita despues de un Buscar con grupos CARGADO
+    '---INI---- xintec-nruz 16-11-2026 FCDVT-14: local y fecha de Descargar Excel ----
+    'ProLeeLocales (Modulo1) llena Combo1 (codigo-alias) y Combo2 (codigo, oculto) segun el perfil;
+    'si el usuario es de un solo local, lo deja elegido. Fecha: dia anterior al del servidor.
+    Call ProLeeLocales(Combo1, Combo2)
+    If Combo2.ListCount = 1 Then Combo2.ListIndex = 0
+    Combo1.ListIndex = Combo2.ListIndex
+    'Si no se puede leer la fecha del servidor, queda la del equipo (LeeFechaServidor no maneja errores)
+    On Error Resume Next
+    DTPicker1.Value = DateAdd("d", -1, Date)
+    DTPicker1.Value = DateAdd("d", -1, CDate(LeeFechaServidor))
+    On Error GoTo 0
+    '---FIN----
+End Sub
+
+'xintec-nruz 16-11-2026 FCDVT-14: Combo2 (codigo del local) sigue a Combo1, como Form59
+Private Sub Combo1_Click()
+    Combo2.ListIndex = Combo1.ListIndex
 End Sub
 
 'Boton Buscar: selecciona el archivo CSV y muestra la ruta en NombreArchivo
@@ -335,16 +431,43 @@ Private Sub Command2_Click()
     Dim ruta As String, i As Integer, r As Integer
     Dim xlApp As Object, xlBook As Object, xlHoja As Object, xlInst As Object, xlLis As Object
     Dim vCols() As String, vFila() As String, vFecha As String, vTexto() As String
+    '---INI---- xintec-nruz 16-11-2026 FCDVT-14: Descargar Excel = plantilla llena con la Z y las Y grabadas del local y la fecha ----
+    'PKG_F8_EXPORTA_MASIVA_YZ (docs/sql/FCDVT-14/04d, 04e): fn_encabezado (columnas de la hoja Carga),
+    'fn_lineas (una linea ; por cierre, mismo formato del CSV de carga) y fn_resumen (por terminal).
+    'Sin cierres ese dia el libro sale vacio y sirve de plantilla, como antes.
+    Dim vLocal As String, vFechaD As Date, vEncab As String
+    Dim vLineas() As String, nLineas As Long, vRes() As String, nRes As Long
+    Dim vDatos() As Variant, r2 As Long, xlRes As Object, vR() As String
+    If Combo2.ListIndex < 0 Then
+        MsgBox "Seleccione el local.", vbExclamation, Me.Caption
+        Exit Sub
+    End If
+    vLocal = Trim(Combo2.Text)
+    vFechaD = DTPicker1.Value
+    Screen.MousePointer = vbHourglass
+    vEncab = EncabezadoExporta()
+    If vEncab = "" Then
+        Screen.MousePointer = vbDefault
+        Exit Sub
+    End If
+    nLineas = LeeExporta("fn_lineas", vLocal, vFechaD, vLineas)
+    If nLineas >= 0 Then nRes = LeeExporta("fn_resumen", vLocal, vFechaD, vRes)
+    Screen.MousePointer = vbDefault
+    If nLineas < 0 Or nRes < 0 Then Exit Sub
+    '---FIN----
     On Error GoTo cancelado
     CmDlog.CancelError = True
-    CmDlog.DialogTitle = "Guardar plantilla Excel de carga masiva de Y y Z"
+    'xintec-nruz 16-11-2026 FCDVT-14: titulo y nombre con el local y la fecha (antes plantilla vacia)
+    'CmDlog.DialogTitle = "Guardar plantilla Excel de carga masiva de Y y Z"
+    CmDlog.DialogTitle = "Descargar Excel de cierres Y y Z del local " & vLocal & " del " & Format(vFechaD, "dd-mm-yyyy")
     CmDlog.Filter = "Libro de Excel (*.xlsx)|*.xlsx"
     CmDlog.FilterIndex = 1
     CmDlog.DefaultExt = "xlsx"
     CmDlog.Flags = cdlOFNOverwritePrompt Or cdlOFNHideReadOnly Or cdlOFNPathMustExist
     'xintec-nruz 11-11-2026 FCDVT-10: nombre con el prefijo del pais (antes plantilla_carga_YZ_FACO.xlsx fijo)
     'CmDlog.filename = "plantilla_carga_YZ_FACO.xlsx"
-    CmDlog.filename = "plantilla_carga_YZ_" & PrefijoCargaYZ() & ".xlsx"
+    'CmDlog.filename = "plantilla_carga_YZ_" & PrefijoCargaYZ() & ".xlsx"
+    CmDlog.filename = "cierres_YZ_" & PrefijoCargaYZ() & "_L" & vLocal & "_" & Format(vFechaD, "yyyymmdd") & ".xlsx"
     CmDlog.ShowSave
     ruta = Trim(CmDlog.filename)
     On Error GoTo errExcel
@@ -352,7 +475,9 @@ Private Sub Command2_Click()
     If LCase(Right(ruta, 5)) <> ".xlsx" Then ruta = ruta & ".xlsx"
 
     Screen.MousePointer = vbHourglass
-    vCols = Split(EncabezadoCsvY(), ";")
+    'xintec-nruz 16-11-2026 FCDVT-14: encabezado del package de Descargar, el mismo de sus lineas (antes EncabezadoCsvY())
+    'vCols = Split(EncabezadoCsvY(), ";")
+    vCols = Split(vEncab, ";")
     'xintec-nruz 11-11-2026 FCDVT-10: sin encabezado (Tottus: no se pudo leer de la base) no se genera la plantilla;
     'vUltCol = ultima columna de la hoja Carga (FACO: BD, 56 columnas; Tottus: segun VTA_PAINT_Z)
     Dim vUltCol As String
@@ -366,15 +491,22 @@ Private Sub Command2_Click()
     Set xlApp = CreateObject("Excel.Application")
     xlApp.DisplayAlerts = False
     Set xlBook = xlApp.Workbooks.Add
-    Do While xlBook.Worksheets.Count < 3
+    'xintec-nruz 16-11-2026 FCDVT-14: 4 hojas, con Resumen en la 2 (antes 3: Carga, Instrucciones, Listas)
+    'Do While xlBook.Worksheets.Count < 3
+    Do While xlBook.Worksheets.Count < 4
         xlBook.Worksheets.Add , xlBook.Worksheets(xlBook.Worksheets.Count)
     Loop
-    Do While xlBook.Worksheets.Count > 3
+    'Do While xlBook.Worksheets.Count > 3
+    Do While xlBook.Worksheets.Count > 4
         xlBook.Worksheets(xlBook.Worksheets.Count).Delete
     Loop
     Set xlHoja = xlBook.Worksheets(1)
-    Set xlInst = xlBook.Worksheets(2)
-    Set xlLis = xlBook.Worksheets(3)
+    'Set xlInst = xlBook.Worksheets(2)
+    'Set xlLis = xlBook.Worksheets(3)
+    Set xlRes = xlBook.Worksheets(2)
+    Set xlInst = xlBook.Worksheets(3)
+    Set xlLis = xlBook.Worksheets(4)
+    xlRes.Name = "Resumen"
     xlHoja.Name = "Carga"
     xlInst.Name = "Instrucciones"
     xlLis.Name = "Listas"
@@ -454,6 +586,25 @@ Private Sub Command2_Click()
         'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes "Debe ser INGRESAR.")
         .ErrorMessage = IIf(Flg_Pais$ = "SFCL", "Debe ser INGRESAR o MODIFICAR.", "Debe ser INGRESAR.")
     End With
+    '---INI---- xintec-nruz 16-11-2026 FCDVT-14: lineas de la Z y las Y desde la fila 2 ----
+    'FECHA, HORA, TIPO y TIPO_CARGA (y los vacios) como texto; el resto como numero (Val: punto decimal)
+    If nLineas > 0 Then
+        ReDim vDatos(1 To nLineas, 1 To UBound(vCols) + 1)
+        For r2 = 1 To nLineas
+            vFila = Split(vLineas(r2), ";")
+            For i = 0 To UBound(vCols)
+                If i <= UBound(vFila) Then
+                    If i = 0 Or i = 4 Or i = 9 Or i = 10 Or Trim(vFila(i)) = "" Then
+                        vDatos(r2, i + 1) = vFila(i)
+                    Else
+                        vDatos(r2, i + 1) = Val(vFila(i))
+                    End If
+                End If
+            Next i
+        Next r2
+        xlHoja.Range("A2:" & vUltCol & CStr(nLineas + 1)).Value = vDatos
+    End If
+    '---FIN----
     'xintec-nruz 11-11-2026 FCDVT-10: hasta la ultima columna del pais (antes A1:BD1 fijo)
     'xlHoja.Range("A1:BD1").EntireColumn.AutoFit
     xlHoja.Range("A1:" & vUltCol & "1").EntireColumn.AutoFit
@@ -461,7 +612,11 @@ Private Sub Command2_Click()
     'Hoja Instrucciones
     ReDim vTexto(12)
     vTexto(0) = "Plantilla de carga masiva de cierres Y y Z (FACO) - Ingreso del YYY Masivo"
-    vTexto(1) = ""
+    'xintec-nruz 16-11-2026 FCDVT-14: origen de los datos descargados (antes vTexto(1) vacio)
+    'vTexto(1) = ""
+    vTexto(1) = "Descargado de F8: local " & vLocal & ", fecha " & Format(vFechaD, "dd-mm-yyyy") & ", " & nLineas & " cierre(s) Z e Y. " & _
+                "Para corregir, cambie los montos y vuelva a cargar el archivo: INGRESAR reemplaza la Z y las Y del terminal y fecha. " & _
+                "Si un terminal no tenía Z grabada, su Z se armó con la suma de sus Y (hoja Resumen, columna Z en el Excel)."
     vTexto(2) = "1. Complete la hoja Carga desde la fila 2: una fila por cada cierre Y y una fila Z por cada terminal y fecha."
     vTexto(3) = "2. El total de la Z (BOLETAS + N.CREDITO + FACTURA) debe ser igual a la suma de los totales de sus Y."
     vTexto(4) = "3. FECHA (dd-mm-yyyy, anterior a hoy) y HORA (HH:MM) ya tienen formato de texto: escríbalas tal cual."
@@ -504,6 +659,51 @@ Private Sub Command2_Click()
     xlInst.Range("A14:O14").Interior.Color = 10807499
     xlInst.Range("A14:O17").Columns.AutoFit
 
+    '---INI---- xintec-nruz 16-11-2026 FCDVT-14: hoja Resumen por terminal (fn_resumen) ----
+    xlRes.Cells(1, 1).Value = "Cierres Y y Z del local " & vLocal & " - fecha " & Format(vFechaD, "dd-mm-yyyy")
+    xlRes.Cells(1, 1).Font.Bold = True
+    'Columna H (16-11): la Z de la hoja Carga es la grabada o una armada con la suma de las Y (fn_resumen Z_ARMADA)
+    vR = Split("Terminal;Cant. Y;Monto Total Y;Monto Total Z;Diferencia (Z - Y);Estado Z;Y cerradas;Z en el Excel", ";")
+    For i = 0 To 7
+        xlRes.Cells(3, i + 1).Value = vR(i)
+    Next i
+    With xlRes.Range("A3:H3")
+        .Font.Bold = True
+        .Font.Color = 3560496
+        .Interior.Color = 10807499
+    End With
+    If nRes = 0 Then
+        xlRes.Cells(4, 1).Value = "Sin cierres Z ni Y para el local y la fecha."
+    Else
+        For r2 = 1 To nRes
+            'TERMINAL;CANT_Y;TOTAL_Y;TOTAL_Z;DIFERENCIA;ESTADO_Z;Y_CERRADAS;Z_ARMADA
+            vR = Split(vRes(r2) & ";;;;;;;", ";")
+            For i = 0 To 4
+                xlRes.Cells(3 + r2, i + 1).Value = Val(vR(i))
+            Next i
+            Select Case Trim(vR(5))
+                Case "": xlRes.Cells(3 + r2, 6).Value = "SIN ESTADO"
+                Case "1", "2": xlRes.Cells(3 + r2, 6).Value = "CERRADA (" & Trim(vR(5)) & ")"
+                Case Else: xlRes.Cells(3 + r2, 6).Value = "ABIERTA (" & Trim(vR(5)) & ")"
+            End Select
+            xlRes.Cells(3 + r2, 7).Value = Val(vR(6))
+            If Trim(vR(7)) = "S" Then
+                xlRes.Cells(3 + r2, 8).Value = "ARMADA (SUMA DE LAS Y)"
+                xlRes.Range("A" & CStr(3 + r2) & ":H" & CStr(3 + r2)).Interior.Color = &H80FFFF   'amarillo, como PENDIENTE en la grilla
+            Else
+                xlRes.Cells(3 + r2, 8).Value = "GRABADA"
+            End If
+        Next r2
+        xlRes.Cells(4 + nRes, 1).Value = "Total"
+        For i = 2 To 5
+            xlRes.Cells(4 + nRes, i).Formula = "=SUM(" & Chr(64 + i) & "4:" & Chr(64 + i) & CStr(3 + nRes) & ")"
+        Next i
+        xlRes.Range("A" & CStr(4 + nRes) & ":H" & CStr(4 + nRes)).Font.Bold = True
+        xlRes.Range("C4:E" & CStr(4 + nRes)).NumberFormat = "#,##0"
+    End If
+    xlRes.Range("A1:H1").EntireColumn.AutoFit
+    xlRes.Columns(1).ColumnWidth = 12
+    '---FIN----
     'Listas oculta; se guarda con Carga activa
     xlLis.Visible = 0
     xlHoja.Activate
@@ -518,6 +718,7 @@ Private Sub Command2_Click()
     xlBook.SaveAs ruta, 51
     xlBook.Close False
     xlApp.Quit
+    Set xlRes = Nothing   'xintec-nruz 16-11-2026 FCDVT-14
     Set xlLis = Nothing
     Set xlInst = Nothing
     Set xlHoja = Nothing
@@ -525,9 +726,15 @@ Private Sub Command2_Click()
     Set xlApp = Nothing
     Screen.MousePointer = vbDefault
 
-    If MsgBox("Plantilla guardada en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
-              "Complétela y guárdela como CSV (delimitado por comas) para cargarla con Buscar." & vbCrLf & vbCrLf & _
-              "¿Desea abrirla en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
+    'xintec-nruz 16-11-2026 FCDVT-14: mensaje con los cierres descargados (antes solo "Plantilla guardada en")
+    'If MsgBox("Plantilla guardada en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
+    '          "Complétela y guárdela como CSV (delimitado por comas) para cargarla con Buscar." & vbCrLf & vbCrLf & _
+    '          "¿Desea abrirla en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
+    If MsgBox("Excel guardado en:" & vbCrLf & ruta & vbCrLf & vbCrLf & _
+              IIf(nLineas = 0, "El local " & vLocal & " no tiene cierres Z ni Y el " & Format(vFechaD, "dd-mm-yyyy") & ": se guardó como plantilla vacía.", _
+                  nLineas & " cierre(s) Z e Y de " & nRes & " terminal(es) del local " & vLocal & " del " & Format(vFechaD, "dd-mm-yyyy") & ".") & vbCrLf & vbCrLf & _
+              "Para cargarlo, guarde la hoja Carga como CSV (delimitado por comas) y elíjalo con Buscar." & vbCrLf & vbCrLf & _
+              "¿Desea abrirlo en Excel?", vbQuestion + vbYesNo, Me.Caption) = vbYes Then
         Shell "explorer.exe """ & ruta & """", vbNormalFocus
     End If
     Exit Sub
@@ -537,18 +744,80 @@ cancelado:
     Exit Sub
 errExcel:
     Screen.MousePointer = vbDefault
-    MsgBox "No se pudo generar la plantilla Excel: " & Err.Description, vbCritical, Me.Caption
+    'xintec-nruz 16-11-2026 FCDVT-14: ya no es solo la plantilla
+    'MsgBox "No se pudo generar la plantilla Excel: " & Err.Description, vbCritical, Me.Caption
+    MsgBox "No se pudo generar el Excel: " & Err.Description, vbCritical, Me.Caption
     Resume limpiar
 limpiar:
     On Error Resume Next
     If Not xlBook Is Nothing Then xlBook.Close False
     If Not xlApp Is Nothing Then xlApp.Quit
+    Set xlRes = Nothing   'xintec-nruz 16-11-2026 FCDVT-14
     Set xlLis = Nothing
     Set xlInst = Nothing
     Set xlHoja = Nothing
     Set xlBook = Nothing
     Set xlApp = Nothing
 End Sub
+
+'---INI---- xintec-nruz 16-11-2026 FCDVT-14: lectura de PKG_F8_EXPORTA_MASIVA_YZ (Descargar Excel) ----
+'Encabezado de la hoja Carga del pais (el mismo de las lineas de fn_lineas). Vacio si no se pudo leer.
+Private Function EncabezadoExporta() As String
+    Dim Consulta As Object
+    EncabezadoExporta = ""
+    Set Consulta = CreateObject("ADODB.Recordset")
+    With Consulta
+        .ActiveConnection = Ado_Conn
+        .CursorLocation = adUseClient
+        .CursorType = adOpenForwardOnly
+        .LockType = adLockReadOnly
+    End With
+    On Error GoTo oraerror
+    Call Consulta.Open("select PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado('" & Flg_Pais$ & "') encab from dual")
+    If Not Consulta.EOF Then EncabezadoExporta = IIf(IsNull(Consulta!encab), "", Consulta!encab)
+    Set Consulta.ActiveConnection = Nothing
+    Exit Function
+oraerror:
+    Set Consulta.ActiveConnection = Nothing
+    Screen.MousePointer = vbDefault
+    SystemMsg = "Problemas al leer el encabezado del Excel (PKG_F8_EXPORTA_MASIVA_YZ.fn_encabezado)"
+    frmLogOraError.Show 1
+End Function
+
+'Lineas de fn_lineas o fn_resumen del local y la fecha en vLineas(1..n). Devuelve n, o -1 si hubo error.
+Private Function LeeExporta(ByVal vFuncion As String, ByVal vLocal As String, ByVal vFecha As Date, vLineas() As String) As Long
+    Dim Consulta As Object, sq As String, n As Long
+    LeeExporta = -1
+    n = 0
+    ReDim vLineas(0)
+    Set Consulta = CreateObject("ADODB.Recordset")
+    With Consulta
+        .ActiveConnection = Ado_Conn
+        .CursorLocation = adUseClient
+        .CursorType = adOpenForwardOnly
+        .LockType = adLockReadOnly
+    End With
+    sq = "select column_value linea " & _
+         "from   table(PKG_F8_EXPORTA_MASIVA_YZ." & vFuncion & "('" & Flg_Pais$ & "', " & CStr(Val(vLocal)) & ", " & _
+         "to_date('" & Format(vFecha, "yyyymmdd") & "', 'yyyymmdd')))"
+    On Error GoTo oraerror
+    Call Consulta.Open(sq)
+    Do While Not Consulta.EOF
+        n = n + 1
+        ReDim Preserve vLineas(n)
+        vLineas(n) = IIf(IsNull(Consulta!linea), "", Consulta!linea)
+        Consulta.MoveNext
+    Loop
+    Set Consulta.ActiveConnection = Nothing
+    LeeExporta = n
+    Exit Function
+oraerror:
+    Set Consulta.ActiveConnection = Nothing
+    Screen.MousePointer = vbDefault
+    SystemMsg = "Problemas al leer los cierres del local " & vLocal & " (PKG_F8_EXPORTA_MASIVA_YZ." & vFuncion & ")"
+    frmLogOraError.Show 1
+End Function
+'---FIN----
 
 'Texto del comentario de cada columna de la plantilla (glosa de Form19Y; docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3)
 Private Function GlosaColumnaCsv(ByVal n As Integer) As String
@@ -826,7 +1095,7 @@ Private Sub CargaGrillaCsv(ByVal ruta As String)
     If Grid1.Rows = 1 Then
         'xintec-nruz 03-11-2026 FCDVT-14: tabla de log del pais (antes VTA_FACOCARGA_YZ_LOG fijo)
         MsgBox "Carga N° " & mCarga & ": el archivo no generó ningún resumen." & vbCrLf & _
-               "Revise que el encabezado sea el de la plantilla (Exportar Excel)." & vbCrLf & _
+               "Revise que el encabezado sea el de la plantilla (Descargar Excel)." & vbCrLf & _
                "Detalle en VTA_" & PrefijoCargaYZ() & "CARGA_YZ_LOG.", vbExclamation, Me.Caption
     Else
         'xintec-nruz 03-11-2026 FCDVT-14: el clic abre Form175 (antes "Doble clic en una fila para ver el motivo.")
