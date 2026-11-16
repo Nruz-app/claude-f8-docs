@@ -30,6 +30,7 @@ Contenido de esta carpeta:
 - `recaudacion.vbw`: son posiciones de ventanas del IDE.
 - `Form174.log`: es del 20-10 a las 13:57, de cuando se creó el formulario y hubo un conflicto con el nombre `Form1722`. Está obsoleto.
 - `*.bak_*` y `bash.exe.stackdump`: no son fuente.
+- `Form133.frx`, `Form43.frx` y `MDIForm1.frx`: tienen fecha reciente en `FTEPROD/` (`MDIForm1.frx` 20-10; `Form133.frx` y `Form43.frx` 30-10) porque el IDE los vuelve a grabar al guardar el formulario, pero estos requerimientos no cambian el diseño de esas pantallas (los diffs de sus `.frm` no tocan offsets `.frx`). Se deja el `.frx` de producción. No se pudieron comparar byte a byte (nota del 16-11-2026): la copia de producción `C:\Users\NRUZ\Downloads\FTEPROD` ya no existe. Si al compilar en producción aparece un error de carga del `.frx`, copiar también el de `FTEPROD/`.
 
 Las copias PROD de `Form43.frm` y `Form133.frm` son idénticas, byte a byte, a los respaldos `FTEPROD/Form43.frm.bak_FSCC-12901` y `Form133.frm.bak_FSCC-12901`. Esto confirma que los cambios se hicieron sobre la versión de producción.
 

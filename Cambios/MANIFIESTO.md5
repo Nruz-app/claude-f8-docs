@@ -13,13 +13,14 @@
 # 2026-11-16: 16-11-2026: FCDVT-14 Form174 Descargar Excel por local y fecha (PKG_F8_EXPORTA_MASIVA_YZ)
 # 2026-11-16: 16-11-2026: FCDVT-14 Form174 Descargar Excel, ajustes de la revision
 # 2026-11-16: 16-11-2026: FCDVT-14 Form174 Descargar Excel con Z armada
+# 2026-11-16: 16-11-2026: README nota sobre Form133/Form43/MDIForm1 .frx (no se llevan)
 26eeeb01e993eece2440ed9739a94562 *PROD/Form133.frm
 0e1bfd0ce9c86e18f8913dbf2876c35d *PROD/Form43.frm
 ee06d78d2d8afd28fa67a146643563e3 *PROD/MDIForm1.frm
 1f17838b52350b69ec28715cb3f267f5 *PROD/otros/Form172.frm
 2218417ba4b2ea3b8565a6158322004d *PROD/otros/Form173.frm
 d986352ffb4d9d10a509a8b6c0d83ed8 *PROD/recaudacion.vbp
-2a1eb6bd7f107e93e62ea7311c503d34 *README.md
+0881ab2592d78268530a08cc760d6688 *README.md
 ed11df46050aa6909ecc3590bedc639b *archivos/Form133.frm
 030476e77ef21efcb32ebd1f1a93d8e4 *archivos/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *archivos/Form174.frx
