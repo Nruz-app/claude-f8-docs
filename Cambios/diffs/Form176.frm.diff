@@ -1,23 +1,23 @@
 --- PROD/Form176.frm
 +++ NUEVO/Form176.frm
-@@ -0,0 +1,604 @@
+@@ -0,0 +1,628 @@
 +VERSION 5.00
-+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 +Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-+Begin VB.Form Form176
++Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
++Begin VB.Form Form176 
 +   BackColor       =   &H00E0E0E0&
 +   Caption         =   " Exportar Cierres Y y Z (plantilla de carga)"
-+   ClientHeight    =   5520
++   ClientHeight    =   6180
 +   ClientLeft      =   2055
 +   ClientTop       =   1410
 +   ClientWidth     =   10410
 +   LinkTopic       =   "Form176"
 +   MaxButton       =   0   'False
-+   ScaleHeight     =   5520
++   ScaleHeight     =   6180
 +   ScaleWidth      =   10410
 +   StartUpPosition =   2  'CenterScreen
 +   Visible         =   0   'False
-+   Begin VB.CommandButton Command1
++   Begin VB.CommandButton Command1 
 +      BackColor       =   &H00A4E8CB&
 +      Caption         =   "&Exportar"
 +      Height          =   495
@@ -26,10 +26,10 @@
 +      Style           =   1  'Graphical
 +      TabIndex        =   6
 +      ToolTipText     =   "Exporta a CSV los cierres Y y Z de los filtros, con el formato de la plantilla de carga"
-+      Top             =   4800
++      Top             =   5460
 +      Width           =   1695
 +   End
-+   Begin VB.CommandButton Command3
++   Begin VB.CommandButton Command3 
 +      BackColor       =   &H00A4E8CB&
 +      Caption         =   "&Salir"
 +      Height          =   495
@@ -37,10 +37,10 @@
 +      MaskColor       =   &H00000080&
 +      Style           =   1  'Graphical
 +      TabIndex        =   7
-+      Top             =   4800
++      Top             =   5460
 +      Width           =   1695
 +   End
-+   Begin VB.PictureBox Picture1
++   Begin VB.PictureBox Picture1 
 +      Appearance      =   0  'Flat
 +      BackColor       =   &H00C0C0C0&
 +      BorderStyle     =   0  'None
@@ -54,10 +54,10 @@
 +      Top             =   0
 +      Width           =   3135
 +   End
-+   Begin VB.Frame Frame1
++   Begin VB.Frame Frame1 
 +      BackColor       =   &H00E0E0E0&
 +      Caption         =   "Criterio"
-+      BeginProperty Font
++      BeginProperty Font 
 +         Name            =   "MS Sans Serif"
 +         Size            =   8.25
 +         Charset         =   0
@@ -72,7 +72,7 @@
 +      TabIndex        =   0
 +      Top             =   840
 +      Width           =   9135
-+      Begin VB.ComboBox Combo1
++      Begin VB.ComboBox Combo1 
 +         BackColor       =   &H00F5F5F5&
 +         ForeColor       =   &H00000080&
 +         Height          =   315
@@ -82,7 +82,7 @@
 +         Top             =   600
 +         Width           =   3375
 +      End
-+      Begin VB.ComboBox Combo2
++      Begin VB.ComboBox Combo2 
 +         Height          =   315
 +         Left            =   1200
 +         Style           =   2  'Dropdown List
@@ -91,7 +91,7 @@
 +         Visible         =   0   'False
 +         Width           =   1215
 +      End
-+      Begin VB.ComboBox Combo3
++      Begin VB.ComboBox Combo3 
 +         BackColor       =   &H00F5F5F5&
 +         ForeColor       =   &H00000080&
 +         Height          =   315
@@ -101,7 +101,7 @@
 +         Top             =   600
 +         Width           =   975
 +      End
-+      Begin MSComCtl2.DTPicker DTPicker1
++      Begin MSComCtl2.DTPicker DTPicker1 
 +         Height          =   315
 +         Left            =   5040
 +         TabIndex        =   3
@@ -115,10 +115,10 @@
 +         CalendarTitleBackColor=   12632256
 +         CalendarTitleForeColor=   128
 +         CalendarTrailingForeColor=   8421504
-+         Format          =   140378113
++         Format          =   112459777
 +         CurrentDate     =   37707
 +      End
-+      Begin MSComCtl2.DTPicker DTPicker2
++      Begin MSComCtl2.DTPicker DTPicker2 
 +         Height          =   315
 +         Left            =   6840
 +         TabIndex        =   4
@@ -132,13 +132,13 @@
 +         CalendarTitleBackColor=   12632256
 +         CalendarTitleForeColor=   128
 +         CalendarTrailingForeColor=   8421504
-+         Format          =   140378113
++         Format          =   112459777
 +         CurrentDate     =   37707
 +      End
-+      Begin VB.Label lblLocal
++      Begin VB.Label lblLocal 
 +         BackColor       =   &H00E0E0E0&
 +         Caption         =   "Local"
-+         BeginProperty Font
++         BeginProperty Font 
 +            Name            =   "MS Sans Serif"
 +            Size            =   8.25
 +            Charset         =   0
@@ -154,10 +154,10 @@
 +         Top             =   360
 +         Width           =   1335
 +      End
-+      Begin VB.Label lblTerminal
++      Begin VB.Label lblTerminal 
 +         BackColor       =   &H00E0E0E0&
 +         Caption         =   "Terminal"
-+         BeginProperty Font
++         BeginProperty Font 
 +            Name            =   "MS Sans Serif"
 +            Size            =   8.25
 +            Charset         =   0
@@ -173,10 +173,10 @@
 +         Top             =   360
 +         Width           =   975
 +      End
-+      Begin VB.Label lblFechaIni
++      Begin VB.Label lblFechaIni 
 +         BackColor       =   &H00E0E0E0&
 +         Caption         =   "Fecha Inicio"
-+         BeginProperty Font
++         BeginProperty Font 
 +            Name            =   "MS Sans Serif"
 +            Size            =   8.25
 +            Charset         =   0
@@ -192,10 +192,10 @@
 +         Top             =   360
 +         Width           =   1575
 +      End
-+      Begin VB.Label lblFechaFin
++      Begin VB.Label lblFechaFin 
 +         BackColor       =   &H00E0E0E0&
 +         Caption         =   "Fecha Fin"
-+         BeginProperty Font
++         BeginProperty Font 
 +            Name            =   "MS Sans Serif"
 +            Size            =   8.25
 +            Charset         =   0
@@ -211,7 +211,7 @@
 +         Top             =   360
 +         Width           =   1575
 +      End
-+      Begin VB.Label lblAyuda
++      Begin VB.Label lblAyuda 
 +         BackColor       =   &H00E0E0E0&
 +         Caption         =   "Local 0 = todos los locales del negocio · Terminal 0 = todos los terminales del local"
 +         ForeColor       =   &H00404040&
@@ -222,17 +222,17 @@
 +         Width           =   8655
 +      End
 +   End
-+   Begin VB.Frame Frame2
++   Begin VB.Frame Frame2 
 +      BackColor       =   &H00F5F5F5&
-+      Height          =   1815
++      Height          =   2490
 +      Left            =   480
 +      TabIndex        =   5
 +      Top             =   2760
 +      Width           =   9135
-+      Begin VB.Label lblResultado
++      Begin VB.Label lblResultado 
 +         BackColor       =   &H00F5F5F5&
 +         Caption         =   "Resultado de la exportación"
-+         BeginProperty Font
++         BeginProperty Font 
 +            Name            =   "MS Sans Serif"
 +            Size            =   8.25
 +            Charset         =   0
@@ -248,52 +248,62 @@
 +         Top             =   240
 +         Width           =   8655
 +      End
-+      Begin VB.Label lblArchivo
++      Begin VB.Label lblArchivo 
 +         BackColor       =   &H00F5F5F5&
 +         Caption         =   "Archivo: (sin exportar)"
 +         ForeColor       =   &H00404040&
-+         Height          =   495
++         Height          =   615
 +         Left            =   240
 +         TabIndex        =   16
-+         Top             =   600
++         Top             =   540
 +         Width           =   8655
 +      End
-+      Begin VB.Label lblCierres
++      Begin VB.Label lblFormato 
++         BackColor       =   &H00F5F5F5&
++         Caption         =   "Formato CSV: mismas columnas y orden de la plantilla de carga"
++         ForeColor       =   &H00808080&
++         Height          =   255
++         Left            =   240
++         TabIndex        =   19
++         Top             =   1200
++         Width           =   8655
++      End
++      Begin VB.Label lblCierres 
 +         BackColor       =   &H00F5F5F5&
 +         Caption         =   "Cierres exportados: -"
 +         ForeColor       =   &H00404040&
 +         Height          =   255
 +         Left            =   240
 +         TabIndex        =   17
-+         Top             =   1080
++         Top             =   1530
 +         Width           =   8655
 +      End
-+      Begin VB.Label lblNota
++      Begin VB.Label lblNota 
 +         BackColor       =   &H00F5F5F5&
 +         Caption         =   "Si no hay cierres para los filtros: «No existen cierres Y/Z para los filtros seleccionados» y no se genera archivo"
 +         ForeColor       =   &H00808080&
-+         Height          =   255
++         Height          =   375
 +         Left            =   240
 +         TabIndex        =   18
-+         Top             =   1440
++         Top             =   1950
 +         Width           =   8655
 +      End
 +   End
-+   Begin MSComDlg.CommonDialog CmDlog
++   Begin MSComDlg.CommonDialog CmDlog 
 +      Left            =   480
 +      Top             =   4800
 +      _ExtentX        =   847
 +      _ExtentY        =   847
 +      _Version        =   393216
 +   End
-+   Begin VB.Image Image1
++   Begin VB.Image Image1 
 +      Height          =   810
 +      Left            =   1620
 +      Picture         =   "Form176.frx":1644
 +      Top             =   -210
 +      Width           =   13590
 +   End
-+   Begin VB.Image Image2
++   Begin VB.Image Image2 
 +      Height          =   1830
 +      Left            =   -150
 +      Picture         =   "Form176.frx":171C
@@ -311,7 +321,9 @@
 +'Exporta a CSV las Z y las Y grabadas de un rango de fechas, un local (0 = todos) y un terminal (0 = todos),
 +'con el formato de la plantilla de carga de Form174 (mismas columnas y orden), para volver a cargarlas con Buscar.
 +'Base: PKG_F8_EXPORTA_MASIVA_YZ (docs/sql/FCDVT-259/02 y 03): fn_encabezado y fn_lineas.
-+'Regla de fechas: Fecha Inicio >= hoy - 2 dias, Fecha Fin <= hoy - 1 (ayer) y Fecha Fin >= Fecha Inicio (hoy = fecha del servidor).
++'Regla de fechas (hoy = fecha del servidor): Fecha Fin <= hoy - 1 (ayer), Fecha Fin >= Fecha Inicio y
++'rango maximo de 3 dias entre Fecha Inicio y Fecha Fin (dias incluidos), sin limite hacia atras.
++'xintec-nruz 17-11-2026 FCDVT-259: antes "Fecha Inicio >= hoy - 2 dias" y calendarios limitados a hoy - 2..ayer.
 +'xintec-nruz 16-11-2026 FCDVT-259: Fecha Fin hasta ayer (antes hasta hoy): Buscar de Form174 rechaza las fechas de hoy y el CSV no se podria volver a cargar.
 +'Se abre desde MDIForm1, boton Y > submenu EXPYZ (permiso 461).
 +Private mHoy As Date            'fecha del servidor al abrir la pantalla
@@ -319,6 +331,7 @@
 +
 +Private Sub Form_Load()
 +    lblArchivo.Caption = "Archivo: (sin exportar)"
++    lblArchivo.ToolTipText = ""
 +    lblCierres.Caption = "Cierres exportados: -"
 +    mHabilitado = (Flg_Pais$ = "FACO")
 +    If Not mHabilitado Then
@@ -326,18 +339,20 @@
 +        MsgBox "Opción disponible solo para Falabella Colombia.", vbExclamation, Me.Caption
 +        Exit Sub
 +    End If
++    '---INI---- xintec-nruz 17-11-2026 FCDVT-259: calendarios con la fecha de ayer por defecto ----
 +    mHoy = FechaServidor()
-+    'Rango permitido en los calendarios: desde hoy - 2 hasta ayer. Primero el maximo, despues el valor
-+    'y al final el minimo, para que el valor nunca quede fuera del rango (el diseno trae 2003).
-+    On Error Resume Next
++    'Rango permitido en los calendarios: maximo ayer. Primero el maximo y despues el valor,
++    'para que el valor nunca quede fuera del rango (el diseno trae 2003).
++    'xintec-nruz 17-11-2026 FCDVT-259: sin MinDate (antes hoy - 2): el limite hacia atras lo aplica
++    'el boton Exportar (rango maximo de 3 dias entre Fecha Inicio y Fecha Fin, dias incluidos).
 +    'xintec-nruz 16-11-2026 FCDVT-259: maximo ayer (antes mHoy)
++    On Error Resume Next
 +    DTPicker1.MaxDate = DateAdd("d", -1, mHoy)
 +    DTPicker2.MaxDate = DateAdd("d", -1, mHoy)
 +    DTPicker1.Value = DateAdd("d", -1, mHoy)
 +    DTPicker2.Value = DateAdd("d", -1, mHoy)
-+    DTPicker1.MinDate = DateAdd("d", -2, mHoy)
-+    DTPicker2.MinDate = DateAdd("d", -2, mHoy)
 +    On Error GoTo 0
++    '---FIN---- xintec-nruz 17-11-2026 FCDVT-259 ----
 +    'Locales del perfil (Modulo1.ProLeeLocales): Combo1 = codigo-alias, Combo2 = codigo (oculto).
 +    'Si el perfil ve mas de un local, "0-TODOS LOS LOCALES" al comienzo, como Form43.
 +    Call ProLeeLocales(Combo1, Combo2)
@@ -436,7 +451,7 @@
 +    vIni = DateSerial(Year(DTPicker1.Value), Month(DTPicker1.Value), Day(DTPicker1.Value))
 +    vFin = DateSerial(Year(DTPicker2.Value), Month(DTPicker2.Value), Day(DTPicker2.Value))
 +
-+    'Validaciones de fechas (FCDVT-259): fin >= inicio, fin <= ayer, inicio >= hoy - 2
++    'Validaciones de fechas (FCDVT-259): fin >= inicio, fin <= ayer y rango maximo de 3 dias entre inicio y fin (dias incluidos)
 +    If vFin < vIni Then
 +        MsgBox "La Fecha Fin no puede ser anterior a la Fecha Inicio.", vbExclamation, Me.Caption
 +        Exit Sub
@@ -446,11 +461,18 @@
 +        MsgBox "La Fecha Fin debe ser anterior a hoy (" & Format(mHoy, "dd-mm-yyyy") & "): la carga masiva no acepta cierres del día.", vbExclamation, Me.Caption
 +        Exit Sub
 +    End If
-+    If vIni < DateAdd("d", -2, mHoy) Then
-+        MsgBox "La Fecha Inicio no puede ser anterior al " & Format(DateAdd("d", -2, mHoy), "dd-mm-yyyy") & _
-+               " (máximo 2 días hacia atrás).", vbExclamation, Me.Caption
++    '---INI---- xintec-nruz 17-11-2026 FCDVT-259: rango maximo de 3 dias entre Fecha Inicio y Fecha Fin (dias incluidos); sin limite hacia atras para Fecha Inicio ----
++'    If vIni < DateAdd("d", -2, mHoy) Then
++'        MsgBox "La Fecha Inicio no puede ser anterior al " & Format(DateAdd("d", -2, mHoy), "dd-mm-yyyy") & _
++'               " (máximo 2 días hacia atrás).", vbExclamation, Me.Caption
++'        Exit Sub
++'    End If
++    'xintec-nruz 17-11-2026 FCDVT-259: rango maximo de 3 dias incluidos (fin - inicio <= 2)
++    If DateDiff("d", vIni, vFin) > 2 Then
++        MsgBox "El rango entre Fecha Inicio y Fecha Fin no puede superar 3 dias (dias incluidos).", vbExclamation, Me.Caption
 +        Exit Sub
 +    End If
++    '---FIN---- xintec-nruz 17-11-2026 FCDVT-259 ----
 +
 +    'Local 0 de un usuario de grupo: solo los locales de su grupo (como ProLeeLocales)
 +    vGrupo = "null"
@@ -471,6 +493,7 @@
 +    If n < 0 Then Exit Sub
 +    If n = 0 Then
 +        lblArchivo.Caption = "Archivo: (no se generó)"
++        lblArchivo.ToolTipText = ""
 +        lblCierres.Caption = "Cierres exportados: 0"
 +        MsgBox "No existen cierres Y/Z para los filtros seleccionados", vbInformation, Me.Caption
 +        Exit Sub
@@ -520,7 +543,8 @@
 +    f = 0
 +    Screen.MousePointer = vbDefault
 +
-+    lblArchivo.Caption = "Archivo: " & ruta & " · Formato CSV, mismas columnas y orden de la plantilla de carga"
++    lblArchivo.Caption = "Archivo: " & ruta
++    lblArchivo.ToolTipText = ruta
 +    lblCierres.Caption = "Cierres exportados: " & n & " filas (" & nTerm & " terminales · " & nY & " Y y " & nZ & " Z)"
 +    MsgBox "Archivo generado:" & vbCrLf & ruta, vbInformation, Me.Caption
 +    Exit Sub

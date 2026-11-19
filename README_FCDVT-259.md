@@ -1,8 +1,8 @@
 # FCDVT-259 · HU02-EXT: exportar los cierres Y y Z en el formato de la plantilla de carga
 
-> **Estado (16-11-2026): programado, sin compilar ni instalar.**
+> **Estado (16-11-2026): implementado.** El exe sigue sin compilar; en base, la primera instalación en desarrollo dejó el body INVALID y ya está corregido — reinstalar `03` (ver Historial).
 > - **Exe:** se crearon `Form176.frm` y `Form176.frx` (Exportar Cierres Y y Z). En `MDIForm1.frm` se agregaron el submenú `EXPYZ` del botón Y y el permiso 461, y en `recaudacion.vbp` la línea `Form=Form176.frm`. `Form174.frm` volvió a la versión anterior al Descargar Excel. Todo está sincronizado en `docs/Cambios/`, sin compilar.
-> - **Base:** `docs/sql/FCDVT-259/` (menú 461 y `PKG_F8_EXPORTA_MASIVA_YZ` solo FACO). Escrito y revisado con `sql-lint`, **sin ejecutar**.
+> - **Base:** `docs/sql/FCDVT-259/` (menú 461 y `PKG_F8_EXPORTA_MASIVA_YZ` solo FACO). Escrito y revisado con `sql-lint`. Instalado el 16-11 en desarrollo: spec VALID, body INVALID (declaraciones de datos entre subprogramas, que 10.2 no acepta) y corregido en `03`.
 > - En Jira: *Refining*, FCDVT Sprint 3, 3 story points.
 >
 > Fuente: `docs/Requerimiento-FCDVT-259/` (`FCDVT-259.doc` es la exportación HTML de Jira; `image-20261116-123023.png` es la maqueta). Relacionado con la carga masiva de **FCDVT-14** (`docs/README_FCDVT-14.md`; Form174 vuelve a cargar el CSV exportado).
@@ -26,6 +26,7 @@
 1. **Pantalla propia, `Form176`**, igual a la maqueta pero sin el recuadro "PROPUESTA". El "Descargar Excel" que se había agregado a Form174 ese mismo día (FCDVT-14 §5.10) **se revierte**: no corresponde a ese formulario.
 2. **Solo Colombia (FACO)**: el package deja de ser multipaís.
 3. **Fechas:** Fecha Inicio ≥ hoy − 2 días, Fecha Fin ≤ ayer y Fecha Fin ≥ Fecha Inicio. Hoy es la fecha del servidor. (Se pidió Fecha Fin ≤ hoy; tras la revisión quedó **hasta ayer**, porque Buscar de Form174 rechaza las fechas de hoy y el CSV no se podría volver a cargar.)
+   - **Modificado el 17-11-2026 a pedido del usuario:** los calendarios abren con **ayer por defecto** y solo tienen tope superior ayer (**sin `MinDate`**), y el botón Exportar valida un **rango máximo de 3 días incluidos** entre Fecha Inicio y Fecha Fin (`Fin − Inicio ≤ 2`); se **quitó** el límite "Fecha Inicio ≥ hoy − 2". El mismo día se restauró el bloque de fechas del servidor que estaba comentado en la copia de `FTEPROD/` (con `mHoy` en 0, Exportar mostraba "hoy (30-12-1899)" y rechazaba todo). Ver `docs/Cambios/README.md` §2.7.
 4. **El botón Exportar llama a `PKG_F8_EXPORTA_MASIVA_YZ`**, ajustado a los filtros de la pantalla. Los scripts se trasladan de `docs/sql/FCDVT-14/` (04d/04e, nunca instalados) a `docs/sql/FCDVT-259/`.
 5. **Z armada:** se mantiene. Un terminal-día con Y y sin Z en libvta (FACO cerrado solo con Y) sale con una Z = suma de sus Y, para que el CSV se pueda volver a cargar.
 6. **Menú:** permiso **461**, submenú "Exportar Cierres Y y Z" del botón Y (junto a "Ingreso del YYY Masivo"), con los mismos perfiles que el 460 (10 y 11).
@@ -48,13 +49,13 @@
 - **Criterio:**
   - Local (`Combo1`/`Combo2`): `ProLeeLocales` según el perfil; si el perfil ve más de un local, "0-TODOS LOS LOCALES" al comienzo, como Form43.
   - Terminal (`Combo3`): 0 + los vigentes del local a la Fecha Inicio (como `Form43.LeeTerminales`); con local 0 solo 0.
-  - Fecha Inicio y Fecha Fin (`DTPicker1`/`DTPicker2`): por defecto ayer, limitadas con `MinDate = hoy − 2` y `MaxDate = ayer`.
+  - Fecha Inicio y Fecha Fin (`DTPicker1`/`DTPicker2`): por defecto **ayer**, limitadas con `MaxDate = ayer`; **sin `MinDate`** desde el 17-11-2026 (antes `MinDate = hoy − 2`).
 - **Exportar:**
   - valida las fechas (§2, punto 3) aunque los calendarios ya las limiten;
   - lee el encabezado y las líneas del package. Con local 0 y perfil de grupo (1 o 5), pasa `p_grupo = LOCALUSER` para no exportar locales de otros grupos;
   - sin líneas, muestra el mensaje de la HU y no genera archivo;
   - con líneas, abre "Guardar como" (`carga_Y_compensa_<ddmmyyyy>_<ddmmyyyy>.csv`, el nombre de la maqueta) y escribe el encabezado y una línea por cierre (`;`, CRLF, `Print #`);
-  - en "Resultado" muestra el archivo y "N filas (T terminales · Y Y y Z Z)". T cuenta local-terminal distintos.
+  - en "Resultado" muestra la ruta en `lblArchivo` (la ruta completa también en su `ToolTipText`), el formato en `lblFormato` y el conteo en `lblCierres`: "N filas (T terminales · Y Y y Z Z)". T cuenta local-terminal distintos.
 - **Otros países:** avisa y deja Exportar deshabilitado. El menú, además, solo existe en FACO.
 
 ### 4.2 `PKG_F8_EXPORTA_MASIVA_YZ` (solo FACO)
@@ -66,18 +67,18 @@
   - orden: fecha, local, terminal, Z, Y; la Z armada se corta por fecha-local-terminal;
   - fin < inicio → ORA-20004.
 - Cambios respecto del 04e de FCDVT-14: sin `p_flg_pais` ni lista blanca (tablas `VTA_FACO*` fijas), filtros de rango, terminal y grupo, y sin `fn_resumen` (Form176 cuenta las líneas).
-- La regla de "2 días hacia atrás" está en el exe, no en el package (así `05_pruebas.sql` puede consultar cualquier fecha).
+- La regla de fechas (rango máximo de 3 días incluidos y Fecha Fin hasta ayer) está en el exe, no en el package (así `05_pruebas.sql` puede consultar cualquier fecha). Hasta el 16-11 era "2 días hacia atrás"; el 17-11-2026 se cambió a rango máximo 3 días sin límite hacia atrás.
 - **Fecha Fin hasta ayer (revisión del 16-11):** Buscar de Form174 rechaza las fechas de hoy ("La fecha debe ser anterior a hoy"), así que Form176 no deja exportar cierres de hoy: todo CSV exportado se puede volver a cargar.
 
 ## 5. Pendientes
 
-1. **Instalar en test:**
+1. **Reinstalar en desarrollo el `03` corregido e instalar en test:**
    - `docs/sql/FCDVT-259/00_prechecks.sql` → `INSTALAR.sql` (02 y 03); requiere `PKG_F8_CARGA_MASIVA_YZ` de FCDVT-14;
    - `01_menu_exporta_yz.sql` (permiso 461) **solo junto con el exe nuevo**: con el exe anterior corta la carga de los permisos siguientes;
    - `04` si el exe usa otro usuario;
    - `05_pruebas.sql`.
 2. **Compilar** el exe con Form176 y MDIForm1. Form176 es nuevo y se escribió a mano: revisar en el IDE que el diseño cargue sin `Form176.log` y se vea como la maqueta.
-3. **Probar** con `docs/sql/FCDVT-259/pruebas/README.md`. Como Form176 solo exporta de hoy − 2 a ayer, hay que cambiar las fechas de prueba: 27-10-2026 por anteayer y 28-10-2026 por ayer.
+3. **Probar** con `docs/sql/FCDVT-259/pruebas/README.md`. Como Form176 exporta a lo más **3 días incluidos terminando ayer** (desde el 17-11-2026; antes hoy − 2 a ayer), hay que cambiar las fechas de prueba: 27-10-2026 por 3 días atrás, 28-10-2026 por 2 atrás y 29-10-2026 por ayer.
 4. **Producción:** `01` (permiso 461) solo junto con el exe nuevo, igual que el 460. Ver `docs/Cambios/README.md` §3.
 5. **Abierto con negocio:** Chile solo Z (fuera de alcance por ahora) y el nombre de archivo de la maqueta (`carga_Y_compensa_…`).
 
@@ -94,3 +95,6 @@ Leer este archivo, `docs/sql/FCDVT-259/00_LEEME.md` y `docs/Cambios/README.md` �
 | 16-11-2026 | Revisión de `f8-revisor`, corregido: el permiso 461 sale de `INSTALAR.sql` (con el exe anterior corta la carga de permisos, como el 460); `00_prechecks` lee `c_encabezado` con `dbms_output` (en SQL da PLS-221) y verifica 4 columnas más; Form176 recarga los terminales al cambiar la Fecha Inicio y avisa los errores del diálogo de guardar distintos de Cancelar. Documentado como límite: Fecha Fin = hoy no se puede recargar en Buscar. |
 | 16-11-2026 | Corrección pendiente del revisor aplicada: Form176 limita la Fecha Fin a **ayer** (`MaxDate` y validación "La Fecha Fin debe ser anterior a hoy"), para que el CSV siempre se pueda recargar en Buscar. Fechas de prueba: 27-10 → anteayer, 28-10 → ayer. `docs/Cambios` sincronizado. |
 | 16-11-2026 | **Estado congelado**: manifiesto `docs/MANIFIESTO_FCDVT-259.md5` (52 archivos: Form176, MDIForm1, vbp, Form174 revertido y sus respaldos, `docs/sql/FCDVT-259/`, `docs/Requerimiento-FCDVT-259/`, lo tocado en FCDVT-14/FCDVT-10 y `docs/Cambios`) y respaldo `docs/respaldos/FCDVT-259_2026-11-16_form176-exportar-yz.zip`. Sin compilar ni ejecutar en la base. |
+| 16-11-2026 | **Instalación en desarrollo** (`INTRANETDE`): spec `02` VALID, body `03` **INVALID** (`PLS-00103` en la línea de `c_id`). El source en la base era idéntico al script: el body declaraba `c_id`, `c_n_id` y `t_buf` **después** de `fn_expr`, y el parser de 10.2 no acepta declaraciones de datos entre subprogramas. Corregido en `03` moviendo el bloque al tope del body (nada más cambió); `00_LEEME.md` y `MANIFIESTO_FCDVT-259.md5` regenerados. Pendiente: reinstalar `03` en desarrollo y en test. |
+| 17-11-2026 | **Regla de fechas nueva (pedido del usuario)**: calendarios de Form176 con **ayer por defecto** y tope ayer, **sin `MinDate`**; Exportar valida **rango máximo de 3 días incluidos** entre Fecha Inicio y Fecha Fin y se quitó el límite "Fecha Inicio ≥ hoy − 2". El mismo día se restauró el bloque de fechas (`mHoy = FechaServidor()`, `MaxDate`, valores) que estaba **comentado en la copia de `FTEPROD/`** — desvío posterior al freeze del 16-11: con `mHoy` en 0, Exportar mostraba "hoy (30-12-1899)" y rechazaba todo rango. Estado previo: `FTEPROD/Form176.frm.bak_FCDVT-259_fechas` (`822c2761…`). `docs/Cambios` sincronizado (README §2.7, diff y manifiestos regenerados). Sin compilar. |
+| 18-11-2026 | **Bloque "Resultado de la exportación" (pedido del usuario)**: con rutas largas el texto se partía en 3 líneas y la tercera quedaba tapada por "Cierres exportados". `Frame2` crece de 1815 a 2490 twips y el form de 5520 a 6180; `lblArchivo` (615) queda solo con la ruta, la frase de formato pasa a `lblFormato` (nuevo, TabIndex 19), `lblCierres` baja a 1530, `lblNota` a 1950 y los botones a 5460. La ruta completa también queda en `ToolTipText`. Sin cambios en `.frx`. `docs/Cambios` sincronizado (archivos, diff y manifiesto). Sin compilar. |

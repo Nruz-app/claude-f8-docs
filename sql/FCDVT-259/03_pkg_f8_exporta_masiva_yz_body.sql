@@ -22,6 +22,10 @@
 -- en termstat, sin libvta 'F8'): fn_lineas agrega una Z armada con la suma
 -- de sus Y (fn_z_armada). Limite conocido: montos con decimales salen con
 -- decimales y Buscar de Form174 los rechaza.
+-- Correccion 16-11-2026: instalado en desarrollo, el body quedo INVALID
+-- (PLS-00103 en la linea del c_id): en 10.2 NO se aceptan declaraciones
+-- de datos entre subprogramas del body. Se movieron c_id, c_n_id y t_buf
+-- al tope del body, antes de la primera rutina; sin otros cambios.
 -- Origen: docs/sql/FCDVT-14/04e (16-11-2026, multipais, nunca instalado).
 -- =====================================================================
 
@@ -34,6 +38,25 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
   -- recien en 11g; en 10.2 se declara aqui para no depender de STANDARD.
   e_no_data_needed exception;
   pragma exception_init(e_no_data_needed, -6548);
+
+  -- ------------------------------------------------------------------
+  -- Z armada con la suma de las Y: un terminal-dia con Y vigentes y sin Z
+  -- vigente en libvta (FACO cerrado solo con Y: la Z esta precreada en
+  -- termstat) sale con una Z armada, para que el archivo se pueda volver
+  -- a cargar con Buscar de Form174.
+  --   - montos (columnas 12 en adelante): suma de las Y, columna a columna;
+  --   - HORA, SECUENCIA, NUM_BOLETA, VENDEDOR y CONT_REPOSICION: los de la
+  --     ultima Y (la de mayor numero), como el ejemplo de la plantilla;
+  --   - NRO_Y vacio, TIPO = Z, TIPO_CARGA = INGRESAR.
+  -- Trabaja sobre las lineas ya armadas (columnas 1 a 11 = c_id).
+  -- Correccion 16-11-2026: este bloque estaba entre fn_expr y fn_ncampos
+  -- (declaraciones despues de una rutina: en 10.2 no compila, PLS-00103).
+  -- ------------------------------------------------------------------
+  c_id   constant varchar2(200) :=
+    'FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA';
+  c_n_id constant pls_integer := 11;
+
+  type t_buf is table of varchar2(4000) index by pls_integer;
 
   -- true si la columna existe en la tabla (del duenio del package)
   function fn_existe_col (p_tabla in varchar2, p_col in varchar2) return boolean is
@@ -93,23 +116,6 @@ create or replace package body PKG_F8_EXPORTA_MASIVA_YZ as
     end if;
     return q'['0']';
   end fn_expr;
-
-  -- ------------------------------------------------------------------
-  -- Z armada con la suma de las Y: un terminal-dia con Y vigentes y sin Z
-  -- vigente en libvta (FACO cerrado solo con Y: la Z esta precreada en
-  -- termstat) sale con una Z armada, para que el archivo se pueda volver
-  -- a cargar con Buscar de Form174.
-  --   - montos (columnas 12 en adelante): suma de las Y, columna a columna;
-  --   - HORA, SECUENCIA, NUM_BOLETA, VENDEDOR y CONT_REPOSICION: los de la
-  --     ultima Y (la de mayor numero), como el ejemplo de la plantilla;
-  --   - NRO_Y vacio, TIPO = Z, TIPO_CARGA = INGRESAR.
-  -- Trabaja sobre las lineas ya armadas (columnas 1 a 11 = c_id).
-  -- ------------------------------------------------------------------
-  c_id   constant varchar2(200) :=
-    'FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA';
-  c_n_id constant pls_integer := 11;
-
-  type t_buf is table of varchar2(4000) index by pls_integer;
 
   -- Cantidad de campos de una linea separada por ;
   function fn_ncampos (p_txt in varchar2) return pls_integer is

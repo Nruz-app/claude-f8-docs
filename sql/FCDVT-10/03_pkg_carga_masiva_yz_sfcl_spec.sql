@@ -10,10 +10,12 @@
 --
 -- Diferencias con FACO:
 --   * Conceptos: salen de VTA_PAINT_Z (vta_localiz = 'SFCL') en tiempo de
---     ejecucion, como en Form19 / Form19Y (no hay lista fija). El
---     encabezado del CSV lo da fn_encabezado (11 columnas de
---     identificacion + una por concepto vta_pop_up = 0, en vta_order_z,
---     con el nombre vta_cmp_asoc).
+--     ejecucion, como en Form19 / Form19Y. El encabezado del CSV lo da
+--     fn_encabezado (11 columnas de identificacion + una por concepto
+--     vta_pop_up = 0, en vta_order_z, con el nombre vta_cmp_asoc) y
+--     VTA_SFCLCARGA_YZ_DET tiene una columna por concepto, en ese mismo
+--     orden (como VTA_FACOCARGA_YZ_DET). Si VTA_PAINT_Z agrega o reordena
+--     conceptos hay que alterar la tabla: prc_config da ORA-20002.
 --   * TIPO_CARGA: INGRESAR y MODIFICAR (HU-03.3: en MODIFICAR un concepto
 --     vacio no cambia).
 --   * INGRESAR acepta una Z sin Y: Cargar crea la Y1 copiando la Z, como
@@ -75,17 +77,23 @@ create or replace package PKG_F8_CARGA_MASIVA_YZ_SFCL as
   procedure prc_config (p_flg_pais in varchar2, p_forzar in boolean default false);
 
   -- Concepto de venta n (1 BOLETAS, 2 N.CREDITO, 3 FACTURA, 4 N.DEBITO,
-  -- 5 GUIA FACTURABLES): su vta_cmp_asoc (clave en VTA_SFCLCARGA_YZ_DETM)
+  -- 5 GUIA FACTURABLES): su vta_cmp_asoc (columna de
+  -- VTA_SFCLCARGA_YZ_DET)
   function fn_col_venta (p_n in pls_integer) return varchar2;
 
-  -- INSERT de VTA_SFCLZZZ desde DETM.
+  -- INSERT de VTA_SFCLZZZ desde VTA_SFCLCARGA_YZ_DET (nulo = 0).
   -- Binds: :1 techkey, :2 fecha, :3 carga, :4 linea
   function fn_sql_ins_zzz return varchar2;
 
   -- UPDATE de VTA_SFCLZZZ solo con los conceptos informados en la linea
-  -- (nulo si la linea no informa conceptos de zzz).
+  -- (columnas no nulas de VTA_SFCLCARGA_YZ_DET; nulo si no informa
+  -- conceptos de zzz).
   -- Binds: :1 carga, :2 linea, :3 techkey
   function fn_sql_upd_zzz (p_carga in number, p_linea in number) return varchar2;
+
+  -- Cantidad de conceptos informados en la linea (columnas no nulas de
+  -- VTA_SFCLCARGA_YZ_DET). La usa PKG_F8_GRABA_MASIVA_YZ_SFCL (MODIFICAR).
+  function fn_cant_conceptos (p_carga in number, p_linea in number) return number;
 
   -- Formula de validacion de la Z sobre la base (Form19.FuncMontoValidaZZZ);
   -- devuelve la diferencia (0 = cuadra). Nulo si la formula no se puede

@@ -36,14 +36,38 @@ select log_id, log_linea, log_etapa, log_campo, log_valor, log_motivo
  where log_carga = 0                                   -- EDITAR: numero de carga
  order by log_linea nulls last, log_id;
 
-prompt ===== 6) Detalle de una carga: lineas y montos informados =====
-select d.det_linea, d.det_fecha, d.det_local, d.det_terminal, d.det_tipo, d.det_nro_y,
-       d.det_tipo_carga, d.det_total, d.det_estado, m.dtm_columna, m.dtm_monto
-  from VTA_SFCLCARGA_YZ_DET d, VTA_SFCLCARGA_YZ_DETM m
- where d.det_carga = 0                                 -- EDITAR: numero de carga
-   and m.dtm_carga (+) = d.det_carga
-   and m.dtm_linea (+) = d.det_linea
- order by d.det_linea, m.dtm_columna;
+prompt ===== 6) Detalle de una carga: lineas y conceptos de venta =====
+select det_linea, det_fecha, det_local, det_terminal, det_tipo, det_nro_y,
+       det_hora, det_tipo_carga, vta_montobol, vta_montoncr, vta_montofac,
+       vta_mmontondb, vta_montoguia, det_total, det_estado
+  from VTA_SFCLCARGA_YZ_DET
+ where det_carga = 0                                   -- EDITAR: numero de carga
+ order by det_linea;
+
+prompt ===== 6b) Montos informados de una linea (las columnas no nulas; el resto no vino en el CSV) =====
+select * from VTA_SFCLCARGA_YZ_DET
+ where det_carga = 0                                   -- EDITAR: numero de carga
+   and det_linea = 0                                   -- EDITAR: linea
+;
+
+prompt ===== 6c) Control: conceptos de VTA_PAINT_Z sin su columna en VTA_SFCLCARGA_YZ_DET =====
+prompt Misma validacion que hace prc_config al compilar el SQL (ORA-20002): nombre y
+prompt orden (columna 15 de DET = primer concepto, como en el encabezado). Esperado: 0 filas.
+select z.pos columna_det, z.vta_order_z, z.vtaglosa_z, z.vta_cmp_asoc
+  from (select vta_order_z, vtaglosa_z, upper(trim(vta_cmp_asoc)) vta_cmp_asoc,
+               row_number() over (order by vta_order_z) pos
+          from vta_paint_z
+         where vta_localiz = 'SFCL'
+           and vta_cmp_asoc is not null
+           and (   (vta_order_z between 2 and 6)
+                or (vta_order_z > 7 and nvl(vta_pop_up, 0) = 0
+                    and (substr(upper(trim(vta_cmp_asoc)), 1, 4) <> 'VTA_'
+                         or substr(upper(trim(vta_cmp_asoc)), 1, 5) = 'MVTA_')))) z
+ where not exists (select 1 from user_tab_columns c
+                    where c.table_name = 'VTA_SFCLCARGA_YZ_DET'
+                      and c.column_name = z.vta_cmp_asoc
+                      and c.column_id   = 14 + z.pos)
+ order by z.pos;
 
 prompt ===== 7) Lo grabado en libvta para una fecha y un local (Z = F8/99; Y = Y/N) =====
 select l.vta_terminal, l.vta_tiporeg, l.vta_secuencia, l.vta_techkey, l.vta_montobol, l.vta_montoncr,

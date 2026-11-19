@@ -1,0 +1,82 @@
+FILA;VTA_CMP_ASOC;VTA_POP_UP;VTA_VALIDADORZZZ;VTA_SIGNO;VTAGLOSA_Z
+1;;1;0;+;VENTAS
+2;vta_montobol;0;1;+;BOLETAS
+3;vta_montoncr;0;1;+;N.CREDITO
+4;vta_montofac;0;1;+;FACTURA
+5;VTA_MMONTONDB;0;1;+;N.DEBITO
+6;VTA_MONTOGUIA;0;1;+;GUIA FACTURABLES
+7;vta_totalvta;3;0;+;TOTALES
+8;;1;0;+;FORMAS DE PAGO
+9;rec_mefectivo;0;7;+;EFECTIVO
+10;rec_mchkdia;0;7;+;CHEQUES AL DIA
+11;rec_mchkfecha;0;7;+;CHEQUES A FECHA
+12;rec_mtransbank;0;7;+;TRANSBANK CR+DITO
+13;REC_MSODIMAC;0;7;+;TARJETA  DEBITO
+14;rec_mcmr;0;7;+;CMR
+15;rec_mtregalo;0;7;+;GIFT CARD
+16;rec_mtotconvenio;0;0;+;TARJETA EMPRESA
+17;rec_mchkfala;0;7;+;VALE CREDITO
+18;rec_mtotfacxcob;0;7;+;FACTURAS X COBRAR
+19;REC_MNCREDITO;0;7;+;NOTA CREDITO
+20;rec_mtde;0;7;+;TDE
+21;rec_tarjedenred;0;7;+;TARJETA ALIMENTO EDENRED
+22;rec_tarjamipass;0;7;+;TARJETA ALIMENTO AMIPASS
+23;rec_tarjsodexo;0;7;+;TARJETA ALIMENTO SODEXO
+24;rec_mcanjepuntos;0;7;+;GUIA CANJE DE PUNTOS
+25;MTOTGIFTCORP;0;7;+;GIFT CORP
+26;rec_mfpay;0;0;+;DONACIONES
+27;;1;0;+;OTROS INGRESOS Y EGRESOS
+28;rec_mdotaciones;0;0;+;DOTACIONES
+29;rec_mretiros;0;0;+;RETIROS
+30;REC_MATESORAMIENTO;0;0;+;ATESORAMIENTO
+31;rec_mabonocmr;0;2;+;PAGO CMR (ABONO)
+32;REC_MTOTSIF;0;0;+;PAGO FACTURAS
+33;rec_mavancecmr;0;2;-;AVANCE CMR
+34;rec_mintereses;0;3;+;FPAY
+35;rec_mtransferencia;0;0;+;Giro Efectivo W.U.NACIONAL
+36;;1;0;+;Rev.Giro.Efe W.U.Nacional
+37;rec_mretirotrans;0;0;+;Retiro Giro W.U.Nacional
+38;REC_MTRANSFERENCIAINT;0;0;+;Giro Efectivo W.U.Internacional
+39;REC_MREVERSATRANSINT;0;0;+;Rev.Giro.Efe W.U.Internacional
+40;REC_MRETIROTRANSINT;0;0;+;Retiro Giro W.U.Internacional
+41;rec_mtotatrf;0;6;+;ACT. GIFT CARD
+42;rec_matrfefec;1;0;+;EFECTIVO
+43;rec_matrfchk;1;0;+;CHEQUE
+44;rec_matrfcmr;1;0;+;CMR
+45;rec_mreversatrans;1;0;+;TRANSBANK
+46;REC_MATRFCRE;1;0;+;DEBITO
+47;rec_mtotalrevtrf ;0;6;-;REVERSA ACTIVACION
+48;;1;0;+;EFECTIVO
+49;;1;0;+;CMR
+50;;1;0;+;TRANSBANK
+51;rec_mabonotde;0;0;+;ABONO TDE
+52;REC_MREVABONOTDE;0;0;+;REVERSA ABONO TDE
+53;;1;0;+;REAJUSTE UF
+54;rec_mtraspasotde;1;0;+;TARJETA EXT.
+55;rec_msellosvrd;0;0;+;SELLOS VERDES
+56;rec_mtotrecauda;0;3;+;RECAUDACION
+57;r_rectelefono;0;0;+;REC TELEF
+58;r_recinternet;0;0;+;REC INTERNET
+59;r_recargabip;0;0;+;REC BIP
+60;r_juegosazar;0;0;+;JUEGOS DE AZAR
+61;r_pagoservicios;0;0;+;PAGO SERVICIOS
+62;r_seguros;0;0;+;SEGUROS
+63;REC_MPREPMOVISTAR;1;0;+;PREPAGO MOVISTAR
+64;rec_mtotrevrecauda;0;0;+;REVERSA. RECAUDACION
+65;rev_rectelefono;0;0;+;REC TELEF
+66;rev_recinternet;0;0;+;REC INTERNET
+67;rev_recargabip;0;0;+;REC BIP
+68;rev_juegosazar;0;0;+;JUEGOS DE AZAR
+69;rev_pagoservicios;0;0;+;PAGO SERVICIOS
+70;rev_seguros;0;0;+;SEGUROS
+71;REC_QMCANJEPUNTOS;1;0;+;CANJE DE PUNTOS
+72;rec_mrevcanjepuntos;0;0;+;REV. CANJE DE PUNTOS
+73;mquickpay;0;7;+;QUICKPAYCMR
+74;quickpaydebidtobf;0;7;+;QUICKPAYDEBITO
+75;REC_MTOTALPESO;0;0;+;AJUSTE LEY 29650
+76;rec_linio;0;7;+;LINIO
+77;rec_ecom;0;7;+;FCOM
+78;rec_pluxee_junaeb;0;7;+;PLUXEE JUNAEB
+79;rec_edenred_junaeb;0;7;+;EDENRED JUNAEB
+80;rec_edenred_privado;0;7;+;EDENRED PRIVADO
+81;;1;0;+;

@@ -7,6 +7,8 @@
 -- misma toma del grupo, misma revalidacion, mismo reemplazo y misma
 -- numeracion de Y. SQL estatico sobre las tablas SFCL; solo VTA_SFCLZZZ va
 -- en SQL dinamico, armado por PKG_F8_CARGA_MASIVA_YZ_SFCL desde VTA_PAINT_Z.
+-- Los montos se leen de VTA_SFCLCARGA_YZ_DET (una columna por concepto, como
+-- VTA_FACOCARGA_YZ_DET): columna nula = concepto no informado en el CSV.
 --
 -- INGRESAR (por grupo):
 --   - rechaza si la Z (termstat) o alguna Y (termstaty) del terminal-dia
@@ -74,16 +76,15 @@ create or replace package body PKG_F8_GRABA_MASIVA_YZ_SFCL as
     return v_usuario;
   end fn_usuario;
 
-  -- Monto informado del concepto de venta n (1..5) en la linea; nulo si vacio
+  -- Monto informado del concepto de venta n (1..5) en la linea; nulo si vacio.
+  -- La columna es la de VTA_SFCLCARGA_YZ_DET (vta_cmp_asoc de VTA_PAINT_Z).
   function fn_venta (p_carga in number, p_linea in number, p_n in pls_integer) return number is
     v_col   varchar2(30) := PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_col_venta(p_n);
     v_monto number;
   begin
-    select max(dtm_monto) into v_monto
-      from VTA_SFCLCARGA_YZ_DETM
-     where dtm_carga   = p_carga
-       and dtm_linea   = p_linea
-       and dtm_columna = v_col;
+    execute immediate 'select ' || v_col || ' from VTA_SFCLCARGA_YZ_DET'
+                      || ' where det_carga = :1 and det_linea = :2'
+      into v_monto using p_carga, p_linea;
     return v_monto;
   end fn_venta;
 
@@ -473,10 +474,8 @@ create or replace package body PKG_F8_GRABA_MASIVA_YZ_SFCL as
         end if;
       end if;
 
-      select count(*) into v_cant_c
-        from VTA_SFCLCARGA_YZ_DETM
-       where dtm_carga = p_carga and dtm_linea = r.det_linea;
-      v_tot_c := v_tot_c + v_cant_c;
+      v_cant_c := PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_cant_conceptos(p_carga, r.det_linea);
+      v_tot_c  := v_tot_c + v_cant_c;
       if r.det_tipo = 'Z' then
         v_cant_z := v_cant_z + 1;
       else

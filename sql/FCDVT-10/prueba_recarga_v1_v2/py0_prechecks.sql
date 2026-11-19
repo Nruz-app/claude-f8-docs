@@ -21,8 +21,8 @@
 select owner, object_name, object_type, status
   from all_objects
  where object_name in ('PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL',
-                       'VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_DETM',
-                       'VTA_SFCLCARGA_YZ_RES', 'VTA_SFCLCARGA_YZ_LOG',
+                       'VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_RES',
+                       'VTA_SFCLCARGA_YZ_LOG',
                        'SEQ_VTA_SFCLCARGA_YZ', 'SEQ_VTA_SFCLCARGA_YZ_LOG',
                        'TRG_VTA_SFCLZZZ_I')
  order by owner, object_name, object_type;

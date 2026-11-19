@@ -47,8 +47,9 @@ declare
 begin
   null;
   -- Descomentar para ejecutar:
-  -- borra('drop table VTA_SFCLCARGA_YZ_RES purge');
+  -- Si el ambiente venia de la version anterior de 02 (DET corta + DETM):
   -- borra('drop table VTA_SFCLCARGA_YZ_DETM purge');
+  -- borra('drop table VTA_SFCLCARGA_YZ_RES purge');
   -- borra('drop table VTA_SFCLCARGA_YZ_DET purge');
   -- borra('drop table VTA_SFCLCARGA_YZ_LOG purge');
   -- borra('drop sequence SEQ_VTA_SFCLCARGA_YZ');

@@ -7,8 +7,8 @@ FCDVT-10 (HU-03). Base: `docs/sql/FCDVT-14/FORMATO_CARGA_Y_FACO.md`. Separador `
 El encabezado **no es fijo**: lo arma `PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL')` desde `VTA_PAINT_Z` (`vta_localiz = 'SFCL'`, orden `vta_order_z`), igual que la grilla de Form19 / Form19Y. Para verlo: `06_pruebas.sql`, consulta 1, o Exportar Excel de Form174.
 
 - Columnas 1 a 11: identificación, iguales a FACO.
-- Columnas 12 en adelante: un monto por concepto editable (`vta_pop_up = 0`), con el nombre de `vta_cmp_asoc`.
-- No van: títulos (`vta_pop_up` 1 y 2), totales (`vta_pop_up` 3, los calcula el sistema) ni conceptos `VTA_` editables fuera de las filas 2 a 6 (Form19Y no los graba; `00_prechecks.sql` §4 los lista).
+- Columnas 12 en adelante: un monto por concepto editable (`vta_pop_up = 0`), con el nombre de `vta_cmp_asoc`. Ese mismo nombre y ese mismo orden son las columnas de concepto de `VTA_SFCLCARGA_YZ_DET`** (63 en test): el CSV no cambia, pero la tabla sí queda fija como `VTA_FACOCARGA_YZ_DET`. Si `VTA_PAINT_Z` agrega o reordena conceptos, hay que recrear la tabla con la lista nueva y reinstalar el package (`prc_config` da ORA-20002).
+- No van como columnas del CSV: títulos (`vta_pop_up` 1 y 2), totales (`vta_pop_up` 3: no se piden; al grabar se escriben en 0, ver §3) ni conceptos `VTA_` editables fuera de las filas 2 a 6 (Form19Y no los graba; `00_prechecks.sql` §4 los lista).
 
 La plantilla del DF (hoja F8-LV-CMP-TES, fila 33) muestra unos 80 conceptos de Tottus. El número exacto de columnas depende de `VTA_PAINT_Z` de la base y se confirma con los prechecks §1.
 
@@ -28,12 +28,13 @@ La plantilla del DF (hoja F8-LV-CMP-TES, fila 33) muestra unos 80 conceptos de T
 | 10 | `TIPO` | `Y` o `Z` | Igual | `F8`/99 (Z) o `Y`/N |
 | 11 | `TIPO_CARGA` | `INGRESAR` | `MODIFICAR` | — |
 
-Igual que en FACO, cada campo va a su columna correcta (Form19Y de SFCL graba `vta_secuencia_srx` = hora).
+Igual que en FACO, cada campo va a su columna correcta. Ojo con `SECUENCIA`: el package _SFCL graba el campo SECUENCIA del CSV en `vta_secuencia_srx`, mientras la Z de Form19 graba ahí SECUENCIA y la Y de Form19Y (rama SFCL) graba ahí la hora (`HHMM`), con la secuencia en `vta_secuencia`. Está anotado en la cabecera de `04c` y queda como decisión de negocio a confirmar (ver `00_LEEME.md`).
 
 ## 3. Montos (columnas 12 en adelante)
 
 - Enteros, sin separador de miles ni decimales, con signo menos si corresponde; hasta 12 dígitos.
 - **INGRESAR:** vacío = 0. **MODIFICAR:** vacío = no cambia; al menos un monto informado.
+- Cada monto se guarda en su columna de `VTA_SFCLCARGA_YZ_DET` (el `vta_cmp_asoc` del concepto). Vacío queda `NULL` (en la tabla distingue "no informado" de un 0 informado, que se guarda como `0`); en INGRESAR el nulo se graba como 0 al pasar a libvta / zzz.
 - Filas 2 a 6 de `VTA_PAINT_Z` (conceptos de venta) → `VTA_SFCLLIBVTA`: BOLETAS → `vta_montobol`, N.CREDITO → `vta_montoncr`, FACTURA → `vta_montofac`, N.DEBITO → `vta_mmontondb`, GUIA FACTURABLES → `vta_montoguia`; `vta_totalvta` = su suma (fila 7, como Form19Y).
 - Resto → la columna `vta_cmp_asoc` de `VTA_SFCLZZZ`. Los totales de zzz (`vta_pop_up` 3) se graban en 0.
 

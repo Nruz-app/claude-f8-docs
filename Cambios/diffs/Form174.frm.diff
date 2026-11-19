@@ -1,27 +1,71 @@
 --- PROD/Form174.frm
 +++ NUEVO/Form174.frm
-@@ -0,0 +1,1178 @@
+@@ -0,0 +1,1118 @@
 +VERSION 5.00
-+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 +Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
++Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 +Begin VB.Form Form174 
 +   BackColor       =   &H00E0E0E0&
 +   Caption         =   " Ingreso de Cierres de Terminal Y Masivo"
-+   ClientHeight    =   7200
++   ClientHeight    =   9015
 +   ClientLeft      =   2055
 +   ClientTop       =   1410
-+   ClientWidth     =   10410
++   ClientWidth     =   11565
 +   LinkTopic       =   "Form71"
 +   MaxButton       =   0   'False
-+   ScaleHeight     =   7200
-+   ScaleWidth      =   10410
++   ScaleHeight     =   9015
++   ScaleWidth      =   11565
 +   StartUpPosition =   2  'CenterScreen
 +   Visible         =   0   'False
++   Begin VB.PictureBox Picture1 
++      Appearance      =   0  'Flat
++      BackColor       =   &H00C0C0C0&
++      BorderStyle     =   0  'None
++      ForeColor       =   &H80000008&
++      Height          =   570
++      Left            =   10200
++      Picture         =   "Form174.frx":0000
++      ScaleHeight     =   570
++      ScaleWidth      =   3135
++      TabIndex        =   0
++      Top             =   0
++      Width           =   3135
++   End
++   Begin VB.Label Label10 
++      BackColor       =   &H00C0C0C0&
++      Height          =   1245
++      Left            =   13320
++      TabIndex        =   2
++      Top             =   -240
++      Width           =   1065
++   End
++   Begin VB.Label Label11 
++      BackColor       =   &H00C0C0C0&
++      Height          =   9585
++      Left            =   13920
++      TabIndex        =   1
++      Top             =   0
++      Width           =   615
++   End
++   Begin VB.Image Image1 
++      Height          =   810
++      Left            =   1620
++      Picture         =   "Form174.frx":1644
++      Top             =   -210
++      Width           =   13590
++   End
++   Begin VB.Image Image2 
++      Height          =   1830
++      Left            =   -150
++      Picture         =   "Form174.frx":171C
++      Top             =   -1230
++      Width           =   4665
++   End
 +   Begin VB.CommandButton Command4 
 +      BackColor       =   &H00A4E8CB&
 +      Caption         =   "&Cargar"
 +      Height          =   375
-+      Left            =   6480
++      Left            =   7950
 +      MaskColor       =   &H00000080&
 +      Style           =   1  'Graphical
 +      TabIndex        =   10
@@ -36,39 +80,25 @@
 +      MaskColor       =   &H00000080&
 +      Style           =   1  'Graphical
 +      TabIndex        =   8
-+      Top             =   5640
++      Top             =   8160
 +      Width           =   1695
 +   End
 +   Begin VB.CommandButton Command3 
 +      BackColor       =   &H00A4E8CB&
 +      Caption         =   "&Salir"
 +      Height          =   375
-+      Left            =   8160
++      Left            =   9585
 +      MaskColor       =   &H00000080&
 +      Style           =   1  'Graphical
 +      TabIndex        =   5
-+      Top             =   5640
++      Top             =   8160
 +      Width           =   1500
-+   End
-+   Begin VB.PictureBox Picture1 
-+      Appearance      =   0  'Flat
-+      BackColor       =   &H00C0C0C0&
-+      BorderStyle     =   0  'None
-+      ForeColor       =   &H80000008&
-+      Height          =   570
-+      Left            =   10200
-+      Picture         =   "Form174.frx":0000
-+      ScaleHeight     =   570
-+      ScaleWidth      =   3135
-+      TabIndex        =   1
-+      Top             =   0
-+      Width           =   3135
 +   End
 +   Begin VB.CommandButton Command1 
 +      BackColor       =   &H00A4E8CB&
 +      Caption         =   "&Buscar"
 +      Height          =   375
-+      Left            =   6480
++      Left            =   7950
 +      MaskColor       =   &H00000080&
 +      Style           =   1  'Graphical
 +      TabIndex        =   0
@@ -81,7 +111,7 @@
 +      Left            =   480
 +      TabIndex        =   4
 +      Top             =   960
-+      Width           =   9135
++      Width           =   10605
 +      Begin VB.TextBox NombreArchivo 
 +         Height          =   285
 +         Left            =   1920
@@ -132,14 +162,14 @@
 +         Width           =   4455
 +      End
 +   End
-+   Begin MSFlexGridLib.MSFlexGrid Grid1
-+      Height          =   2295
++   Begin MSFlexGridLib.MSFlexGrid Grid1 
++      Height          =   4600
 +      Left            =   480
 +      TabIndex        =   11
 +      Top             =   3120
-+      Width           =   9135
-+      _ExtentX        =   16113
-+      _ExtentY        =   4048
++      Width           =   10605
++      _ExtentX        =   18703
++      _ExtentY        =   8114
 +      _Version        =   393216
 +      Cols            =   4
 +      FixedCols       =   0
@@ -150,7 +180,7 @@
 +      BackColorSel    =   13692411
 +      ForeColorSel    =   128
 +      BackColorBkg    =   15132904
-+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851}
++      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
 +         Name            =   "MS Sans Serif"
 +         Size            =   8.25
 +         Charset         =   0
@@ -166,36 +196,6 @@
 +      _ExtentX        =   847
 +      _ExtentY        =   847
 +      _Version        =   393216
-+   End
-+   Begin VB.Label Label10 
-+      BackColor       =   &H00C0C0C0&
-+      Height          =   1245
-+      Left            =   13320
-+      TabIndex        =   3
-+      Top             =   -240
-+      Width           =   1065
-+   End
-+   Begin VB.Label Label11 
-+      BackColor       =   &H00C0C0C0&
-+      Height          =   9585
-+      Left            =   13920
-+      TabIndex        =   2
-+      Top             =   0
-+      Width           =   615
-+   End
-+   Begin VB.Image Image1 
-+      Height          =   810
-+      Left            =   1620
-+      Picture         =   "Form174.frx":1644
-+      Top             =   -210
-+      Width           =   13590
-+   End
-+   Begin VB.Image Image2 
-+      Height          =   1830
-+      Left            =   -150
-+      Picture         =   "Form174.frx":171C
-+      Top             =   -1230
-+      Width           =   4665
 +   End
 +End
 +Attribute VB_Name = "Form174"
@@ -237,7 +237,7 @@
 +        Exit Sub
 +    End If
 +    If LCase(Right(nomFile, 4)) <> ".csv" Then
-+        MsgBox "El archivo debe tener extensión .csv", vbExclamation, Me.Caption
++        MsgBox "El archivo debe tener extensiín .csv", vbExclamation, Me.Caption
 +        Exit Sub
 +    End If
 +
@@ -257,7 +257,7 @@
 +    End If
 +End Sub
 +
-+'Encabezado del CSV de carga masiva de Y FACO (54 columnas, docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3).
++'Encabezado del CSV de carga masiva de Y FACO (54 columnas, docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md seccion 3).
 +'xintec-nruz 30-10-2026 FCDVT-14: 56 columnas, con TIPO (Y/Z) y TIPO_CARGA despues de CONT_REPOSICION (antes 54).
 +'Debe ser igual a PKG_F8_CARGA_MASIVA_YZ.c_encabezado.
 +'Lo usa Exportar Excel y lo usara Cargar para validar el archivo.
@@ -479,7 +479,7 @@
 +    'xintec-nruz 11-11-2026 FCDVT-10: textos de Tottus (SFCL): cuadratura con N.DEBITO y GUIA, Y1 automatica y MODIFICAR
 +    If Flg_Pais$ = "SFCL" Then
 +        vTexto(0) = "Plantilla de carga masiva de cierres Y y Z (Tottus Chile) - Ingreso del YYY Masivo"
-+        vTexto(3) = "2. INGRESAR: el total de venta de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de sus Y. Una Z sin Y crea la Y1 automática (copia de la Z)."
++        vTexto(3) = "2. INGRESAR: el total de venta de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de sus Y. Una Z sin Y crea la Y1 automatica (copia de la Z)."
 +        vTexto(5) = "4. Números y montos: enteros, sin decimales ni separador de miles; negativos con el signo menos. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
 +        vTexto(6) = "5. TIPO (Y o Z) y TIPO_CARGA (INGRESAR o MODIFICAR) se eligen de la lista. En la fila Z, NRO_Y va vacío. MODIFICAR cambia solo los montos informados de una Z o Y (con su NRO_Y) que ya existe."
 +    End If
@@ -553,7 +553,7 @@
 +    Set xlApp = Nothing
 +End Sub
 +
-+'Texto del comentario de cada columna de la plantilla (glosa de Form19Y; docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md §3)
++'Texto del comentario de cada columna de la plantilla (glosa de Form19Y; docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md seccion 3)
 +Private Function GlosaColumnaCsv(ByVal n As Integer) As String
 +    Dim s As String, vG() As String
 +    Select Case n
@@ -991,9 +991,9 @@
 +        'xintec-nruz 03-11-2026 FCDVT-14: el estado correcto es CARGADO (antes PROCESADO)
 +        'If Consulta!res_estado <> "PROCESADO" Then
 +        If Consulta!res_estado <> "CARGADO" Then
-+            Grid1.Row = Grid1.Rows - 1
++            Grid1.row = Grid1.Rows - 1
 +            For c = 0 To 6
-+                Grid1.Col = c
++                Grid1.col = c
 +                If Consulta!res_estado = "ERROR" Then
 +                    Grid1.CellBackColor = &HFF            'rojo, como Form133
 +                    Grid1.CellForeColor = &H80000005
@@ -1020,16 +1020,16 @@
 +'xintec-nruz 03-11-2026 FCDVT-14: un solo clic (antes Grid1_DblClick); clic en el encabezado no abre nada
 +'Private Sub Grid1_DblClick()
 +Private Sub Grid1_Click()
-+    If Grid1.Rows < 2 Or Grid1.Row < 1 Then Exit Sub
++    If Grid1.Rows < 2 Or Grid1.row < 1 Then Exit Sub
 +    If Grid1.MouseRow < 1 Then Exit Sub
 +    'MsgBox "Fecha " & Grid1.TextMatrix(Grid1.Row, 2) & ", local " & Grid1.TextMatrix(Grid1.Row, 0) & _
 +    '       ", terminal " & Grid1.TextMatrix(Grid1.Row, 1) & vbCrLf & vbCrLf & _
 +    '       "Estado: " & Grid1.TextMatrix(Grid1.Row, 6) & vbCrLf & _
 +    '       Grid1.TextMatrix(Grid1.Row, 7), vbInformation, Me.Caption
 +    If mCarga <= 0 Then Exit Sub
-+    Call Form175.MuestraLog(mCarga, Grid1.TextMatrix(Grid1.Row, 2), Grid1.TextMatrix(Grid1.Row, 0), _
-+                            Grid1.TextMatrix(Grid1.Row, 1), Grid1.TextMatrix(Grid1.Row, 6), _
-+                            Grid1.TextMatrix(Grid1.Row, 7))
++    Call Form175.MuestraLog(mCarga, Grid1.TextMatrix(Grid1.row, 2), Grid1.TextMatrix(Grid1.row, 0), _
++                            Grid1.TextMatrix(Grid1.row, 1), Grid1.TextMatrix(Grid1.row, 6), _
++                            Grid1.TextMatrix(Grid1.row, 7))
 +End Sub
 +
 +'---INI---- xintec-nruz 04-11-2026 FCDVT-14: boton Cargar ----
@@ -1117,65 +1117,5 @@
 +'Mientras no se programe nhal1, Salir ejecuta PKG_F8_CIERRE_DIARIO para FACO con la fecha
 +'de prueba fija (vFechaPrueba = 02-11-2026 desde el 03-11, COMPENSA_DI prueba_test7; antes 14-10-2026 prueba_test6, 15-09-2026 prueba_test5, 20-08-2026 prueba_test4, 15-10-2026 FCDVT-56 y 17-09-2026 prueba_test3). Antes de produccion dejar Command3_Click solo con Unload Me.
 +Private Sub Command3_Click()
-+    'xintec-nruz 11-11-2026 FCDVT-10: la prueba del cierre diario es de FACO; un usuario de Tottus (SFCL) no la ejecuta (antes Call EjecutaCierreDiario sin condicion)
-+    'Call EjecutaCierreDiario
-+    If Flg_Pais$ = "FACO" Then Call EjecutaCierreDiario
 +    Unload Me
 +End Sub
-+
-+Private Sub EjecutaCierreDiario()
-+    Dim cmd As ADODB.Command
-+    Dim vEjecucion As String, vCerradas As String, vNoCerradas As String
-+    Dim vFechaPrueba As String
-+
-+    'vFechaPrueba = "20260831"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 20-10-2026 FSCC-12901: fecha de prueba 10-09-2026 (antes 31-08-2026, prueba_test2)
-+    'vFechaPrueba = "20260910"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 20-10-2026 FSCC-12901: fecha de prueba 17-09-2026 (antes 10-09-2026, prueba_test3 para la demostracion)
-+    'vFechaPrueba = "20260917"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 22-10-2026 FCDVT-56: fecha de prueba 15-10-2026 (antes 17-09-2026; etapa sin venta, local 5 T2)
-+    'vFechaPrueba = "20261015"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 22-10-2026 FSCC-12901: fecha de prueba 20-08-2026 (antes 15-10-2026; prueba_test4 COMPENSA_DI)
-+    'vFechaPrueba = "20260820"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 26-10-2026 FSCC-12901: fecha de prueba 15-09-2026 (antes 20-08-2026; prueba_test5 COMPENSA_DI)
-+    'vFechaPrueba = "20260915"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 28-10-2026 FSCC-12901: fecha de prueba 14-10-2026 (antes 15-09-2026; prueba_test6 COMPENSA_DI)
-+    'vFechaPrueba = "20261014"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+    'xintec-nruz 03-11-2026 FSCC-12901: fecha de prueba 02-11-2026 (antes 14-10-2026; prueba_test7 COMPENSA_DI)
-+    vFechaPrueba = "20261102"   'fecha de venta fija para la prueba en test (yyyymmdd)
-+
-+    On Error GoTo oraerror
-+    Screen.MousePointer = vbHourglass
-+    Set cmd = New ADODB.Command
-+    Set cmd.ActiveConnection = Ado_Conn
-+    With cmd
-+        .CommandType = adCmdText
-+        .CommandText = "BEGIN PKG_F8_CIERRE_DIARIO.prc_cierre_diario(?, to_date(?, 'yyyymmdd'), ?, ?, ?, ?); END;"
-+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 20, "FACO")
-+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 8, vFechaPrueba)
-+        .Parameters.Append .CreateParameter(, adVarChar, adParamInput, 50, "PROC_CIERRE_DIARIO")
-+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
-+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
-+        .Parameters.Append .CreateParameter(, adDouble, adParamOutput)
-+        .Execute
-+    End With
-+    vEjecucion = IIf(IsNull(cmd.Parameters(3).Value), "", cmd.Parameters(3).Value)
-+    vCerradas = IIf(IsNull(cmd.Parameters(4).Value), "0", cmd.Parameters(4).Value)
-+    vNoCerradas = IIf(IsNull(cmd.Parameters(5).Value), "0", cmd.Parameters(5).Value)
-+    Set cmd.ActiveConnection = Nothing
-+    Set cmd = Nothing
-+    Screen.MousePointer = vbDefault
-+
-+    MsgBox "Cierre diario FACO del " & Right(vFechaPrueba, 2) & "-" & Mid(vFechaPrueba, 5, 2) & "-" & Left(vFechaPrueba, 4) & " ejecutado." & vbCrLf & vbCrLf & _
-+           "Ejecución: " & vEjecucion & vbCrLf & _
-+           "Cajas cerradas: " & vCerradas & vbCrLf & _
-+           "Cajas no cerradas: " & vNoCerradas & vbCrLf & vbCrLf & _
-+           "Detalle en VTA_FACOLOG_CIERRE_DIARIO.", vbInformation, Me.Caption
-+    Exit Sub
-+oraerror:
-+    Screen.MousePointer = vbDefault
-+    If Not cmd Is Nothing Then Set cmd.ActiveConnection = Nothing
-+    SystemMsg = "Problemas al ejecutar PKG_F8_CIERRE_DIARIO (cierre diario FACO)"
-+    frmLogOraError.Show 1
-+End Sub
-+'---FIN----

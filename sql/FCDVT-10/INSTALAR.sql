@@ -16,7 +16,7 @@
 set echo on feedback on serveroutput on
 whenever sqlerror exit failure rollback
 
-prompt ===== Paso 02: tablas y secuencias VTA_SFCLCARGA_YZ_* (solo las que falten) =====
+prompt ===== Paso 02: tablas y secuencias VTA_SFCLCARGA_YZ_* (DDL estatico: ORA-00955 si ya existen; reinstalar con 99_rollback parte C) =====
 @02_tablas_carga_yz_sfcl.sql
 prompt ===== Paso 03: especificacion PKG_F8_CARGA_MASIVA_YZ_SFCL (Buscar) =====
 @03_pkg_carga_masiva_yz_sfcl_spec.sql
@@ -27,15 +27,22 @@ prompt ===== Paso 04b: especificacion PKG_F8_GRABA_MASIVA_YZ_SFCL (Cargar) =====
 prompt ===== Paso 04c: cuerpo PKG_F8_GRABA_MASIVA_YZ_SFCL (Cargar) =====
 @04c_pkg_f8_graba_masiva_yz_sfcl_body.sql
 
-prompt ===== Estado (esperado: 4 tablas, 2 secuencias, 2 packages con spec y body VALID; sin user_errors) =====
+prompt ===== Estado (esperado: 3 tablas, 2 secuencias, 2 packages con spec y body VALID; sin user_errors) =====
 select object_name, object_type, status from user_objects
- where object_name in ('VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_DETM', 'VTA_SFCLCARGA_YZ_RES',
+ where object_name in ('VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_RES',
                        'VTA_SFCLCARGA_YZ_LOG', 'SEQ_VTA_SFCLCARGA_YZ', 'SEQ_VTA_SFCLCARGA_YZ_LOG',
                        'PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL')
  order by object_type, object_name;
 select name, type, line, position, text from user_errors
  where name in ('PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL')
  order by type, sequence;
+
+-- La verificacion siguiente es informativa: fn_encabezado lee VTA_PAINT_Z y
+-- lanza ORA-20002 si esa tabla aun no tiene la forma esperada. Eso no debe
+-- cerrar la instalacion en "failure": los objetos ya quedaron creados y el
+-- error solo indica que falta configurar VTA_PAINT_Z (ver 00_prechecks.sql,
+-- seccion 6). Por eso se continua y se deja el mensaje a la vista.
+whenever sqlerror continue
 
 prompt ===== Configuracion leida de VTA_PAINT_Z (ORA-20002 = VTA_PAINT_Z no tiene la forma esperada) =====
 select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL') encabezado from dual;

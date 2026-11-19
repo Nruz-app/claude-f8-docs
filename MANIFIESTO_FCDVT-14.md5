@@ -24,8 +24,15 @@
 # 2026-11-16: estado congelado con Descargar Excel por local y fecha en Form174 (PKG_F8_EXPORTA_MASIVA_YZ, 04d/04e, Z armada con la suma de las Y) y los cambios de FCDVT-10 (Tottus) desde el 04-11. Manifiesto regenerado: agrega docs/sql/FCDVT-14 y docs/sql/FCDVT-10 completas y los .bak_FCDVT-14_Descargar / .bak_FCDVT-10; sin BOM. Sin compilar ni ejecutar en la base. Respaldo docs/respaldos/FCDVT-14_2026-11-16_descargar-excel-z-armada.zip
 # 2026-11-16 (2): agrega docs/sql/FCDVT-14/pruebas_descargar/ (prueba de Descargar Excel en test); actualizados los MD5 de README_FCDVT-14.md y 00_LEEME.md. Sin respaldo ZIP nuevo (el del 16-11 es anterior a esta carpeta)
 # 2026-11-16 (3): FCDVT-259 (Exportar Cierres Y y Z, Form176) revierte el Descargar Excel de Form174 (vuelve a .bak_FCDVT-14_Descargar) y traslada PKG_F8_EXPORTA_MASIVA_YZ y pruebas_descargar/ a docs/sql/FCDVT-259 (pruebas/). Se quitan del manifiesto 04d, 04e y pruebas_descargar/ (8 archivos); se agrega Form174.frm.bak_FCDVT-259_Descargar (version con Descargar) y se recalculan 12 MD5 (Form174, MDIForm1 y vbp con 461/Form176, INSTALAR/05/06/99/00_LEEME de FCDVT-14, indices). Estado de FCDVT-259: docs/MANIFIESTO_FCDVT-259.md5. Sin compilar ni ejecutar en la base.
+# 2026-11-18: FCDVT-10: Form174 resincronizado con el exe vivo (el rediseno del 17-11 habia perdido el bloque de Tottus/SFCL). Se agrega docs/README_FCDVT-10.md al manifiesto (no estaba listado) y se corrigen comentarios de docs/sql/FCDVT-10 (00_LEEME, 02 y FORMATO): decisiones de negocio a confirmar y contradicciones de redaccion. Sin compilar.
+# 2026-11-18 (4): FCDVT-10: 01_menu_ingreso_masivo_y_sfcl.sql con INSERT explicitos como el de FACO (1 fila de menu + 1 por perfil: 9, 10 y 12 activos, el resto comentado). README_FCDVT-10, 00_LEEME y Cambios/README 2.3.
+# 2026-11-18 (3): FCDVT-10: 02_tablas_carga_yz_sfcl.sql pasa a DDL estatico (create table/index/sequence + comment, sin PL/SQL ni 'solo lo que falta'); no reejecutable (ORA-00955, reinstalar con 99 parte C). Columnas y tipos iguales. INSTALAR y 00_LEEME actualizados.
+# 2026-11-18 (2): FCDVT-10: docs/sql/FCDVT-10/INSTALAR.sql con whenever sqlerror continue antes de la verificacion final (fn_encabezado), que da ORA-20002 si VTA_PAINT_Z no esta configurada, para que eso no cierre la instalacion en failure. README_FCDVT-10, 00_LEEME y FORMATO con el mismo dia. Sin ejecutar en la base.
+# 2026-11-18 (6): FCDVT-10: CSV de prueba de Buscar/Cargar en docs/sql/FCDVT-10/pruebas_cargar (s01_ok, s02_dos_terminales, s03_mixto, encabezado.txt y paint_z_sfcl.csv exportados de test el 18-11, generador arma_csv.ps1) + README_FCDVT-10 y 00_LEEME. Local 116, 16 y 17-11-2026. Sin ejecutar en la base.
+# 2026-11-18 (7): FCDVT-10: pruebas_cargar/ completo con paridad respecto de FCDVT-14 (s04/s05 reemplazo, s06 numeracion, s07 MODIFICAR, s08 Z sin Y, s09 errores, s10 Y cerrada), arma_csv.ps1 extendido (genera y valida los 9 CSV) y LEEME reescrito con orden, dependencias y mensajes esperados. Terminales nuevos T7/T8 del local 116 para 16 y 17-11-2026 (no verificados en test: sin VPN). Sin ejecutar en la base ni compilar.
+# 2026-11-18 (8): FCDVT-10: VTA_SFCLCARGA_YZ_DET pasa al esquema ancho de Colombia (una columna por concepto: las 63 de VTA_PAINT_Z de test, en el orden del encabezado) y se elimina VTA_SFCLCARGA_YZ_DETM; nuevo docs/sql/FCDVT-10/07_migra_det_ancha.sql para el ambiente ya instalado (recrea DET con el DDL de 02 y borra DETM; despues recompilar 03, 04, 04b y 04c). prc_config valida nombre y posicion de cada columna (ORA-20002) y arma g_sql_conc; prc_inserta_linea con INSERT estatico de 63 binds; nueva fn_cant_conceptos; 04c lee la columna de DET por nombre. Actualizados 00_prechecks, 06_pruebas, 99_rollback, 03 (spec), INSTALAR, py0_prechecks, 00_LEEME, FORMATO, sql/CLAUDE.md y README_FCDVT-10. Se recalculan tambien prueba_recarga_v1_v2/LEEME.md y pruebas_cargar/arma_csv.ps1, que estaban con otro criterio de hash. Sin cambio de exe (Form174/175/176 no leen DETM). Sin compilar ni ejecutar en la base.
 4db4bc1018bb9d3bee700e1951dd516e *CLAUDE.md
-8027c5715b201f73568b41e3c155a1e9 *FTEPROD/Form174.frm
+186e56e7eb50d86f126e4526d0587e71 *FTEPROD/Form174.frm
 423711b951fd0f99a8fe609822c2d1ea *FTEPROD/Form174.frm.bak_FCDVT-10
 59a9ff73f64a47f89a9498057518d08f *FTEPROD/Form174.frm.bak_FCDVT-14
 4327b27755c00edfffd0e2ccde98c4c1 *FTEPROD/Form174.frm.bak_FCDVT-14_Buscar
@@ -56,28 +63,30 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form175.frx
 692a13fa336a9d91f8412cf03753ee05 *FTEPROD/recaudacion.vbp.bak_FCDVT-14_Form175
 edd1fa4b6f35d3f0fac476794d6b0e1e *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
 8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
+7d3b67039329823cec56cd71f5441553 *docs/README_FCDVT-10.md
 db378e1705cd8b6b5f685e8db27e834d *docs/README_FCDVT-14.md
 5f7e07fb70d8b10d5322fd0dc1fb1385 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
-4cdb84057e319a1047ca06c201bf1485 *docs/sql/CLAUDE.md
-d190506d52f1ca242583c5b2a78cbed2 *docs/sql/FCDVT-10/00_LEEME.md
-e76c7a62931bc0d8af68c6ce3683f4e2 *docs/sql/FCDVT-10/00_prechecks.sql
-1fe46d49e722e4b7c3185a1a09339b65 *docs/sql/FCDVT-10/01_menu_ingreso_masivo_y_sfcl.sql
-cc4b7e6a6a8876cdecf0a26e8901d5e3 *docs/sql/FCDVT-10/02_tablas_carga_yz_sfcl.sql
-ed2fe5d315d6c9b280349c2135950bdd *docs/sql/FCDVT-10/03_pkg_carga_masiva_yz_sfcl_spec.sql
-3002a9998848d566fd463c7dda7bac02 *docs/sql/FCDVT-10/04_pkg_carga_masiva_yz_sfcl_body.sql
+163ef0c20c87e3ae63e5150a2498e89d *docs/sql/CLAUDE.md
+bfad2b6aa03f46057068aaf69a7c07ac *docs/sql/FCDVT-10/00_LEEME.md
+d395cd7a28519c3cb3254afd3ea42734 *docs/sql/FCDVT-10/00_prechecks.sql
+5d521ca179c074ce693149ca38ff138a *docs/sql/FCDVT-10/01_menu_ingreso_masivo_y_sfcl.sql
+0323c8c88663ccf8ae4be70a753be03a *docs/sql/FCDVT-10/02_tablas_carga_yz_sfcl.sql
+7cdc638a0872d649e30a86a3710375d9 *docs/sql/FCDVT-10/03_pkg_carga_masiva_yz_sfcl_spec.sql
+ad0361ed9c0f1bd998aa725d51af2d32 *docs/sql/FCDVT-10/04_pkg_carga_masiva_yz_sfcl_body.sql
 385c595ab11d0362d800a74ce2cb6023 *docs/sql/FCDVT-10/04b_pkg_f8_graba_masiva_yz_sfcl_spec.sql
-4578b021ae67664c0d19e5dc5db1c36a *docs/sql/FCDVT-10/04c_pkg_f8_graba_masiva_yz_sfcl_body.sql
+102190143c8115e44f9b8d2a3202ec58 *docs/sql/FCDVT-10/04c_pkg_f8_graba_masiva_yz_sfcl_body.sql
 374fe97347e932a214fa1f59eaaa6577 *docs/sql/FCDVT-10/05_grants_sinonimos.sql
-619ff5e4718aa8a84cf149a8be33b8a9 *docs/sql/FCDVT-10/06_pruebas.sql
+c1321c9cfd94f23d804677623b557781 *docs/sql/FCDVT-10/06_pruebas.sql
+154af6a41a470c039e2c9f191eb250c6 *docs/sql/FCDVT-10/07_migra_det_ancha.sql
 ab12b5ccd0035dbe76729110eb74b853 *docs/sql/FCDVT-10/98_limpia_prueba.sql
-92d4a40fcdc9895236f0dff54d83961f *docs/sql/FCDVT-10/99_rollback.sql
-d3b5aa65df9972eea0259a57f78d0d99 *docs/sql/FCDVT-10/FORMATO_CARGA_YZ_SFCL.md
-d6cdb87a344e1ac7387353a24afbd7d8 *docs/sql/FCDVT-10/INSTALAR.sql
-70dc0f34035d74a980e37534d160b6cd *docs/sql/FCDVT-10/prueba_recarga_v1_v2/LEEME.md
+83b9dadaed0abcb65254ae6b0cf0cc81 *docs/sql/FCDVT-10/99_rollback.sql
+a53e38daa6ca7b042108a3fe8e1fb907 *docs/sql/FCDVT-10/FORMATO_CARGA_YZ_SFCL.md
+0896155cf5caebb03a7e1f9216bd4e75 *docs/sql/FCDVT-10/INSTALAR.sql
+e8a8e8be25d03c74c4e78dff2a7632d4 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/LEEME.md
 6d3158e015dc8363558760afb9ba9a28 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/arma_prueba.py
 a86063b0f08208882bc687d65c9b89f6 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/plantillas/py2_resultados.sql.tpl
 d841c337c6e747257cb988e1e239238e *docs/sql/FCDVT-10/prueba_recarga_v1_v2/plantillas/py9_limpiar.sql.tpl
-17329f03a9923e149216e230af0177b2 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/py0_prechecks.sql
+d3ae1813e17b7b01e9a110fc2306b232 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/py0_prechecks.sql
 63eb3aa27675ac55e2f451a9449217ff *docs/sql/FCDVT-14/00_LEEME.md
 c4a6958cb3e7eaa0b3379f09aadc3431 *docs/sql/FCDVT-14/00_prechecks.sql
 4623a236daee4abb03e753c738f94130 *docs/sql/FCDVT-14/01_menu_ingreso_masivo_y.sql
@@ -239,3 +248,17 @@ ca0f9969d3e9fe867310111d300fc718 *docs/sql/FCDVT-14/pruebas_cargar/c02_mixto.csv
 7f020d4416877e85ddbb2c2644a0cec6 *docs/sql/FCDVT-14/pruebas_cargar/c03_reemplazo.csv
 d6335a01448b195152b62ed0a83bdef7 *docs/sql/FCDVT-14/pruebas_cargar/c04_numeracion.csv
 84c4ed17db79711e2c8d74604ae44b4e *docs/sql/FCDVT-14/pruebas_cargar/c05_y_cerrada.sql
+046dd0430c3d66602cc24e185a749822 *docs/sql/FCDVT-10/pruebas_cargar/LEEME.md
+ab9560df41e47323d3367e1a4e12ebc0 *docs/sql/FCDVT-10/pruebas_cargar/arma_csv.ps1
+f4f43d87efcd74f61c7f6b40c9cf08e1 *docs/sql/FCDVT-10/pruebas_cargar/encabezado.txt
+072ac0512d6722be4cf8005f44c074ff *docs/sql/FCDVT-10/pruebas_cargar/paint_z_sfcl.csv
+6b98977b9ecc444e1aa826afa4e2b506 *docs/sql/FCDVT-10/pruebas_cargar/s01_ok.csv
+11e52630170962d5fcf13344c68880be *docs/sql/FCDVT-10/pruebas_cargar/s02_dos_terminales.csv
+525299bfd9885bf95f7516169c6802a9 *docs/sql/FCDVT-10/pruebas_cargar/s03_mixto.csv
+350eb5ed255a45b885c9c534fc70359b *docs/sql/FCDVT-10/pruebas_cargar/s04_reemplazo_v1.csv
+ea848467e7c5529220380768cdaeabb7 *docs/sql/FCDVT-10/pruebas_cargar/s05_reemplazo_v2.csv
+ace2993773c097506fd110c988697ba5 *docs/sql/FCDVT-10/pruebas_cargar/s06_numeracion.csv
+f79ea821b6a89828d585b70bf91a8411 *docs/sql/FCDVT-10/pruebas_cargar/s07_modificar.csv
+509e562857b93e8c745f9ea240489654 *docs/sql/FCDVT-10/pruebas_cargar/s08_z_sin_y.csv
+8e0fc9610a7a6ad80a68258207e300d9 *docs/sql/FCDVT-10/pruebas_cargar/s09_errores.csv
+6f5574f2dce43761dea601bb2cd18465 *docs/sql/FCDVT-10/pruebas_cargar/s10_y_cerrada.sql

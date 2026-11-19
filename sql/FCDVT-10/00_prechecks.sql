@@ -63,7 +63,7 @@ select z.vta_validadorzzz, z.vtaglosa_z, z.vta_cmp_asoc
 prompt ===== 6) Objetos nuevos (ESPERADO antes de instalar: 0 filas) =====
 select object_name, object_type, status
   from user_objects
- where object_name in ('VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_DETM', 'VTA_SFCLCARGA_YZ_RES',
+ where object_name in ('VTA_SFCLCARGA_YZ_DET', 'VTA_SFCLCARGA_YZ_RES',
                        'VTA_SFCLCARGA_YZ_LOG', 'SEQ_VTA_SFCLCARGA_YZ', 'SEQ_VTA_SFCLCARGA_YZ_LOG',
                        'PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL',
                        'IND_VTA_SFCLCARGA_YZ_LOG_01');

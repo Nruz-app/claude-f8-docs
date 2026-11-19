@@ -9,6 +9,13 @@
 -- estatico; solo los conceptos de VTA_SFCLZZZ van en SQL dinamico, armado
 -- desde VTA_PAINT_Z (nombres validados contra user_tab_columns).
 --
+-- VTA_SFCLCARGA_YZ_DET tiene una columna por concepto (mismo esquema que
+-- VTA_FACOCARGA_YZ_DET; ver 02_tablas_carga_yz_sfcl.sql): el nombre de la
+-- columna es el vta_cmp_asoc de VTA_PAINT_Z y su ORDEN es el de esa tabla
+-- (columna 15 de DET = fila 2 de VTA_PAINT_Z, etc.). prc_config lo verifica;
+-- si VTA_PAINT_Z cambia (concepto nuevo o reordenado) da ORA-20002 hasta
+-- alterar la tabla. Monto nulo = concepto no informado en el CSV.
+--
 -- Configuracion (prc_config, desde VTA_PAINT_Z con vta_localiz = 'SFCL',
 -- en vta_order_z; es lo mismo que pinta la grilla de Form19 / Form19Y):
 --   * filas 2 a 6 = conceptos de venta (Form19Y.GrabarTerceraZZZ rama
@@ -55,7 +62,7 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
   -- Configuracion (desde VTA_PAINT_Z)
   -- ------------------------------------------------------------------
   type t_conc is record (
-    col     varchar2(30),     -- vta_cmp_asoc (nombre en el CSV y en DETM)
+    col     varchar2(30),     -- vta_cmp_asoc (nombre en el CSV y en DET)
     glosa   varchar2(50),
     destino varchar2(1),      -- L = VTA_SFCLLIBVTA (venta), Z = VTA_SFCLZZZ
     venta   pls_integer       -- 1..5 si es concepto de venta, si no 0
@@ -85,6 +92,11 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
   g_campos   pls_integer;
   g_sql_ins  varchar2(32767);
   g_sql_val  varchar2(32767);
+  g_sql_conc varchar2(32767);   -- montos informados de una linea de DET
+
+  -- Primera columna de concepto de VTA_SFCLCARGA_YZ_DET (1 a 14 =
+  -- identificacion, ver 02_tablas_carga_yz_sfcl.sql)
+  c_col_concepto1 constant pls_integer := 15;
 
   function fn_existe_col (p_tabla in varchar2, p_col in varchar2) return boolean is
     v_n number;
@@ -122,8 +134,10 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
     v_zzz   boolean;
     v_t     varchar2(1);
     v_i     pls_integer;
+    v_n     number;
     v_cols  varchar2(32767);
     v_vals  varchar2(32767);
+    v_sel   varchar2(32767);
     type t_g is table of varchar2(32767) index by pls_integer;
     v_g     t_g;
   begin
@@ -144,6 +158,7 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
     g_vld.delete;
     g_vld_ok  := true;
     g_aviso   := null;
+    g_sql_conc := null;
 
     -- vta_pop_up nulo = 0 (editable), como Form19 / Form19Y (decode(VTA_POP_UP, null, 0, ...))
     for r in (select upper(trim(vta_cmp_asoc)) col, vtaglosa_z glosa,
@@ -232,6 +247,25 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
         'VTA_PAINT_Z no tiene los conceptos de SFCL (filas: ' || v_r || ')');
     end if;
 
+    -- Las columnas de concepto de VTA_SFCLCARGA_YZ_DET son fijas y en el
+    -- mismo orden que VTA_PAINT_Z (el INSERT de prc_inserta_linea es
+    -- estatico). Si falta una columna o el orden cambio, ORA-20002.
+    for i in 1 .. g_conc.count loop
+      select count(*) into v_n
+        from user_tab_columns
+       where table_name = 'VTA_SFCLCARGA_YZ_DET'
+         and column_name = g_conc(i).col
+         and column_id   = c_col_concepto1 + i - 1;
+      if v_n = 0 then
+        raise_application_error(-20002,
+          'VTA_SFCLCARGA_YZ_DET: la columna ' || (c_col_concepto1 + i - 1)
+          || ' debe ser ' || g_conc(i).col || ' (' || g_conc(i).glosa
+          || ', fila ' || (i + c_campos_id) || ' de VTA_PAINT_Z); crear la'
+          || ' columna o rehacer la tabla como 02_tablas_carga_yz_sfcl.sql /'
+          || ' 07_migra_det_ancha.sql');
+      end if;
+    end loop;
+
     -- Encabezado del CSV
     g_encab := c_encabezado_id;
     for i in 1 .. g_conc.count loop
@@ -239,14 +273,13 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
     end loop;
     g_campos := c_campos_id + g_conc.count;
 
-    -- INSERT de zzz: conceptos desde DETM (vacio = 0) y totales en 0
+    -- INSERT de zzz: conceptos de la linea de DET (nulo = 0) y totales en 0
     v_cols := 'rec_techkey, rec_fechaproceso';
     v_vals := ':1, :2';
     for i in 1 .. g_conc.count loop
       if g_conc(i).destino = 'Z' then
         v_cols := v_cols || ', ' || g_conc(i).col;
-        v_vals := v_vals || ', nvl(max(decode(dtm_columna, ''' || g_conc(i).col
-                         || ''', dtm_monto)), 0)';
+        v_vals := v_vals || ', nvl(d.' || g_conc(i).col || ', 0)';
       end if;
     end loop;
     for i in 1 .. g_ztot.count loop
@@ -254,7 +287,17 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
       v_vals := v_vals || ', 0';
     end loop;
     g_sql_ins := 'insert into VTA_SFCLZZZ (' || v_cols || ') select ' || v_vals
-                 || ' from VTA_SFCLCARGA_YZ_DETM where dtm_carga = :3 and dtm_linea = :4';
+                 || ' from VTA_SFCLCARGA_YZ_DET d where d.det_carga = :3 and d.det_linea = :4';
+
+    -- Montos informados de una linea (una fila de DET): 'COLUMNA' / valor,
+    -- solo las columnas no nulas. Binds :1 carga, :2 linea
+    for i in 1 .. g_conc.count loop
+      v_sel := v_sel || case when v_sel is null then '' else ' union all ' end
+               || 'select ''' || g_conc(i).col || ''' col, ' || g_conc(i).col
+               || ' monto from VTA_SFCLCARGA_YZ_DET where det_carga = :1'
+               || ' and det_linea = :2 and ' || g_conc(i).col || ' is not null';
+    end loop;
+    g_sql_conc := v_sel;
 
     -- Formula de la Z: grupo7 - grupo6 - ... - grupo1 (FuncMontoValidaZZZ)
     g_sql_val := null;
@@ -302,34 +345,56 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
     return g_sql_val;
   end fn_sql_valida_z;
 
-  function fn_sql_upd_zzz (p_carga in number, p_linea in number) return varchar2 is
-    v_set  varchar2(32767);
-    v_sel  varchar2(32767);
+  -- Montos informados de una linea (columnas no nulas de VTA_SFCLCARGA_YZ_DET,
+  -- o sea lo que el CSV traia en esos conceptos). o_col = nombre del concepto,
+  -- o_monto = monto. Reemplaza la lectura de la antigua tabla de montos
+  -- (VTA_SFCLCARGA_YZ_DETM, eliminada por 02 / 07).
+  procedure pr_montos_linea (p_carga in number, p_linea in number,
+                             o_col   in out t_v30,
+                             o_monto in out t_nums) is
   begin
     prc_config(c_pais);
-    for r in (select dtm_columna
-                from VTA_SFCLCARGA_YZ_DETM
-               where dtm_carga = p_carga
-                 and dtm_linea = p_linea
-               order by dtm_columna) loop
-      if g_idx.exists(r.dtm_columna) then
-        if g_conc(g_idx(r.dtm_columna)).destino = 'Z' then
-          if v_set is not null then
-            v_set := v_set || ', ';
-            v_sel := v_sel || ', ';
-          end if;
-          v_set := v_set || r.dtm_columna;
-          v_sel := v_sel || 'max(decode(dtm_columna, ''' || r.dtm_columna || ''', dtm_monto))';
+    o_col.delete;
+    o_monto.delete;
+    execute immediate g_sql_conc bulk collect into o_col, o_monto
+      using p_carga, p_linea;
+  end pr_montos_linea;
+
+  function fn_sql_upd_zzz (p_carga in number, p_linea in number) return varchar2 is
+    v_cols  t_v30;    -- conceptos informados en la linea
+    v_montos t_nums;
+    v_set   varchar2(32767);
+    v_sel   varchar2(32767);
+  begin
+    pr_montos_linea(p_carga, p_linea, v_cols, v_montos);
+    for i in 1 .. v_cols.count loop
+      if g_idx.exists(v_cols(i))
+         and g_conc(g_idx(v_cols(i))).destino = 'Z' then
+        if v_set is not null then
+          v_set := v_set || ', ';
+          v_sel := v_sel || ', ';
         end if;
+        v_set := v_set || v_cols(i);
+        v_sel := v_sel || 'd.' || v_cols(i);
       end if;
     end loop;
     if v_set is null then
       return null;
     end if;
     return 'update VTA_SFCLZZZ set (' || v_set || ') = (select ' || v_sel
-           || ' from VTA_SFCLCARGA_YZ_DETM where dtm_carga = :1 and dtm_linea = :2)'
+           || ' from VTA_SFCLCARGA_YZ_DET d where d.det_carga = :1 and d.det_linea = :2)'
            || ' where rec_techkey = :3';
   end fn_sql_upd_zzz;
+
+  -- Cantidad de conceptos informados en la linea (MODIFICAR: columnas no
+  -- nulas de DET). La usa PKG_F8_GRABA_MASIVA_YZ_SFCL para el mensaje de Cargar.
+  function fn_cant_conceptos (p_carga in number, p_linea in number) return number is
+    v_cols  t_v30;
+    v_montos t_nums;
+  begin
+    pr_montos_linea(p_carga, p_linea, v_cols, v_montos);
+    return v_cols.count;
+  end fn_cant_conceptos;
 
   -- ------------------------------------------------------------------
   -- Log (transaccion autonoma: queda aunque el proceso haga rollback)
@@ -496,17 +561,17 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
   -- total; zzz = conceptos del CSV (vacio = 0); el resto = 0.
   -- ------------------------------------------------------------------
   function fn_dif_valida_archivo (p_carga in number, p_linea in number) return number is
+    v_cols  t_v30;    -- conceptos informados en la linea
+    v_montos t_nums;
     v_vals  t_val;
     v_lib   t_val;
     v_total number;
     v_val   number;
     v_g     t_nums;
   begin
-    for r in (select dtm_columna, dtm_monto
-                from VTA_SFCLCARGA_YZ_DETM
-               where dtm_carga = p_carga
-                 and dtm_linea = p_linea) loop
-      v_vals(r.dtm_columna) := r.dtm_monto;
+    pr_montos_linea(p_carga, p_linea, v_cols, v_montos);
+    for i in 1 .. v_cols.count loop
+      v_vals(v_cols(i)) := v_montos(i);
     end loop;
     select det_total into v_total
       from VTA_SFCLCARGA_YZ_DET
@@ -586,6 +651,7 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
     v_s       varchar2(4000);
     v_m       number;
     v_vals    t_nums;          -- posicion del concepto -> monto informado
+    v_nconc   pls_integer := 0; -- conceptos informados en la linea
     v_i       pls_integer;
   begin
     prc_config(p_flg_pais);
@@ -678,7 +744,11 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
       v_err := true;
     end if;
 
-    -- Montos (columnas 12 en adelante): solo se guardan los informados
+    -- Montos (columnas 12 en adelante): solo se guardan los informados; el
+    -- resto queda nulo en DET (MODIFICAR: nulo = no cambia)
+    for i in 1 .. g_conc.count loop
+      v_vals(i) := null;
+    end loop;
     for i in 1 .. g_conc.count loop
       v_s := fn_campo(v_txt, c_campos_id + i);
       if v_s is not null then
@@ -690,26 +760,26 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
             v_err := true;
           else
             v_vals(i) := v_m;
+            v_nconc   := v_nconc + 1;
           end if;
         end if;
       end if;
     end loop;
 
     if v_mod then
-      if v_vals.count = 0 and not v_err then
+      if v_nconc = 0 and not v_err then
         prc_log(p_carga, p_linea, 'LECTURA', 'LINEA', null,
                 'MODIFICAR sin conceptos informados: no hay nada que cambiar');
         v_err := true;
       end if;
       v_total := null;
     else
-      -- Total de venta = filas 2 a 6 (vacio = 0)
+      -- Total de venta = filas 2 a 6 (vacio = 0). v_vals tiene los 63
+      -- indices precargados en null, por eso el nvl.
       v_total := 0;
       for k in 1 .. 5 loop
         v_i := g_idx(g_venta(k));
-        if v_vals.exists(v_i) then
-          v_total := v_total + v_vals(v_i);
-        end if;
+        v_total := v_total + nvl(v_vals(v_i), 0);
       end loop;
     end if;
 
@@ -719,21 +789,44 @@ create or replace package body PKG_F8_CARGA_MASIVA_YZ_SFCL as
       v_estado := 'OK';
     end if;
 
+    -- Una fila de DET con una columna por concepto (mismo orden que
+    -- VTA_PAINT_Z, ver prc_config); nulo = concepto no informado
     insert into VTA_SFCLCARGA_YZ_DET
       (det_carga, det_linea, det_texto, det_fecha, det_local, det_terminal,
        det_nro_y, det_hora, det_secuencia, det_num_boleta, det_vendedor,
-       det_cont_repo, det_tipo, det_tipo_carga, det_total, det_estado, det_fechahora)
+       det_cont_repo, det_tipo, det_tipo_carga,
+       vta_montobol, vta_montoncr, vta_montofac, vta_mmontondb, vta_montoguia,
+       rec_mefectivo, rec_mchkdia, rec_mchkfecha, rec_mtransbank, rec_msodimac,
+       rec_mcmr, rec_mtregalo, rec_mtotconvenio, rec_mchkfala, rec_mtotfacxcob,
+       rec_mncredito, rec_mtde, rec_tarjedenred, rec_tarjamipass, rec_tarjsodexo,
+       rec_mcanjepuntos, mtotgiftcorp, rec_mfpay, rec_mdotaciones, rec_mretiros,
+       rec_matesoramiento, rec_mabonocmr, rec_mtotsif, rec_mavancecmr, rec_mintereses,
+       rec_mtransferencia, rec_mretirotrans, rec_mtransferenciaint, rec_mreversatransint,
+       rec_mretirotransint, rec_mtotatrf, rec_mtotalrevtrf, rec_mabonotde, rec_mrevabonotde,
+       rec_msellosvrd, rec_mtotrecauda, r_rectelefono, r_recinternet, r_recargabip,
+       r_juegosazar, r_pagoservicios, r_seguros, rec_mtotrevrecauda, rev_rectelefono,
+       rev_recinternet, rev_recargabip, rev_juegosazar, rev_pagoservicios, rev_seguros,
+       rec_mrevcanjepuntos, mquickpay, quickpaydebidtobf, rec_mtotalpeso, rec_linio,
+       rec_ecom, rec_pluxee_junaeb, rec_edenred_junaeb, rec_edenred_privado,
+       det_total, det_estado, det_fechahora)
     values
       (p_carga, p_linea, substr(p_texto, 1, 4000), v_fecha, v_local, v_term,
        v_nroy, v_hora, v_sec, v_bol, v_vend,
-       v_crepo, v_tipo, v_tcarga, v_total, v_estado, sysdate);
-
-    v_i := v_vals.first;
-    while v_i is not null loop
-      insert into VTA_SFCLCARGA_YZ_DETM (dtm_carga, dtm_linea, dtm_columna, dtm_monto)
-      values (p_carga, p_linea, g_conc(v_i).col, v_vals(v_i));
-      v_i := v_vals.next(v_i);
-    end loop;
+       v_crepo, v_tipo, v_tcarga,
+       v_vals(1),  v_vals(2),  v_vals(3),  v_vals(4),  v_vals(5),
+       v_vals(6),  v_vals(7),  v_vals(8),  v_vals(9),  v_vals(10),
+       v_vals(11), v_vals(12), v_vals(13), v_vals(14), v_vals(15),
+       v_vals(16), v_vals(17), v_vals(18), v_vals(19), v_vals(20),
+       v_vals(21), v_vals(22), v_vals(23), v_vals(24), v_vals(25),
+       v_vals(26), v_vals(27), v_vals(28), v_vals(29), v_vals(30),
+       v_vals(31), v_vals(32), v_vals(33), v_vals(34), v_vals(35),
+       v_vals(36), v_vals(37), v_vals(38), v_vals(39), v_vals(40),
+       v_vals(41), v_vals(42), v_vals(43), v_vals(44), v_vals(45),
+       v_vals(46), v_vals(47), v_vals(48), v_vals(49), v_vals(50),
+       v_vals(51), v_vals(52), v_vals(53), v_vals(54), v_vals(55),
+       v_vals(56), v_vals(57), v_vals(58), v_vals(59), v_vals(60),
+       v_vals(61), v_vals(62), v_vals(63),
+       v_total, v_estado, sysdate);
     commit;
   exception
     when others then
