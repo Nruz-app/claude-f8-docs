@@ -15,6 +15,7 @@ Creada el 16-11-2026. Índice del requerimiento: `docs/README_FCDVT-259.md`. La 
 | — | `INSTALAR.sql` | Ejecuta 02 y 03 (no el 01) y verifica `user_objects` / `user_errors` | — |
 | 99 | `99_rollback.sql` | A: borra el permiso 461. B (comentada): `drop package` y sinónimo | — |
 | — | `pruebas/` | Prueba de punta a punta en test (graba con Form174 y limpia con `d09`). Pasos y resultado esperado en `pruebas/README.md` | Sin ejecutar |
+| — | `pruebas/sesion_2026-11-07/` | La misma prueba con fecha **07-11-2026** (día sin cierres 08-11-2026), con la regla de fechas del 17-11 (rango de 3 días, sin límite hacia atrás). Pasos en su `README.md` | Creada el 19-11-2026; sin ejecutar |
 
 ## `PKG_F8_EXPORTA_MASIVA_YZ`
 

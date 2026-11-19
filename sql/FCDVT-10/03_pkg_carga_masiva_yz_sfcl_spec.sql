@@ -3,102 +3,96 @@
 -- Especificacion de PKG_F8_CARGA_MASIVA_YZ_SFCL   (Oracle 10.2)
 -- Tottus Chile (Flg_Pais$ = "SFCL")
 -- xintec-nruz 11-11-2026
--- Base: docs/sql/FCDVT-14/03_pkg_carga_masiva_yz_spec.sql (FACO). Las
--- firmas de prc_inicia, prc_inserta_linea y prc_procesa son las MISMAS
--- (con pais), asi Form174 solo cambia el nombre del package segun
--- Flg_Pais$. El package de FACO no se toca.
+-- xintec-nruz 19-11-2026: MISMAS REGLAS QUE COLOMBIA (FCDVT-14,
+--   PKG_F8_CARGA_MASIVA_YZ). Solo cambian los campos de concepto: 63
+--   columnas de Tottus en una lista fija (c_encabezado), igual que el
+--   c_encabezado de FACO. Antes: conceptos leidos de VTA_PAINT_Z en cada
+--   carga, MODIFICAR, Z sin Y con Y1 automatica, formula de la Z y
+--   cerrados en Buscar (anterior_2026-11-19/).
 --
--- Diferencias con FACO:
---   * Conceptos: salen de VTA_PAINT_Z (vta_localiz = 'SFCL') en tiempo de
---     ejecucion, como en Form19 / Form19Y. El encabezado del CSV lo da
---     fn_encabezado (11 columnas de identificacion + una por concepto
---     vta_pop_up = 0, en vta_order_z, con el nombre vta_cmp_asoc) y
---     VTA_SFCLCARGA_YZ_DET tiene una columna por concepto, en ese mismo
---     orden (como VTA_FACOCARGA_YZ_DET). Si VTA_PAINT_Z agrega o reordena
---     conceptos hay que alterar la tabla: prc_config da ORA-20002.
---   * TIPO_CARGA: INGRESAR y MODIFICAR (HU-03.3: en MODIFICAR un concepto
---     vacio no cambia).
---   * INGRESAR acepta una Z sin Y: Cargar crea la Y1 copiando la Z, como
---     Form19.GrabaYprima.
---   * La Z se valida con la formula de VTA_PAINT_Z (vta_validadorzzz /
---     vta_signo), como Form19.FuncMontoValidaZZZ.
+-- Carga masiva de cierres Y / Z, etapa 1 (boton Buscar de Form174):
+-- recibe el CSV linea a linea, lo separa y valida, y arma el resumen por
+-- fecha / local / terminal que muestra la grilla. NO graba libvta, zzz ni
+-- termstat(y): eso lo hace el boton Cargar con PKG_F8_GRABA_MASIVA_YZ_SFCL
+-- (pasos 04b y 04c).
 --
--- Uso desde Form174 (ADODB.Command), con p_flg_pais = Flg_Pais$ ("SFCL"):
+-- Uso desde Form174 (ADODB.Command, autocommit), con p_flg_pais = Flg_Pais$:
 --   0) select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL') from dual
---      (plantilla / Exportar Excel)
---   1) prc_inicia -> numero de carga
---   2) prc_inserta_linea -> una llamada por linea del archivo (incluida la 1)
---   3) prc_procesa -> validaciones contra la base + resumen
+--      (plantilla de Exportar Excel)
+--   1) prc_inicia          -> numero de carga
+--   2) prc_inserta_linea   -> una llamada por linea del archivo (incluida la 1)
+--   3) prc_procesa         -> validaciones contra la base + resumen
 --   4) select ... from VTA_SFCLCARGA_YZ_RES where res_carga = :carga
--- Cargar: PKG_F8_GRABA_MASIVA_YZ_SFCL.prc_graba (pasos 04b y 04c).
 --
+-- Las firmas son las de PKG_F8_CARGA_MASIVA_YZ (FACO): Form174 solo cambia
+-- el nombre del package segun Flg_Pais$. Otro pais -> ORA-20001.
+-- Estados del resumen: PENDIENTE, ERROR y CARGADO.
 -- Formato del CSV: FORMATO_CARGA_YZ_SFCL.md. Detalle: 00_LEEME.md.
 -- =====================================================================
 
 create or replace package PKG_F8_CARGA_MASIVA_YZ_SFCL as
 
-  c_pais      constant varchar2(10) := 'SFCL';
+  c_pais constant varchar2(10) := 'SFCL';
 
-  -- Columnas de identificacion (1 a 11), iguales a las de FACO
-  c_encabezado_id constant varchar2(200) :=
-    'FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA';
-  c_campos_id constant pls_integer := 11;
+  -- Encabezado obligatorio del CSV de Tottus (74 columnas, separador ;):
+  -- 11 de identificacion (iguales a FACO) + 63 conceptos, con el nombre
+  -- vta_cmp_asoc y en el orden de VTA_PAINT_Z de test (18-11-2026). Las 5
+  -- primeras son la venta (libvta); las 58 siguientes van a VTA_SFCLZZZ.
+  -- Debe ser igual a las columnas 15 a 77 de VTA_SFCLCARGA_YZ_DET.
+  c_encabezado constant varchar2(1000) :=
+       'FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA'
+    || ';VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;VTA_MMONTONDB;VTA_MONTOGUIA'
+    || ';REC_MEFECTIVO;REC_MCHKDIA;REC_MCHKFECHA;REC_MTRANSBANK;REC_MSODIMAC;REC_MCMR'
+    || ';REC_MTREGALO;REC_MTOTCONVENIO;REC_MCHKFALA;REC_MTOTFACXCOB;REC_MNCREDITO;REC_MTDE'
+    || ';REC_TARJEDENRED;REC_TARJAMIPASS;REC_TARJSODEXO;REC_MCANJEPUNTOS;MTOTGIFTCORP;REC_MFPAY'
+    || ';REC_MDOTACIONES;REC_MRETIROS;REC_MATESORAMIENTO;REC_MABONOCMR;REC_MTOTSIF;REC_MAVANCECMR'
+    || ';REC_MINTERESES;REC_MTRANSFERENCIA;REC_MRETIROTRANS;REC_MTRANSFERENCIAINT;REC_MREVERSATRANSINT'
+    || ';REC_MRETIROTRANSINT;REC_MTOTATRF;REC_MTOTALREVTRF;REC_MABONOTDE;REC_MREVABONOTDE'
+    || ';REC_MSELLOSVRD;REC_MTOTRECAUDA;R_RECTELEFONO;R_RECINTERNET;R_RECARGABIP;R_JUEGOSAZAR'
+    || ';R_PAGOSERVICIOS;R_SEGUROS;REC_MTOTREVRECAUDA;REV_RECTELEFONO;REV_RECINTERNET'
+    || ';REV_RECARGABIP;REV_JUEGOSAZAR;REV_PAGOSERVICIOS;REV_SEGUROS;REC_MREVCANJEPUNTOS'
+    || ';MQUICKPAY;QUICKPAYDEBIDTOBF;REC_MTOTALPESO;REC_LINIO;REC_ECOM;REC_PLUXEE_JUNAEB'
+    || ';REC_EDENRED_JUNAEB;REC_EDENRED_PRIVADO';
+
+  c_campos constant pls_integer := 74;
 
   -- Estado final de un grupo correcto (el mismo de FACO)
   c_estado_ok constant varchar2(20) := 'CARGADO';
 
-  -- Encabezado completo del CSV (identificacion + conceptos de VTA_PAINT_Z)
+  -- Encabezado del CSV (c_encabezado). Lo usa Exportar Excel de Form174.
   function fn_encabezado (p_flg_pais in varchar2) return varchar2;
 
-  -- Abre una carga y graba el log INICIO (vuelve a leer VTA_PAINT_Z).
+  -- Abre una carga y graba el log INICIO.
+  --   p_flg_pais : Flg_Pais$ (solo SFCL; otro pais -> ORA-20001)
+  --   p_archivo  : ruta del CSV (solo para el log)
+  --   p_usuario  : LOGINUSER (log y resumen)
+  --   o_carga    : numero de carga (SEQ_VTA_SFCLCARGA_YZ)
   procedure prc_inicia (p_flg_pais in  varchar2,
                         p_archivo  in  varchar2,
                         p_usuario  in  varchar2,
                         o_carga    out number);
 
-  -- Recibe una linea del archivo. La linea 1 debe ser el encabezado
-  -- (fn_encabezado; sin distinguir mayusculas; se tolera un ; final).
+  -- Recibe una linea del archivo. La linea 1 debe ser c_encabezado (sin
+  -- distinguir mayusculas; se tolera un ; final). Las lineas vacias se
+  -- ignoran. Cada error de formato queda en el log (linea, campo, valor y
+  -- motivo) y la fila se guarda en DET con det_estado = 'ERROR'.
   procedure prc_inserta_linea (p_flg_pais in varchar2,
                                p_carga    in number,
                                p_linea    in number,
                                p_texto    in varchar2);
 
-  -- Valida contra la base, arma el resumen y lo cierra en CARGADO o ERROR.
+  -- Valida contra la base (terminal vigente, NRO_Y repetido en el archivo),
+  -- arma el resumen (estado PENDIENTE) y lo cierra en CARGADO o ERROR.
+  --   o_grupos_ok    : grupos CARGADO
+  --   o_grupos_error : grupos ERROR
+  --   o_lin_error    : lineas con error (con o sin grupo)
+  -- Si el proceso se cae, lo anota en el log (etapa ERROR), los grupos
+  -- quedan PENDIENTE y el error se propaga a Form174.
   procedure prc_procesa (p_flg_pais     in  varchar2,
                          p_carga        in  number,
                          o_grupos_ok    out number,
                          o_grupos_error out number,
                          o_lin_error    out number);
-
-  -- ------------------------------------------------------------------
-  -- Uso interno de PKG_F8_GRABA_MASIVA_YZ_SFCL (una sola configuracion)
-  -- ------------------------------------------------------------------
-  -- Valida el pais y carga los conceptos de VTA_PAINT_Z (p_forzar: relee)
-  procedure prc_config (p_flg_pais in varchar2, p_forzar in boolean default false);
-
-  -- Concepto de venta n (1 BOLETAS, 2 N.CREDITO, 3 FACTURA, 4 N.DEBITO,
-  -- 5 GUIA FACTURABLES): su vta_cmp_asoc (columna de
-  -- VTA_SFCLCARGA_YZ_DET)
-  function fn_col_venta (p_n in pls_integer) return varchar2;
-
-  -- INSERT de VTA_SFCLZZZ desde VTA_SFCLCARGA_YZ_DET (nulo = 0).
-  -- Binds: :1 techkey, :2 fecha, :3 carga, :4 linea
-  function fn_sql_ins_zzz return varchar2;
-
-  -- UPDATE de VTA_SFCLZZZ solo con los conceptos informados en la linea
-  -- (columnas no nulas de VTA_SFCLCARGA_YZ_DET; nulo si no informa
-  -- conceptos de zzz).
-  -- Binds: :1 carga, :2 linea, :3 techkey
-  function fn_sql_upd_zzz (p_carga in number, p_linea in number) return varchar2;
-
-  -- Cantidad de conceptos informados en la linea (columnas no nulas de
-  -- VTA_SFCLCARGA_YZ_DET). La usa PKG_F8_GRABA_MASIVA_YZ_SFCL (MODIFICAR).
-  function fn_cant_conceptos (p_carga in number, p_linea in number) return number;
-
-  -- Formula de validacion de la Z sobre la base (Form19.FuncMontoValidaZZZ);
-  -- devuelve la diferencia (0 = cuadra). Nulo si la formula no se puede
-  -- armar (ver log INICIO). Binds: :1 fecha, :2 local, :3 terminal
-  function fn_sql_valida_z return varchar2;
 
 end PKG_F8_CARGA_MASIVA_YZ_SFCL;
 /

@@ -1,18 +1,16 @@
 -- =====================================================================
 -- FCDVT-10 (HU-03) - Paso 98: limpia en TEST lo que grabo Cargar (INGRESAR)
 -- Tottus Chile (SFCL)
--- xintec-nruz 11-11-2026
+-- xintec-nruz 11-11-2026 / 19-11-2026 (reglas de Colombia: solo INGRESAR)
 -- Base: docs/sql/FCDVT-14/98_limpia_prueba.sql.
 --
--- Por cada grupo GRABADO con TIPO_CARGA INGRESAR de la carga del bloque
+-- Por cada grupo GRABADO de la carga del bloque
 -- EDITAR borra la zzz y la libvta 'F8' / 'Y' del terminal-dia, las
--- termstaty con la glosa de la carga (incluida la Y1 automatica) y la
+-- termstaty con la glosa de la carga y la
 -- termstat con la glosa de la carga (las precreadas se conservan). Deja el
 -- grupo en CARGADO para volver a ejecutar Cargar.
 --
 -- OJO: Cargar REEMPLAZA. Lo que el terminal-dia tenia antes no se repone.
--- Los grupos MODIFICAR no se pueden deshacer con este script (no se guarda
--- el valor anterior): se informan y se saltan.
 -- Tampoco revierte lo que TRG_VTA_SFCLZZZ_I creo al insertar las Y en zzz:
 -- VTA_SFCLTARJ (codigos 2001 y 2002) y VTA_SFCLMOVDET tipo 'AL'. En test,
 -- revisarlos y borrarlos a mano si molestan (consulta de ejemplo al final).
@@ -30,15 +28,11 @@ begin
     raise_application_error(-20001, 'Completar v_carga en el bloque EDITAR');
   end if;
 
-  for g in (select res_fecha, res_local, res_terminal, res_tipo_carga
+  for g in (select res_fecha, res_local, res_terminal
               from VTA_SFCLCARGA_YZ_RES
              where res_carga = v_carga and res_estado = 'GRABADO'
              order by 1, 2, 3) loop
-    if nvl(g.res_tipo_carga, 'INGRESAR') <> 'INGRESAR' then
-      dbms_output.put_line(to_char(g.res_fecha, 'dd-mm-yyyy') || ' L' || g.res_local
-                           || ' T' || g.res_terminal || ': ' || g.res_tipo_carga
-                           || ', no se limpia');
-    else
+    begin
       select count(*) into v_n
         from VTA_SFCLLIBVTA
        where vta_fecha_venta = g.res_fecha and vta_local = g.res_local
@@ -69,7 +63,7 @@ begin
          where res_carga = v_carga and res_fecha = g.res_fecha
            and res_local = g.res_local and res_terminal = g.res_terminal;
       end if;
-    end if;
+    end;
   end loop;
 
   if v_ejecutar = 'S' then

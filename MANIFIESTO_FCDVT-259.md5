@@ -11,7 +11,9 @@
 # 2026-11-17: docs/Cambios sincronizado (archivos, diff y README 2.7); README_FCDVT-259 actualizado (decisiones 2.3, diseno 4.1/4.2, pruebas 5.3 e Historial). Nota: se mantuvo la convencion docs/ = MD5 del contenido con LF (nota del 16-11).
 # 2026-11-18: Form176, bloque "Resultado de la exportacion" reordenado (ruta/formato/conteo separados, form mas alto); .bak_FCDVT-259_resumen; docs/Cambios y README_FCDVT-259 sincronizados. Sin compilar.
 # 2026-11-18: FCDVT-10: FTEPROD/Form174.frm resincronizado con el exe vivo (186e56e7..., el rediseno del 17-11 habia perdido el bloque Tottus/SFCL); docs/Cambios/archivos, diff y README quedan identicos al fuente vivo. Se actualiza docs/sql/FCDVT-10/00_LEEME.md (decisiones de negocio a confirmar). Form175 no cambia. Sin compilar.
-4db4bc1018bb9d3bee700e1951dd516e *CLAUDE.md
+# 2026-11-19: sesion de prueba con fecha 07-11-2026 (docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/: d00, d01_carga_07-11.csv, d02, d03, d09 y README). Nota en pruebas/README.md, fila en 00_LEEME y historial en README_FCDVT-259. Sin cambios en FTEPROD ni en la base.
+# 2026-11-19 (2): traspaso documentado (docs/SESION_2026-11-19.md, README_FCDVT-10/259 seccion 6, CLAUDE.md seccion 9) y respaldo docs/respaldos/FCDVT-10_2026-11-19_reglas-colombia.zip. Recalculados los archivos de esta sesion. SIN RECALCULAR (no coincidian antes de esta sesion; ver docs/SESION_2026-11-19.md seccion 5): docs/Cambios/archivos/Form176.frm, docs/Cambios/archivos/MDIForm1.frm, docs/Cambios/PROD/MDIForm1.frm, docs/Cambios/PROD/recaudacion.vbp, docs/Cambios/diffs/Form176.frm.diff, docs/sql/FCDVT-259/03_pkg_f8_exporta_masiva_yz_body.sql, docs/sql/FCDVT-259/pruebas/d01_carga_27-10.csv.
+727165610d3a80b42a96e8ad5d7e9391 *CLAUDE.md
 b14ace09afc0e646ad59be9907a69116 *FTEPROD/Form176.frm
 64ad88d2bca62693c9f7c57ec1dcaa3c *FTEPROD/Form176.frm.bak_FCDVT-259_resumen
 cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form176.frx
@@ -21,36 +23,36 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form176.frx
 f2fcdefb13ac2aa57ce3a923b32239d5 *FTEPROD/MDIForm1.frm.bak_FCDVT-259
 9c9031de4f306bad8237704f222ca5cd *FTEPROD/recaudacion.vbp
 3b78c88571822f42ad31e77e50af4f39 *FTEPROD/recaudacion.vbp.bak_FCDVT-259
-186e56e7eb50d86f126e4526d0587e71 *FTEPROD/Form174.frm
+c787725ec13ae5c7543e3608d25f3adc *FTEPROD/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form174.frx
 8027c5715b201f73568b41e3c155a1e9 *FTEPROD/Form174.frm.bak_FCDVT-14_Descargar
 030476e77ef21efcb32ebd1f1a93d8e4 *FTEPROD/Form174.frm.bak_FCDVT-259_Descargar
-9bce3c9c8a38dce600f5b9a0b83e833a *docs/README_FCDVT-259.md
+3cec93d8328a3a03f3bb3593b42683b0 *docs/README_FCDVT-259.md
 db378e1705cd8b6b5f685e8db27e834d *docs/README_FCDVT-14.md
 5ac286ef6c661b54bc14863c8c8946a9 *docs/CATALOGO_FORMULARIOS.md
-4cdb84057e319a1047ca06c201bf1485 *docs/sql/CLAUDE.md
-c400edbed3a012f470b94df1a1beb98c *docs/sql/FCDVT-10/00_LEEME.md
+decdbcb6d86e4c49d2996556c0b735c7 *docs/sql/CLAUDE.md
+5535efbbaebdd3f23dd12446aed25a6d *docs/sql/FCDVT-10/00_LEEME.md
 63eb3aa27675ac55e2f451a9449217ff *docs/sql/FCDVT-14/00_LEEME.md
 fbc6ca07ad151adca8daf76fb3e4cd43 *docs/sql/FCDVT-14/INSTALAR.sql
 45e9e0cf59603ad52e872e0c8edef358 *docs/sql/FCDVT-14/05_grants_sinonimos.sql
 141db762102038c2051c9b5f50d478d5 *docs/sql/FCDVT-14/06_pruebas.sql
 5c6a1b34db0df34e9f30ad20092ba632 *docs/sql/FCDVT-14/99_rollback.sql
-4ec7fb55ac7ea4feb7f4ac33ce416da7 *docs/Cambios/README.md
-1c29eaa4a5215731a28671f7795684ef *docs/Cambios/MANIFIESTO.md5
+d97666350b5169c3b58750c8361ece64 *docs/Cambios/README.md
+613d56901510580f77f657de76abe831 *docs/Cambios/MANIFIESTO.md5
 38e7de21eaa6c832d3090609bd74a386 *docs/Cambios/archivos/Form176.frm
 cc816b30965b9897e284bdf47ef0e79c *docs/Cambios/archivos/Form176.frx
 a57ee86786e53832af999786f9164fcd *docs/Cambios/archivos/MDIForm1.frm
-f8ca9ae5c178d64e6d8ff28e61bfae0c *docs/Cambios/archivos/Form174.frm
+c787725ec13ae5c7543e3608d25f3adc *docs/Cambios/archivos/Form174.frm
 cc816b30965b9897e284bdf47ef0e79c *docs/Cambios/archivos/Form174.frx
 63de5deebb1f2a6c81b83d5efada232e *docs/Cambios/PROD/MDIForm1.frm
 f4ab7b66e9429149efd250c58659bc5a *docs/Cambios/PROD/recaudacion.vbp
 87a08b284b9e60f682f9844cc040dd26 *docs/Cambios/diffs/Form176.frm.diff
 74eab31fa1e514a14862914a4046007f *docs/Cambios/diffs/MDIForm1.frm.diff
-0cc5be2ad0e6b87fde3b0b73d3188dbf *docs/Cambios/diffs/Form174.frm.diff
+b25c5da0c00ff7f35c31d798f98e4703 *docs/Cambios/diffs/Form174.frm.diff
 ccf8f8b22e8cdb393216ef259aef70f6 *docs/Cambios/diffs/recaudacion.vbp.diff
 caf1d20c018871e54d3327634b7dc81c *docs/Requerimiento-FCDVT-259/FCDVT-259.doc
 9aa4f12681f1df5098f1542c5d97da1c *docs/Requerimiento-FCDVT-259/image-20261116-123023.png
-6efdb8003932d76abef4a67ca6ecc327 *docs/sql/FCDVT-259/00_LEEME.md
+5b3c4121d1fe85f8039979fe4c0d1cf3 *docs/sql/FCDVT-259/00_LEEME.md
 0e93575d6699b67e66872431036d93c4 *docs/sql/FCDVT-259/00_prechecks.sql
 8f7d8e64d49bb4af725fb0ba39918804 *docs/sql/FCDVT-259/01_menu_exporta_yz.sql
 0289702060aed3ab757d326e78106c71 *docs/sql/FCDVT-259/02_pkg_f8_exporta_masiva_yz_spec.sql
@@ -59,9 +61,16 @@ ade29434be8c108d095aa74791bb5d46 *docs/sql/FCDVT-259/04_grants_sinonimos.sql
 55341bfc6c90b672b081de4c7d38730b *docs/sql/FCDVT-259/05_pruebas.sql
 f03ff9ec05d7503331a6a2ff7f41d2a8 *docs/sql/FCDVT-259/99_rollback.sql
 7cadb5c08f9bb0e79cb080d46935622a *docs/sql/FCDVT-259/INSTALAR.sql
-f4f9e1cdffe3e096742d6bacbc52fd5a *docs/sql/FCDVT-259/pruebas/README.md
+8705ed5fc5a50a4455df1842d426461e *docs/sql/FCDVT-259/pruebas/README.md
 7af57b876937c218cecee763d67b0a94 *docs/sql/FCDVT-259/pruebas/d00_prechecks.sql
 bfcba34e7ebc5251dcf9a5ccc50f764d *docs/sql/FCDVT-259/pruebas/d01_carga_27-10.csv
 9b4c0e317c67d300b054c9043e8c343e *docs/sql/FCDVT-259/pruebas/d02_simula_solo_y.sql
 7120dfe6cfb278385fc049c2394b5812 *docs/sql/FCDVT-259/pruebas/d03_valida.sql
 df11c87801ddaf779ba43c446c628f11 *docs/sql/FCDVT-259/pruebas/d09_limpia.sql
+7e0dc9b5517e1fc9845f8b26dee8e2e3 *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/README.md
+82a3786a4d34601045df1aca752bde90 *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/d00_prechecks.sql
+008b6552a1296a9d6d0e76ef5fa56fae *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/d01_carga_07-11.csv
+ccaa1036cefdfb79a8a296a2422b087e *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/d02_simula_solo_y.sql
+331742e77b99a1c758d00fd5b2d41bf3 *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/d03_valida.sql
+10549dd4a0cedf586d2b8acc2cfcdabb *docs/sql/FCDVT-259/pruebas/sesion_2026-11-07/d09_limpia.sql
+3a1b62af6a7b7351e494dd9f81b12a17 *docs/SESION_2026-11-19.md

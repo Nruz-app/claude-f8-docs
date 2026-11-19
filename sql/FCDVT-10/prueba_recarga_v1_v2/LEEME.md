@@ -1,5 +1,7 @@
 # FCDVT-10 (HU-03): prueba de recarga v1 / v2 — carga masiva de Tottus Chile (SFCL)
 
+> **19-11-2026: la carga de Tottus sigue las reglas de Colombia.** El encabezado ya no sale de `VTA_PAINT_Z` (es la lista fija `PKG_F8_CARGA_MASIVA_YZ_SFCL.c_encabezado`, igual a `../pruebas_cargar/encabezado.txt`), y un terminal-día sin Y da ERROR "Sin filas Y." en Buscar: **los escenarios 3 (TC) y 4 (TD) ya no graban** (v2 de TD y v1/v2 de TC quedan en ERROR). Los escenarios 1 (TA) y 2 (TB) siguen valiendo. La versión anterior está en `../anterior_2026-11-19/`.
+
 Armada el 12-11-2026. Es **la misma prueba que la sesión 7 de FACO** (`docs/sql/FCDVT-14/prueba_carga_y_compensa_di_s7/`, pruebas 5 y 6), adaptada a Tottus. Se cargan **dos archivos** en Form174 con la misma fecha, local y terminal y **otro monto que también cuadra** (`carga_v1.csv` y después `carga_v2.csv`), para saber **qué monto queda al final**.
 
 Diferencias con la sesión 7 de FACO:

@@ -1,5 +1,7 @@
 # FCDVT-259: prueba de Exportar Cierres Y y Z en test (Form176)
 
+> **19-11-2026:** hay una sesión nueva con fecha **07-11-2026** en `sesion_2026-11-07/` (mismos datos y pasos, fechas fijas). La nota de abajo sobre cambiar las fechas a anteayer/ayer quedó obsoleta: desde el 17-11-2026 Form176 no tiene límite hacia atrás (Fecha Fin hasta ayer y rango máximo de 3 días), así que esta sesión del 27-10 también se puede usar con sus fechas originales.
+
 Creada el 16-11-2026 a partir de la prueba de Descargar Excel de FCDVT-14 (`docs/sql/FCDVT-14/pruebas_descargar/`, que se trasladó aquí cuando el Descargar de Form174 se revirtió). Es la prueba de punta a punta de **Form176** (Exportar → `PKG_F8_EXPORTA_MASIVA_YZ.fn_lineas`, pasos `02`/`03`; diseño en `docs/README_FCDVT-259.md`). Cubre la Z grabada, la **Z armada con la suma de las Y** (terminal FACO cerrado solo con Y), los filtros sin cierres, las validaciones de fechas y la recarga del CSV exportado en Form174.
 
 - **Datos:** local 5, terminales 1 a 3, un día **con** cierres (el CSV `d01`) y el día siguiente **sin** cierres.

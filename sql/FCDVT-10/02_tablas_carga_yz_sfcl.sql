@@ -13,16 +13,15 @@
 -- La columna de cada concepto es su vta_cmp_asoc; los 5 primeros son los
 -- conceptos de venta (filas 2 a 6 de VTA_PAINT_Z), que van a VTA_SFCLLIBVTA.
 --
--- Importante: al ser columnas fijas, si se agrega o reordena un concepto en
--- VTA_PAINT_Z hay que recrear esta tabla con la lista nueva (las columnas de
--- concepto son la 15 a la 77, en el orden del encabezado) y reinstalar
--- PKG_F8_CARGA_MASIVA_YZ_SFCL. El package lo detecta en prc_config (ORA-20002
--- con el numero de columna). Para un ambiente ya instalado con la version
--- anterior (DET solo identificacion + DETM), 07_migra_det_ancha.sql recrea
--- esta tabla con el DDL de aqui.
+-- xintec-nruz 19-11-2026: mismas reglas que Colombia. Las 63 columnas son
+-- la lista fija del encabezado (PKG_F8_CARGA_MASIVA_YZ_SFCL.c_encabezado);
+-- el package ya no lee VTA_PAINT_Z. Un concepto nuevo de Tottus exige
+-- agregarlo aqui, en c_encabezado y en los INSERT de 04 y 04c, como en FACO.
+-- Para un ambiente ya instalado con la version anterior (DET solo
+-- identificacion + DETM), 07_migra_det_ancha.sql recrea esta tabla con el
+-- DDL de aqui.
 --
--- Montos: nulo = concepto no informado en el CSV (en INGRESAR se graba 0; en
--- MODIFICAR no se cambia); 0 = informado en 0 (distingue vacio de cero).
+-- Montos: vacio en el CSV = 0 (como FACO).
 --
 -- Crea:
 --   VTA_SFCLCARGA_YZ_DET  : una fila por linea del CSV, ya separada y tipada
@@ -31,7 +30,7 @@
 --   SEQ_VTA_SFCLCARGA_YZ y SEQ_VTA_SFCLCARGA_YZ_LOG
 --
 -- res_estado: PENDIENTE, ERROR, CARGADO (validado por Buscar), GRABADO
---   (Cargar lo grabo). res_tipo_carga: INGRESAR o MODIFICAR.
+--   (Cargar lo grabo).
 -- log_etapa: INICIO, LECTURA, VALIDACION, RESUMEN, FIN, ERROR, GRABADO.
 --
 -- DDL estatico (como la version FACO del 30-10): NO es reejecutable. Si los
@@ -53,7 +52,7 @@ create table VTA_SFCLCARGA_YZ_DET (
   det_vendedor        number,                     -- VENDEDOR
   det_cont_repo       number,                     -- CONT_REPOSICION
   det_tipo            varchar2(1),                -- TIPO: Y / Z
-  det_tipo_carga      varchar2(20),               -- TIPO_CARGA: INGRESAR / MODIFICAR
+  det_tipo_carga      varchar2(20),               -- TIPO_CARGA: INGRESAR
   -- Conceptos de venta (filas 2 a 6 de VTA_PAINT_Z) -> VTA_SFCLLIBVTA
   vta_montobol        number,                     -- BOLETAS       -> vta_montobol
   vta_montoncr        number,                     -- N.CREDITO     -> vta_montoncr
@@ -143,7 +142,6 @@ create table VTA_SFCLCARGA_YZ_RES (
   res_mensaje         varchar2(1000),
   res_usuario         varchar2(50),
   res_fechahora       date            default sysdate not null,
-  res_tipo_carga      varchar2(20),               -- TIPO_CARGA: INGRESAR / MODIFICAR
   constraint PK_VTA_SFCLCARGA_YZ_RES primary key (res_carga, res_fecha, res_local, res_terminal)
 );
 
@@ -171,6 +169,6 @@ create sequence SEQ_VTA_SFCLCARGA_YZ
 create sequence SEQ_VTA_SFCLCARGA_YZ_LOG
   start with 1 increment by 1 nocache nocycle;
 
-comment on table VTA_SFCLCARGA_YZ_DET  is 'FCDVT-10 Carga masiva Y/Z Tottus: lineas del CSV con una columna por concepto de VTA_PAINT_Z (PKG_F8_CARGA_MASIVA_YZ_SFCL)';
+comment on table VTA_SFCLCARGA_YZ_DET  is 'FCDVT-10 Carga masiva Y/Z Tottus: lineas del CSV con una columna por concepto de Tottus (PKG_F8_CARGA_MASIVA_YZ_SFCL)';
 comment on table VTA_SFCLCARGA_YZ_RES  is 'FCDVT-10 Carga masiva Y/Z Tottus: resumen por fecha, local y terminal (grilla de Form174)';
 comment on table VTA_SFCLCARGA_YZ_LOG  is 'FCDVT-10 Carga masiva Y/Z Tottus: log por carga, fila y campo';

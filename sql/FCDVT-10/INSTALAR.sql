@@ -1,9 +1,11 @@
 -- =====================================================================
 -- FCDVT-10 (HU-03) - Instalacion de la carga masiva Y / Z de Tottus Chile
 --   (02, 03, 04, 04b y 04c)
--- xintec-nruz 11-11-2026
+-- xintec-nruz 11-11-2026 / 19-11-2026 (reglas de Colombia, conceptos fijos)
 --
--- ANTES, y por separado: 00_prechecks.sql (secciones 1 a 6).
+-- ANTES, y por separado: 00_prechecks.sql (secciones 1 a 4).
+-- Si test ya tiene la version anterior de DET (corta + DETM): NO usar este
+-- script; correr 07_migra_det_ancha.sql y despues 03, 04, 04b y 04c.
 -- DESPUES, por separado: 01_menu_ingreso_masivo_y_sfcl.sql (solo con el exe
 -- nuevo), 05_grants_sinonimos.sql (si el exe usa otro usuario) y
 -- 06_pruebas.sql. No toca los objetos de FACO (FCDVT-14).
@@ -37,12 +39,5 @@ select name, type, line, position, text from user_errors
  where name in ('PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL')
  order by type, sequence;
 
--- La verificacion siguiente es informativa: fn_encabezado lee VTA_PAINT_Z y
--- lanza ORA-20002 si esa tabla aun no tiene la forma esperada. Eso no debe
--- cerrar la instalacion en "failure": los objetos ya quedaron creados y el
--- error solo indica que falta configurar VTA_PAINT_Z (ver 00_prechecks.sql,
--- seccion 6). Por eso se continua y se deja el mensaje a la vista.
-whenever sqlerror continue
-
-prompt ===== Configuracion leida de VTA_PAINT_Z (ORA-20002 = VTA_PAINT_Z no tiene la forma esperada) =====
+prompt ===== Encabezado del CSV (74 columnas: 11 de identificacion + 63 conceptos de Tottus) =====
 select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL') encabezado from dual;

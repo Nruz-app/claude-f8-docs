@@ -1,7 +1,7 @@
 -- =====================================================================
 -- FCDVT-10 (HU-03) - Paso 06: consultas de prueba (SOLO LECTURA)
 -- Carga masiva de cierres Y / Z, Tottus Chile (SFCL)
--- xintec-nruz 11-11-2026
+-- xintec-nruz 11-11-2026 / 19-11-2026 (reglas de Colombia: sin formula de la Z ni MODIFICAR)
 -- Completar los valores EDITAR (carga, fecha y local) en cada consulta.
 -- =====================================================================
 set pagesize 200 linesize 250 feedback on
@@ -10,11 +10,8 @@ column log_motivo format a80
 column log_valor format a30
 column encabezado format a250
 
-prompt ===== 1) Encabezado del CSV (plantilla de Tottus, sale de VTA_PAINT_Z) =====
+prompt ===== 1) Encabezado del CSV (plantilla de Tottus, lista fija c_encabezado) =====
 select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL') encabezado from dual;
-
-prompt ===== 2) Formula de validacion de la Z que usa Cargar (nulo = desactivada) =====
-select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_sql_valida_z formula from dual;
 
 prompt ===== 3) Ultimas cargas =====
 select log_carga, min(log_fechahora) inicio, max(log_usuario) usuario,
@@ -24,7 +21,7 @@ select log_carga, min(log_fechahora) inicio, max(log_usuario) usuario,
  order by log_carga desc;
 
 prompt ===== 4) Resumen de una carga (grilla de Form174) =====
-select res_fecha, res_local, res_terminal, res_tipo_carga, res_cant_z, res_total_z,
+select res_fecha, res_local, res_terminal, res_cant_z, res_total_z,
        res_cant_y, res_total_y, res_lin_error, res_estado, res_mensaje
   from VTA_SFCLCARGA_YZ_RES
  where res_carga = 0                                   -- EDITAR: numero de carga
@@ -44,30 +41,18 @@ select det_linea, det_fecha, det_local, det_terminal, det_tipo, det_nro_y,
  where det_carga = 0                                   -- EDITAR: numero de carga
  order by det_linea;
 
-prompt ===== 6b) Montos informados de una linea (las columnas no nulas; el resto no vino en el CSV) =====
+prompt ===== 6b) Todos los montos de una linea (vacio en el CSV = 0) =====
 select * from VTA_SFCLCARGA_YZ_DET
  where det_carga = 0                                   -- EDITAR: numero de carga
    and det_linea = 0                                   -- EDITAR: linea
 ;
 
-prompt ===== 6c) Control: conceptos de VTA_PAINT_Z sin su columna en VTA_SFCLCARGA_YZ_DET =====
-prompt Misma validacion que hace prc_config al compilar el SQL (ORA-20002): nombre y
-prompt orden (columna 15 de DET = primer concepto, como en el encabezado). Esperado: 0 filas.
-select z.pos columna_det, z.vta_order_z, z.vtaglosa_z, z.vta_cmp_asoc
-  from (select vta_order_z, vtaglosa_z, upper(trim(vta_cmp_asoc)) vta_cmp_asoc,
-               row_number() over (order by vta_order_z) pos
-          from vta_paint_z
-         where vta_localiz = 'SFCL'
-           and vta_cmp_asoc is not null
-           and (   (vta_order_z between 2 and 6)
-                or (vta_order_z > 7 and nvl(vta_pop_up, 0) = 0
-                    and (substr(upper(trim(vta_cmp_asoc)), 1, 4) <> 'VTA_'
-                         or substr(upper(trim(vta_cmp_asoc)), 1, 5) = 'MVTA_')))) z
- where not exists (select 1 from user_tab_columns c
-                    where c.table_name = 'VTA_SFCLCARGA_YZ_DET'
-                      and c.column_name = z.vta_cmp_asoc
-                      and c.column_id   = 14 + z.pos)
- order by z.pos;
+prompt ===== 6c) Control: columnas de concepto de VTA_SFCLCARGA_YZ_DET (ESPERADO: 63, de la 15 a la 77) =====
+select count(*) columnas_concepto, min(column_id) primera, max(column_id) ultima
+  from user_tab_columns
+ where table_name = 'VTA_SFCLCARGA_YZ_DET'
+   and column_id between 15 and 77
+   and column_name not like 'DET\_%' escape '\';
 
 prompt ===== 7) Lo grabado en libvta para una fecha y un local (Z = F8/99; Y = Y/N) =====
 select l.vta_terminal, l.vta_tiporeg, l.vta_secuencia, l.vta_techkey, l.vta_montobol, l.vta_montoncr,

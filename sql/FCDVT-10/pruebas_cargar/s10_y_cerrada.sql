@@ -16,8 +16,8 @@
 --
 --   1) PARTE 1 (v_parte = 1): Y 1 del 17-11 L116 T7 -> ter_estado = 1
 --   2) Form174: Buscar s05_reemplazo_v2.csv (o s04_reemplazo_v1.csv)
---      Esperado en Buscar: ERROR "El terminal tiene 1 cierre(s) Y cerrado(s)
---      ese dia; INGRESAR los reemplazaria."
+--      Esperado en Buscar: CARGADO (19-11-2026: reglas de Colombia, Buscar
+--      no revisa los cierres; antes daba ERROR en Buscar).
 --      Esperado en Cargar: "No se grabo: El terminal tiene 1 cierre(s) Y
 --      cerrado(s) (termstaty estado 1 o 2); no se reemplaza". En la base,
 --      17-11 L116 T7 queda igual que antes.

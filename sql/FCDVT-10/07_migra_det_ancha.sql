@@ -1,13 +1,13 @@
 -- =====================================================================
 -- FCDVT-10 (HU-03) - Paso 07: lleva VTA_SFCLCARGA_YZ_DET al esquema ancho
 -- Tottus Chile (Flg_Pais$ = "SFCL")
--- xintec-nruz 18-11-2026
+-- xintec-nruz 18-11-2026 / 19-11-2026 (reglas de Colombia: lista fija de conceptos)
 --
 -- SOLO para un ambiente donde ya se ejecuto la version anterior de
 -- 02_tablas_carga_yz_sfcl.sql (DET solo con la identificacion y los montos
 -- en VTA_SFCLCARGA_YZ_DETM). Deja VTA_SFCLCARGA_YZ_DET como la tabla de
 -- Colombia (VTA_FACOCARGA_YZ_DET): una columna por concepto, con el nombre y
--- el orden de VTA_PAINT_Z de SFCL.
+-- el orden de la lista fija PKG_F8_CARGA_MASIVA_YZ_SFCL.c_encabezado.
 --
 --   Parte A: recrea VTA_SFCLCARGA_YZ_DET con las 63 columnas de concepto en
 --            las posiciones 15 a 77 y det_total / det_estado / det_fechahora
@@ -16,11 +16,10 @@
 --   Parte B: borra VTA_SFCLCARGA_YZ_DETM (sus montos no se trasladan)
 --   Parte C: verificaciones
 --
--- Por que se recrea y no un alter table ... add: Oracle solo agrega columnas
--- al final, y la tabla tiene que quedar con los conceptos en las posiciones
--- 15 a 77, que es lo que valida prc_config (y la consulta 6c de
--- 06_pruebas.sql). Con ALTER las columnas quedarian despues de
--- det_fechahora y el package daria ORA-20002.
+-- Por que se recrea y no un alter table ... add: asi la tabla queda igual a
+-- la de una instalacion limpia (conceptos en las posiciones 15 a 77, en el
+-- orden del encabezado; consulta 6c de 06_pruebas.sql). Los packages leen y
+-- graban las columnas por nombre.
 --
 -- Para una instalacion limpia NO se usa este script: 02 ya crea la tabla
 -- ancha. DESPUES de las partes A y B los packages quedan INVALID: ejecutar
@@ -147,7 +146,7 @@ create table VTA_SFCLCARGA_YZ_DET_NEW (
 )]';
 
   execute immediate 'comment on table VTA_SFCLCARGA_YZ_DET_NEW is '
-    || q'['FCDVT-10 Carga masiva Y/Z Tottus: lineas del CSV con una columna por concepto de VTA_PAINT_Z (PKG_F8_CARGA_MASIVA_YZ_SFCL)']';
+    || q'['FCDVT-10 Carga masiva Y/Z Tottus: lineas del CSV con una columna por concepto de Tottus (PKG_F8_CARGA_MASIVA_YZ_SFCL)']';
 
   execute immediate 'drop table VTA_SFCLCARGA_YZ_DET purge';
   execute immediate 'alter table VTA_SFCLCARGA_YZ_DET_NEW rename to VTA_SFCLCARGA_YZ_DET';
@@ -188,22 +187,31 @@ select count(*) columnas_concepto, min(column_id) primera, max(column_id) ultima
    and column_id >= 15
    and column_name not like 'DET\_%' escape '\';
 
-prompt ===== C2) Conceptos de VTA_PAINT_Z fuera de su columna de DET (esperado: 0 filas) =====
-select z.pos, z.vta_order_z, z.vtaglosa_z, z.vta_cmp_asoc
-  from (select vta_order_z, vtaglosa_z, upper(trim(vta_cmp_asoc)) vta_cmp_asoc,
-               row_number() over (order by vta_order_z) pos
-          from vta_paint_z
-         where vta_localiz = 'SFCL'
-           and vta_cmp_asoc is not null
-           and (   (vta_order_z between 2 and 6)
-                or (vta_order_z > 7 and nvl(vta_pop_up, 0) = 0
-                    and (substr(upper(trim(vta_cmp_asoc)), 1, 4) <> 'VTA_'
-                         or substr(upper(trim(vta_cmp_asoc)), 1, 5) = 'MVTA_')))) z
- where not exists (select 1 from user_tab_columns c
-                    where c.table_name = 'VTA_SFCLCARGA_YZ_DET'
-                      and c.column_name = z.vta_cmp_asoc
-                      and c.column_id   = 14 + z.pos)
- order by z.pos;
+prompt ===== C2) Columnas de concepto de DET que faltan respecto de la lista fija (ESPERADO: 0 filas) =====
+with l as (
+  select 'VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;VTA_MMONTONDB;VTA_MONTOGUIA;REC_MEFECTIVO'
+      || ';REC_MCHKDIA;REC_MCHKFECHA;REC_MTRANSBANK;REC_MSODIMAC;REC_MCMR;REC_MTREGALO'
+      || ';REC_MTOTCONVENIO;REC_MCHKFALA;REC_MTOTFACXCOB;REC_MNCREDITO;REC_MTDE;REC_TARJEDENRED'
+      || ';REC_TARJAMIPASS;REC_TARJSODEXO;REC_MCANJEPUNTOS;MTOTGIFTCORP;REC_MFPAY;REC_MDOTACIONES'
+      || ';REC_MRETIROS;REC_MATESORAMIENTO;REC_MABONOCMR;REC_MTOTSIF;REC_MAVANCECMR;REC_MINTERESES'
+      || ';REC_MTRANSFERENCIA;REC_MRETIROTRANS;REC_MTRANSFERENCIAINT;REC_MREVERSATRANSINT;REC_MRETIROTRANSINT;REC_MTOTATRF'
+      || ';REC_MTOTALREVTRF;REC_MABONOTDE;REC_MREVABONOTDE;REC_MSELLOSVRD;REC_MTOTRECAUDA;R_RECTELEFONO'
+      || ';R_RECINTERNET;R_RECARGABIP;R_JUEGOSAZAR;R_PAGOSERVICIOS;R_SEGUROS;REC_MTOTREVRECAUDA'
+      || ';REV_RECTELEFONO;REV_RECINTERNET;REV_RECARGABIP;REV_JUEGOSAZAR;REV_PAGOSERVICIOS;REV_SEGUROS'
+      || ';REC_MREVCANJEPUNTOS;MQUICKPAY;QUICKPAYDEBIDTOBF;REC_MTOTALPESO;REC_LINIO;REC_ECOM'
+      || ';REC_PLUXEE_JUNAEB;REC_EDENRED_JUNAEB;REC_EDENRED_PRIVADO' lista from dual
+), c as (
+  select level pos, regexp_substr(l.lista, '[^;]+', 1, level) col
+    from l
+ connect by level <= 63
+)
+select c.pos, c.col
+  from c
+ where not exists (select 1 from user_tab_columns t
+                    where t.table_name = 'VTA_SFCLCARGA_YZ_DET'
+                      and t.column_name = c.col
+                      and t.column_id   = 14 + c.pos)
+ order by c.pos;
 
 prompt ===== C3) Objetos de la carga masiva (esperado: 3 tablas, 2 secuencias, 2 packages; sin DETM) =====
 select object_name, object_type, status

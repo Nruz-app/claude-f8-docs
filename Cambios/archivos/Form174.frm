@@ -386,12 +386,14 @@ Private Sub Command2_Click()
     xlBook.Names.Add "ListaTipo", "=Listas!$A$1:$A$2"
     'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes solo INGRESAR)
     'xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
-    If Flg_Pais$ = "SFCL" Then
-        xlLis.Cells(2, 2).Value = "MODIFICAR"
-        xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$2"
-    Else
-        xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
-    End If
+    'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia, Tottus solo INGRESAR (antes If SFCL con MODIFICAR):
+    'If Flg_Pais$ = "SFCL" Then
+        'xlLis.Cells(2, 2).Value = "MODIFICAR"
+        'xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$2"
+    'Else
+        'xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
+    'End If
+    xlBook.Names.Add "ListaTipoCarga", "=Listas!$B$1:$B$1"
 
     'Hoja Carga, fila 1: encabezado tecnico (no se cambia) con la glosa en un comentario
     For i = 0 To UBound(vCols)
@@ -399,7 +401,9 @@ Private Sub Command2_Click()
         'xintec-nruz 11-11-2026 FCDVT-10: en Tottus (SFCL) la glosa de los montos sale de VTA_PAINT_Z
         'xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
         If Flg_Pais$ = "SFCL" And i >= 11 Then
-            xlHoja.Cells(1, i + 1).AddComment GlosaPaintZ(vCols(i)) & ". Monto entero, sin separador de miles. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
+        'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia, vacío = 0 (antes INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia.)
+            'xlHoja.Cells(1, i + 1).AddComment GlosaPaintZ(vCols(i)) & ". Monto entero, sin separador de miles. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
+            xlHoja.Cells(1, i + 1).AddComment GlosaPaintZ(vCols(i)) & ". Monto entero, sin separador de miles. Vacío = 0."
         Else
             xlHoja.Cells(1, i + 1).AddComment GlosaColumnaCsv(i + 1)
         End If
@@ -452,7 +456,9 @@ Private Sub Command2_Click()
         .Add 3, 1, 1, "=ListaTipoCarga"
         .ErrorTitle = "TIPO_CARGA"
         'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes "Debe ser INGRESAR.")
-        .ErrorMessage = IIf(Flg_Pais$ = "SFCL", "Debe ser INGRESAR o MODIFICAR.", "Debe ser INGRESAR.")
+        'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia, solo INGRESAR (antes en SFCL "Debe ser INGRESAR o MODIFICAR.")
+        '.ErrorMessage = IIf(Flg_Pais$ = "SFCL", "Debe ser INGRESAR o MODIFICAR.", "Debe ser INGRESAR.")
+        .ErrorMessage = "Debe ser INGRESAR."
     End With
     'xintec-nruz 11-11-2026 FCDVT-10: hasta la ultima columna del pais (antes A1:BD1 fijo)
     'xlHoja.Range("A1:BD1").EntireColumn.AutoFit
@@ -476,9 +482,11 @@ Private Sub Command2_Click()
     'xintec-nruz 11-11-2026 FCDVT-10: textos de Tottus (SFCL): cuadratura con N.DEBITO y GUIA, Y1 automatica y MODIFICAR
     If Flg_Pais$ = "SFCL" Then
         vTexto(0) = "Plantilla de carga masiva de cierres Y y Z (Tottus Chile) - Ingreso del YYY Masivo"
-        vTexto(3) = "2. INGRESAR: el total de venta de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de sus Y. Una Z sin Y crea la Y1 automatica (copia de la Z)."
-        vTexto(5) = "4. Números y montos: enteros, sin decimales ni separador de miles; negativos con el signo menos. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
-        vTexto(6) = "5. TIPO (Y o Z) y TIPO_CARGA (INGRESAR o MODIFICAR) se eligen de la lista. En la fila Z, NRO_Y va vacío. MODIFICAR cambia solo los montos informados de una Z o Y (con su NRO_Y) que ya existe."
+        'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia: 1 Z y al menos 1 Y, Z = suma de las Y, solo INGRESAR (antes Y1 automatica y MODIFICAR)
+        'vTexto(3) = "2. INGRESAR: el total de venta de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de sus Y. Una Z sin Y crea la Y1 automatica (copia de la Z)."
+        'vTexto(5) = "4. Números y montos: enteros, sin decimales ni separador de miles; negativos con el signo menos. INGRESAR: vacío = 0. MODIFICAR: vacío = no cambia."
+        'vTexto(6) = "5. TIPO (Y o Z) y TIPO_CARGA (INGRESAR o MODIFICAR) se eligen de la lista. En la fila Z, NRO_Y va vacío. MODIFICAR cambia solo los montos informados de una Z o Y (con su NRO_Y) que ya existe."
+        vTexto(3) = "2. Cada terminal y fecha lleva 1 Z y al menos 1 Y. El total de la Z (BOLETAS + N.CREDITO + FACTURA + N.DEBITO + GUIA FACTURABLES) debe ser igual a la suma de los totales de sus Y."
     End If
     For i = 0 To 12
         xlInst.Cells(i + 1, 1).Value = vTexto(i)
@@ -565,7 +573,9 @@ Private Function GlosaColumnaCsv(ByVal n As Integer) As String
         Case 9: GlosaColumnaCsv = "CONT. REPOSICION. Obligatorio. Número entero."
         Case 10: GlosaColumnaCsv = "TIPO. Y = cierre Y; Z = cierre Z del terminal y fecha (una sola)."
         'xintec-nruz 11-11-2026 FCDVT-10: Tottus (SFCL) tambien MODIFICAR (antes solo "TIPO_CARGA. INGRESAR.")
-        Case 11: GlosaColumnaCsv = IIf(Flg_Pais$ = "SFCL", "TIPO_CARGA. INGRESAR (reemplaza la Z y las Y del día) o MODIFICAR (cambia solo los montos informados; la Y con su NRO_Y).", "TIPO_CARGA. INGRESAR.")
+        'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia, solo INGRESAR (antes en SFCL INGRESAR o MODIFICAR)
+        'Case 11: GlosaColumnaCsv = IIf(Flg_Pais$ = "SFCL", "TIPO_CARGA. INGRESAR (reemplaza la Z y las Y del día) o MODIFICAR (cambia solo los montos informados; la Y con su NRO_Y).", "TIPO_CARGA. INGRESAR.")
+        Case 11: GlosaColumnaCsv = "TIPO_CARGA. INGRESAR."
         Case 12 To 56
             s = "BOLETAS|N.CREDITO (va en negativo)|FACTURA|EFECTIVO|EFECT.RECAUDACION|CHEQUES AL DIA|CHEQUE POSFECHADO"
             s = s & "|TARJETA CREDITO|TARJETA DEBITO|CMR|GIFT CARD|TARJETA EMPRESA / GIFT CARD EMPRESA|TDE|RENUEVA CMR"
@@ -1053,9 +1063,14 @@ Private Sub Command4_Click()
         Exit Sub
     End If
     'xintec-nruz 11-11-2026 FCDVT-10: en Tottus (SFCL) el aviso incluye MODIFICAR
+    'xintec-nruz 19-11-2026 FCDVT-10: reglas de Colombia: el mismo aviso que FACO (antes en SFCL con Y1 y MODIFICAR)
+    'If MsgBox("Se grabarán " & nCargados & " cierre(s) de terminal (Z y sus Y) de la carga N° " & mCarga & "." & vbCrLf & vbCrLf & _
+              'IIf(Flg_Pais$ = "SFCL", "INGRESAR: si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo (sin Y en el archivo, se crea la Y1)." & vbCrLf & "MODIFICAR: solo cambian los montos informados.", _
+                  '"Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo.") & vbCrLf & _
+              '"Los grupos con error no se graban." & vbCrLf & vbCrLf & _
+              '"¿Desea continuar?", vbQuestion + vbYesNo + vbDefaultButton2, Me.Caption) <> vbYes Then
     If MsgBox("Se grabarán " & nCargados & " cierre(s) de terminal (Z y sus Y) de la carga N° " & mCarga & "." & vbCrLf & vbCrLf & _
-              IIf(Flg_Pais$ = "SFCL", "INGRESAR: si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo (sin Y en el archivo, se crea la Y1)." & vbCrLf & "MODIFICAR: solo cambian los montos informados.", _
-                  "Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo.") & vbCrLf & _
+              "Si un terminal ya tiene la Z o cierres Y ese día, se REEMPLAZAN por los del archivo." & vbCrLf & _
               "Los grupos con error no se graban." & vbCrLf & vbCrLf & _
               "¿Desea continuar?", vbQuestion + vbYesNo + vbDefaultButton2, Me.Caption) <> vbYes Then
         Exit Sub
