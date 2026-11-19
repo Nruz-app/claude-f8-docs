@@ -1,30 +1,19 @@
 VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
-Begin VB.Form Form175
+Begin VB.Form Form175 
    BackColor       =   &H00E0E0E0&
    Caption         =   " Detalle del Log de la Carga Masiva de Y y Z"
-   ClientHeight    =   7200
+   ClientHeight    =   9015
    ClientLeft      =   2055
    ClientTop       =   1410
-   ClientWidth     =   10410
-   LinkTopic       =   "Form175"
+   ClientWidth     =   11565
+   LinkTopic       =   "Form71"
    MaxButton       =   0   'False
-   ScaleHeight     =   7200
-   ScaleWidth      =   10410
+   ScaleHeight     =   9015
+   ScaleWidth      =   11565
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
-   Begin VB.CommandButton Command3
-      BackColor       =   &H00A4E8CB&
-      Caption         =   "&Salir"
-      Height          =   375
-      Left            =   8160
-      MaskColor       =   &H00000080&
-      Style           =   1  'Graphical
-      TabIndex        =   2
-      Top             =   6480
-      Width           =   1500
-   End
-   Begin VB.PictureBox Picture1
+   Begin VB.PictureBox Picture1 
       Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       BorderStyle     =   0  'None
@@ -34,21 +23,62 @@ Begin VB.Form Form175
       Picture         =   "Form175.frx":0000
       ScaleHeight     =   570
       ScaleWidth      =   3135
-      TabIndex        =   3
+      TabIndex        =   0
       Top             =   0
       Width           =   3135
    End
-   Begin VB.Frame Frame1
+   Begin VB.Label Label10 
+      BackColor       =   &H00C0C0C0&
+      Height          =   1245
+      Left            =   13320
+      TabIndex        =   2
+      Top             =   -240
+      Width           =   1065
+   End
+   Begin VB.Label Label11 
+      BackColor       =   &H00C0C0C0&
+      Height          =   9585
+      Left            =   13920
+      TabIndex        =   1
+      Top             =   0
+      Width           =   615
+   End
+   Begin VB.Image Image1 
+      Height          =   810
+      Left            =   1620
+      Picture         =   "Form175.frx":1644
+      Top             =   -210
+      Width           =   13590
+   End
+   Begin VB.Image Image2 
+      Height          =   1830
+      Left            =   -150
+      Picture         =   "Form175.frx":171C
+      Top             =   -1230
+      Width           =   4665
+   End
+   Begin VB.CommandButton Command3 
+      BackColor       =   &H00A4E8CB&
+      Caption         =   "&Salir"
+      Height          =   375
+      Left            =   9585
+      MaskColor       =   &H00000080&
+      Style           =   1  'Graphical
+      TabIndex        =   2
+      Top             =   8160
+      Width           =   1500
+   End
+   Begin VB.Frame Frame1 
       BackColor       =   &H00E0E0E0&
       Height          =   1095
       Left            =   480
       TabIndex        =   4
       Top             =   960
-      Width           =   9135
-      Begin VB.Label lblGrupo
+      Width           =   10605
+      Begin VB.Label lblGrupo 
          BackColor       =   &H00E0E0E0&
          Caption         =   "Carga"
-         BeginProperty Font
+         BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
             Charset         =   0
@@ -62,9 +92,9 @@ Begin VB.Form Form175
          Left            =   240
          TabIndex        =   0
          Top             =   240
-         Width           =   8655
+         Width           =   10125
       End
-      Begin VB.Label lblMensaje
+      Begin VB.Label lblMensaje 
          BackColor       =   &H00E0E0E0&
          Caption         =   "Estado"
          ForeColor       =   &H00000080&
@@ -72,17 +102,17 @@ Begin VB.Form Form175
          Left            =   240
          TabIndex        =   5
          Top             =   540
-         Width           =   8655
+         Width           =   10125
       End
    End
-   Begin MSFlexGridLib.MSFlexGrid Grid1
-      Height          =   4215
+   Begin MSFlexGridLib.MSFlexGrid Grid1 
+      Height          =   5730
       Left            =   480
       TabIndex        =   1
       Top             =   2160
-      Width           =   9135
-      _ExtentX        =   16113
-      _ExtentY        =   7435
+      Width           =   10605
+      _ExtentX        =   18703
+      _ExtentY        =   10107
       _Version        =   393216
       Cols            =   7
       FixedCols       =   0
@@ -94,7 +124,7 @@ Begin VB.Form Form175
       ForeColorSel    =   128
       BackColorBkg    =   15132904
       WordWrap        =   -1  'True
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851}
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
          Charset         =   0
@@ -103,36 +133,6 @@ Begin VB.Form Form175
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-   End
-   Begin VB.Label Label10
-      BackColor       =   &H00C0C0C0&
-      Height          =   1245
-      Left            =   13320
-      TabIndex        =   6
-      Top             =   -240
-      Width           =   1065
-   End
-   Begin VB.Label Label11
-      BackColor       =   &H00C0C0C0&
-      Height          =   9585
-      Left            =   13920
-      TabIndex        =   7
-      Top             =   0
-      Width           =   615
-   End
-   Begin VB.Image Image1
-      Height          =   810
-      Left            =   1620
-      Picture         =   "Form175.frx":1644
-      Top             =   -210
-      Width           =   13590
-   End
-   Begin VB.Image Image2
-      Height          =   1830
-      Left            =   -150
-      Picture         =   "Form175.frx":171C
-      Top             =   -1230
-      Width           =   4665
    End
 End
 Attribute VB_Name = "Form175"
