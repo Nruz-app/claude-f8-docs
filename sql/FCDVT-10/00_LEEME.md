@@ -30,6 +30,7 @@ Se mantienen los **packages propios** `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GR
 | 6 | `06_pruebas.sql` | Solo lectura: encabezado, cargas, resumen, log, detalle y lo grabado (`EDITAR`) | — |
 | 98 | `98_limpia_prueba.sql` | **Solo test.** Deshace los grupos GRABADO de una carga y los deja en CARGADO | — |
 | 99 | `99_rollback.sql` | A: menú 460. B: packages (comentado). C: tablas y secuencias (comentado) | — |
+| — | `08_verifica_carga_sfcl.sql` | Solo lectura, después de recompilar 03, 04, 04b y 04c: estado de los dos packages, `user_errors`, largo y campos de `fn_encabezado` (1031 / 74), control del orden de las 63 columnas de concepto contra `VTA_SFCLCARGA_YZ_DET` y la última carga del log | Nuevo 21-11-2026 |
 | — | `INSTALAR.sql` | 02, 03, 04, 04b y 04c; verifica `user_objects` / `user_errors` y muestra el encabezado | — |
 | — | `FORMATO_CARGA_YZ_SFCL.md` | Columnas, reglas y ejemplo del CSV | — |
 | — | `pruebas_cargar/` | CSV para Buscar/Cargar (`s01` a `s09`, `s10_y_cerrada.sql`), con los resultados esperados de las reglas de Colombia en su `LEEME.md` | CSV sin cambios; esperados actualizados el 19-11 |
@@ -39,6 +40,8 @@ Se mantienen los **packages propios** `PKG_F8_CARGA_MASIVA_YZ_SFCL` / `PKG_F8_GR
 ## Estado en test
 
 Según `docs/README_FCDVT-10.md`, en test quedó instalada la versión del 11-11 (DET corta + `DETM`, packages VALID). Para pasar a esta versión: `07_migra_det_ancha.sql` (partes A y B) y después `03`, `04`, `04b` y `04c` (no `02`: daría ORA-00955). Si se corrió `05_grants_sinonimos.sql`, repetirlo. La columna `res_tipo_carga` de `VTA_SFCLCARGA_YZ_RES` que haya quedado en test ya no se usa y no molesta (la `02` nueva no la crea).
+
+**21-11-2026: el primer Buscar en test daba ORA-06502 (corregido).** `c_encabezado` de la spec `03` estaba declarado `varchar2(1000)` y su literal mide **1031** caracteres (74 columnas): el package compilaba VALID pero reventaba al instanciarse, en la primera llamada (`prc_inicia`), con `ORA-06502: character string buffer too small` en la línea del `constant`, y `Form174` lo mostraba como "(PKG_F8_CARGA_MASIVA_YZ_SFCL, carga 0)". FACO no lo ve porque su encabezado mide 760. Quedó `varchar2(4000)` en `03_pkg_carga_masiva_yz_sfcl_spec.sql`: hay que recompilar `03` y `04` en test (no `INSTALAR.sql`, el paso `02` daría ORA-00955) y después correr `08_verifica_carga_sfcl.sql`.
 
 ## Diferencias con FACO (FCDVT-14): solo los campos
 

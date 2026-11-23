@@ -39,7 +39,11 @@ create or replace package PKG_F8_CARGA_MASIVA_YZ_SFCL as
   -- vta_cmp_asoc y en el orden de VTA_PAINT_Z de test (18-11-2026). Las 5
   -- primeras son la venta (libvta); las 58 siguientes van a VTA_SFCLZZZ.
   -- Debe ser igual a las columnas 15 a 77 de VTA_SFCLCARGA_YZ_DET.
-  c_encabezado constant varchar2(1000) :=
+  -- xintec-nruz 21-11-2026 FCDVT-10: varchar2(4000) (antes 1000). El literal
+  -- mide 1031 caracteres (74 columnas) y el package compilaba VALID, pero
+  -- reventaba ORA-06502 "character string buffer too small" al instanciarse
+  -- (Buscar: "PKG_F8_CARGA_MASIVA_YZ_SFCL, carga 0"); FACO mide 760 y no lo ve.
+  c_encabezado constant varchar2(4000) :=
        'FECHA;LOCAL;TERMINAL;NRO_Y;HORA;SECUENCIA;NUM_BOLETA;VENDEDOR;CONT_REPOSICION;TIPO;TIPO_CARGA'
     || ';VTA_MONTOBOL;VTA_MONTONCR;VTA_MONTOFAC;VTA_MMONTONDB;VTA_MONTOGUIA'
     || ';REC_MEFECTIVO;REC_MCHKDIA;REC_MCHKFECHA;REC_MTRANSBANK;REC_MSODIMAC;REC_MCMR'

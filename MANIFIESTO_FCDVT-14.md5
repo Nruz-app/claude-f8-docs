@@ -33,6 +33,7 @@
 # 2026-11-18 (8): FCDVT-10: VTA_SFCLCARGA_YZ_DET pasa al esquema ancho de Colombia (una columna por concepto: las 63 de VTA_PAINT_Z de test, en el orden del encabezado) y se elimina VTA_SFCLCARGA_YZ_DETM; nuevo docs/sql/FCDVT-10/07_migra_det_ancha.sql para el ambiente ya instalado (recrea DET con el DDL de 02 y borra DETM; despues recompilar 03, 04, 04b y 04c). prc_config valida nombre y posicion de cada columna (ORA-20002) y arma g_sql_conc; prc_inserta_linea con INSERT estatico de 63 binds; nueva fn_cant_conceptos; 04c lee la columna de DET por nombre. Actualizados 00_prechecks, 06_pruebas, 99_rollback, 03 (spec), INSTALAR, py0_prechecks, 00_LEEME, FORMATO, sql/CLAUDE.md y README_FCDVT-10. Se recalculan tambien prueba_recarga_v1_v2/LEEME.md y pruebas_cargar/arma_csv.ps1, que estaban con otro criterio de hash. Sin cambio de exe (Form174/175/176 no leen DETM). Sin compilar ni ejecutar en la base.
 # 2026-11-19: FCDVT-10: la carga de Tottus sigue las reglas de Colombia (solo INGRESAR, 1 Z y al menos 1 Y, Z = suma de las Y, sin formula de la Z, cerrados en Cargar; 63 conceptos en lista fija). Reescritos 03/04/04b/04c como copia de FCDVT-14; 02 sin res_tipo_carga; 00_prechecks, 06, 07, 98, INSTALAR, FORMATO, 00_LEEME, pruebas_cargar/LEEME (mismos CSV, esperados nuevos), s10 y prueba_recarga LEEME. Form174.frm (textos y lista TIPO_CARGA como FACO; bak_FCDVT-10_ReglasFACO) y docs/Cambios. Respaldo: docs/sql/FCDVT-10/anterior_2026-11-19/. Se recalculan tambien CLAUDE.md (revision /init) y entradas de FCDVT-10 que ya no coincidian sin cambio de contenido hoy (01, 99, py0_prechecks, arma_csv.ps1). FTEPROD/Form175.frm no se recalcula (difiere desde el rediseno del 17-11). Sin compilar ni ejecutar en la base.
 # 2026-11-19 (2): traspaso documentado (docs/SESION_2026-11-19.md, README_FCDVT-10/259 seccion 6, CLAUDE.md seccion 9) y respaldo docs/respaldos/FCDVT-10_2026-11-19_reglas-colombia.zip. Recalculados los archivos de esta sesion. SIN RECALCULAR (no coincidian antes de esta sesion; ver docs/SESION_2026-11-19.md seccion 5): FTEPROD/Form175.frm.
+# 2026-11-21: FCDVT-10: ORA-06502 en el primer Buscar de test. c_encabezado de la spec 03 estaba en varchar2(1000) y su literal mide 1031 caracteres (74 columnas): el package compilaba VALID pero fallaba al instanciarse en prc_inicia (ORA-06512 en la linea del constant; Form174 lo mostraba como "carga 0"). Se sube a varchar2(4000) en 03; nuevo 08_verifica_carga_sfcl.sql (solo lectura: estado de los packages, user_errors, largo y campos de fn_encabezado, orden de las 63 columnas de DET y ultima carga del log); INSTALAR recupera el whenever sqlerror continue antes de la verificacion final y remite a 08; README_FCDVT-10 (seccion 1 y 7) y 00_LEEME actualizados. Sin compilar ni ejecutar DDL (solo consultas de lectura en test).
 727165610d3a80b42a96e8ad5d7e9391 *CLAUDE.md
 c787725ec13ae5c7543e3608d25f3adc *FTEPROD/Form174.frm
 423711b951fd0f99a8fe609822c2d1ea *FTEPROD/Form174.frm.bak_FCDVT-10
@@ -65,25 +66,26 @@ cc816b30965b9897e284bdf47ef0e79c *FTEPROD/Form175.frx
 692a13fa336a9d91f8412cf03753ee05 *FTEPROD/recaudacion.vbp.bak_FCDVT-14_Form175
 edd1fa4b6f35d3f0fac476794d6b0e1e *docs/FCDVT-14/FORMATO_CARGA_Y_FACO.md
 8c56b00fcf8bbee05dd5b921a46d3ae8 *docs/FCDVT-14/plantilla_carga_Y_FACO.csv
-b0eb1f9cb186d7f4062a54989c09803b *docs/README_FCDVT-10.md
+5145f21bc27df7f1b0be3c89017c286c *docs/README_FCDVT-10.md
 db378e1705cd8b6b5f685e8db27e834d *docs/README_FCDVT-14.md
 5f7e07fb70d8b10d5322fd0dc1fb1385 *docs/Requerimiento-FCDVT-14/DF-SCC-vf_24.03.2025 Ingreso Cierre de caja F8.xlsx
 decdbcb6d86e4c49d2996556c0b735c7 *docs/sql/CLAUDE.md
-5535efbbaebdd3f23dd12446aed25a6d *docs/sql/FCDVT-10/00_LEEME.md
+3653a589e283803e3844081198aaf2aa *docs/sql/FCDVT-10/00_LEEME.md
 5ea264ad5f8997b86d96436db25039e8 *docs/sql/FCDVT-10/00_prechecks.sql
 40ba9d9c6a5cbcb6c49d7aa2ab17c5ec *docs/sql/FCDVT-10/01_menu_ingreso_masivo_y_sfcl.sql
 34ab86387588bb2a8a44c6d7879fa1f7 *docs/sql/FCDVT-10/02_tablas_carga_yz_sfcl.sql
-a8188cb4360a6b1806bf35ef8a91538c *docs/sql/FCDVT-10/03_pkg_carga_masiva_yz_sfcl_spec.sql
+ef31c5d03764f5868b647c8ca677ad03 *docs/sql/FCDVT-10/03_pkg_carga_masiva_yz_sfcl_spec.sql
 528fd185e396794a584409cfa3016bda *docs/sql/FCDVT-10/04_pkg_carga_masiva_yz_sfcl_body.sql
 4137b6739d412edabd5d394b7bc05e01 *docs/sql/FCDVT-10/04b_pkg_f8_graba_masiva_yz_sfcl_spec.sql
 0460e166877db5aacbba16b9c5e75300 *docs/sql/FCDVT-10/04c_pkg_f8_graba_masiva_yz_sfcl_body.sql
 374fe97347e932a214fa1f59eaaa6577 *docs/sql/FCDVT-10/05_grants_sinonimos.sql
 7347eaf68366c32608304e4e05d42243 *docs/sql/FCDVT-10/06_pruebas.sql
 03905854f0899665f5c3701a4317ee63 *docs/sql/FCDVT-10/07_migra_det_ancha.sql
+a9c6c63e3c1398cf835065ab3a308d9f *docs/sql/FCDVT-10/08_verifica_carga_sfcl.sql
 07dd498a51cbb2e38bc10e8ae7221a91 *docs/sql/FCDVT-10/98_limpia_prueba.sql
 6ed91871fe96f70ca495b94649c4dab9 *docs/sql/FCDVT-10/99_rollback.sql
 aeb33023d0a17ca777f1da55bbe7b1a2 *docs/sql/FCDVT-10/FORMATO_CARGA_YZ_SFCL.md
-04e100d4aced8365bdbdd9687444f84b *docs/sql/FCDVT-10/INSTALAR.sql
+acf2d69a523f733e16d030cc91e98927 *docs/sql/FCDVT-10/INSTALAR.sql
 e18c654fe6b9f1c949f87008987ca6d4 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/LEEME.md
 6d3158e015dc8363558760afb9ba9a28 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/arma_prueba.py
 a86063b0f08208882bc687d65c9b89f6 *docs/sql/FCDVT-10/prueba_recarga_v1_v2/plantillas/py2_resultados.sql.tpl

@@ -39,5 +39,14 @@ select name, type, line, position, text from user_errors
  where name in ('PKG_F8_CARGA_MASIVA_YZ_SFCL', 'PKG_F8_GRABA_MASIVA_YZ_SFCL')
  order by type, sequence;
 
+-- xintec-nruz 21-11-2026 FCDVT-10: la verificacion del encabezado es
+-- informativa. Si falla (ORA-06502 por una spec con c_encabezado corto, u
+-- ORA-20002 si VTA_PAINT_Z no tiene la forma esperada), el
+-- "whenever sqlerror exit failure rollback" de la cabecera marcaria la
+-- instalacion como fallida aunque los objetos ya quedaron creados.
+whenever sqlerror continue
+
 prompt ===== Encabezado del CSV (74 columnas: 11 de identificacion + 63 conceptos de Tottus) =====
 select PKG_F8_CARGA_MASIVA_YZ_SFCL.fn_encabezado('SFCL') encabezado from dual;
+
+prompt ===== Verificacion posterior, solo lectura: @08_verifica_carga_sfcl.sql =====
